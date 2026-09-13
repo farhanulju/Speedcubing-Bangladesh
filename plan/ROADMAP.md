@@ -1,25 +1,25 @@
 # ROADMAP
 
-Phased plan. Scope gate: `docs/product/FEATURE_LIST.md` (review applied 2026-09-14). Stack gate: `docs/architecture/ARCHITECTURE.md`. English-only v1, Cloudflare-only, WCA-cached. No Google Forms. No content in repo.
+Phased plan. Scope gate: `docs/product/FEATURE_LIST.md` (review applied 2026-09-14; A22 email added after design review round 2). Stack gate: `docs/architecture/ARCHITECTURE.md`. Execution order: `plan/BUILD_PLAN.md` (WP-00…WP-53). English-only v1, Cloudflare-only (+Resend exception), WCA-cached. No Google Forms. No content in repo.
 
-## Phase 0 — Review (done 2026-09-14)
+## Phase 0 — Review (done 2026-09-14; design round 2 graded after)
 
 - [x] Board ticked MVP rows A1–A8, A11–A21 in `FEATURE_LIST.md`; deferred A9 volunteers UI, A10 gallery UI; promoted records (A16); added WCA auth + user dashboard (A17), admin dashboard (A18), payment dashboard (A19), news (A20), competition history (A21).
-- [ ] Confirm remaining unknowns in `docs/project-memory/CURRENT_STATE.md`: payment-number owner, TxID verifier roster, photo-consent flow, newsletter provider, Worlds candidate criteria + refund policy, WCA OAuth app credentials, Cloudflare Access seats.
+- [x] Design review round 2 (`plan/DESIGN_REVIEW_ROUND2.md`): 13 new screens verified; Stitch punchlist feeds BUILD_PLAN M5.
+- [ ] Confirm remaining unknowns in `docs/project-memory/CURRENT_STATE.md`: payment-number owner, TxID verifier roster, photo-consent ops, newsletter provider, Worlds candidate list, WCA OAuth app credentials, Cloudflare Access seats.
 
 Exit: owner per MVP row + Cloudflare account/D1/R2/KV provisioned.
 
-## Phase 1 — MVP (after review)
+## Phase 1 — MVP (execute `plan/BUILD_PLAN.md` M0→M5)
 
-Three surfaces, one stack (Pages + Workers + D1 + KV + R2 + Turnstile + Access). Daily WCA cron → KV.
+Three surfaces, one stack (Pages + Workers + D1 + KV + R2 + Turnstile + Access + Resend). Daily WCA cron → KV (+ snapshots/champions → D1); 5-min outbox flush.
 
-1. Shell + design system (EN strings externalized for future `bn/`), header/footer, SEO/sitemap/analytics (A1, A15).
-2. D1 content schema + admin dashboard with TipTap (A18): announcements, pages/about, people, sponsors, FAQ, news, comp overrides, Worlds page, donation totals. **No `src/content/` in repo.**
-3. Public content pages wired to D1 (A2, A3, A5 overrides, A7, A8, A12, A13, A14, A20) + competitions list/detail from WCA cache (A4, A5) + records (A16) + history archive (A21).
-4. WCA OAuth + user dashboard (A17): login, WCA ID validation, local competitor profile, my registrations, payment status, my history.
-5. Manual payments end-to-end (A6 + A19): fee tiers → Send-Money steps → TxID form (Turnstile) → D1 queue → admin accept/reject → status in user dashboard.
-6. Lost-found + contact + opt-in forms, all Cloudflare-native (A11, A14). Simple Workers + D1; no Durable Objects, no Google embeds.
-7. UAT on mid-range Android (public + `/dashboard` + `/admin`); content entered via admin (no content freeze on git); launch + link-in-bio swap.
+1. M0 foundations: accounts/secrets, Astro scaffold, Stitch tokens, CI budgets (WP-00…WP-03).
+2. M1 data + admin: migrations 0001–0007, R2 uploader, Editor.js field, admin CRUD, payment queue, inboxes, Access gating (WP-10…WP-16). **No `src/content/` in repo.**
+3. M2 public site wired to D1 + WCA cache: shell, home/about/people/faq/contact/lost-found, competitions + detail, records + progression, news, sponsors, worlds (WP-20…WP-23).
+4. M3 accounts + money: WCA OAuth, registration flow, user dashboard (+ consent card, seed display), email notices, print slip (WP-30…WP-34).
+5. M4 sync jobs: cache, snapshots, champions, outbox flush, rate-limited manual refresh (WP-40…WP-42).
+6. M5 content + launch: punchlist sweep, seeding runbook (consent gate ON, placeholders purged), QA matrix, cutover + rollback rehearsal (WP-50…WP-53).
 
 Exit: a stranger can find the next comp, understand fees/payment, meet the org, register with a verified WCA ID, track payment, and read news/records — all on mobile. An admin can publish everything without a deploy.
 

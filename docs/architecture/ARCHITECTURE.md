@@ -1,6 +1,6 @@
 # ARCHITECTURE — Cloudflare-only, WCA-cached, dashboard-operated
 
-Status: board-reviewed 2026-09-14. Stack is fixed (Cloudflare free tier only); scope is gated by `docs/product/FEATURE_LIST.md`.
+Status: board-reviewed 2026-09-14, amended for design review round 2 + build plan. Stack is fixed (Cloudflare free tier + two recorded exceptions: Resend for transactional email, Discourse only if a forum is ever approved); scope is gated by `docs/product/FEATURE_LIST.md`. Execution order lives in `plan/BUILD_PLAN.md`.
 
 ## 1. Principles
 
@@ -17,7 +17,7 @@ Status: board-reviewed 2026-09-14. Stack is fixed (Cloudflare free tier only); s
 flowchart TB
   Visitor["Visitor (mobile-first, EN)<br/>public site"] --> Pages["Cloudflare Pages<br/>/, /about, /people, /competitions,<br/>/competitions/[slug], /records,<br/>/faq, /news, /sponsors,<br/>/worlds-2027, /lost-found, /contact"]
   User["Logged-in cuber<br/>WCA OAuth"] --> Dash["User dashboard /dashboard<br/>my registrations, payment status,<br/>competition history"]
-  Admin["Admin (board/delegate)<br/>Cloudflare Access"] --> AdminUI["Admin dashboard /admin<br/>content (TipTap), announcements,<br/>payment verification queue,<br/>lost-found inbox, donors"]
+  Admin["Admin (board/delegate)<br/>Cloudflare Access"] --> AdminUI["Admin dashboard /admin<br/>content (Editor.js blocks), announcements,<br/>payment verification queue,<br/>lost-found inbox, donors"]
 
   Pages --> KV["Cloudflare KV<br/>WCA cache (daily)<br/>competitions-BD, ranks-BD,<br/>persons, records"]
   Pages --> D1["Cloudflare D1 (SQLite)<br/>content tables (announcements,<br/>pages, people, sponsors, faq,<br/>news, comp_overrides, donations),<br/>competitor, registration,<br/>tx_submission, lost_found, opt_in"]
@@ -30,6 +30,9 @@ flowchart TB
   Cron["Workers Cron (daily)<br/>sync-wca"] --> WCAu["Unofficial WCA REST API<br/>static JSON (WST-endorsed)<br/>competitions/persons/ranks"]
   Cron --> WCAo["WCA official API v0<br/>OAuth + competitions?country_iso2=BD<br/>wcif/public per comp"]
   Cron --> KV
+  Cron -. append snapshots .-> D1
+  API -. enqueue .-> OUT["D1 email_outbox"]
+  OUT -. flush 5-min cron .-> RES["Resend (free tier)<br/>verification + consent notices"]
 
   Pages -. link, never fork .-> WCALive["WCA Live<br/>day-of results"]
   Dash -. register + status .-> WCA["worldcubeassociation.org<br/>acceptance stays canonical"]
@@ -51,32 +54,38 @@ Deploy: `git push main` → Pages build (code only, no content) → Cron refresh
 | Spam protection | Turnstile (free) | No hCaptcha keys |
 | Admin gate | Cloudflare Access (free 50 seats) | No Auth0 bill |
 | User login | WCA OAuth (existing accounts, validates WCA ID) | No new passwords to store |
+| Transactional email | Resend free tier (3k/mo, 100/day) via D1 outbox + 5-min flush cron | Cloudflare has no outbound email; dashboard stays source of truth if sends fail |
 | Secrets | Dashboard secrets + `.dev.vars` locally | Never in git |
 
-Recorded exception: a future Discourse forum (if ever approved) needs its own host — it cannot run on Cloudflare free tier. That requires a separate hosting + moderation decision first.
+Recorded exceptions: (1) Resend for transactional email only (payment decisions, guardian-consent confirmations) — bulk newsletter still undecided; (2) a future Discourse forum (if ever approved) needs its own host — it cannot run on Cloudflare free tier. Neither may widen without a DECISION_REGISTER entry.
 
 ## 4. Data ownership (one definition per concept)
 
 Content tables (D1, edited in `/admin`, `locale='en'`, `updated_by/at` everywhere):
-- `announcement { slug, title, date, comp_wca_id?, body_json (TipTap), pinned }` → Home + comp page.
-- `page { slug, title, body_json }` → about sections, contact blocks, Worlds story, refund policy.
+- `announcement { slug, title, date, comp_wca_id?, body_json (Editor.js blocks), pinned }` → Home + comp page.
+- `page { slug, title, body_json (Editor.js blocks) }` → about sections, contact blocks, Worlds story, refund policy.
 - `person { id, name, photo_r2, role, wca_id?, focus_area?, member_since, links }` + private `volunteer_internal { person_id, tier, notes, availability, mobility }` — public queries never select private columns. Volunteer UI deferred; tables stay.
-- `sponsor { name, logo_r2, tier?, url? }`, `faq { q, a_json, order }`, `news { slug, title, published_at, body_json, cover_r2? }`, `comp_override { wca_id, payment_steps_json, venue_note, fee_tiers_json }`, `donation_page { target_bdt, raised_manual_bdt, updated_at, policy_json }` + `donor { name, amount_bdt?, consent }`.
+- `sponsor { name, logo_r2, tier?, url? }`, `faq { q, a_json (Editor.js blocks), order }`, `news { slug, title, published_at, body_json (Editor.js blocks), cover_r2? }`, `comp_override { wca_id, payment_steps_json, venue_note, fee_tiers_json }`, `donation_page { target_bdt, raised_manual_bdt, updated_at, policy_json }` + `donor { name, amount_bdt?, consent }`.
 - WCA cache (KV, 24h TTL): `competitions-BD`, `competition/:id`, `person/:wca_id`, `ranks-BD/:event`, `records-BD`, each with `asOfExportDate`. Display "updated daily, source: WCA export". Override rows win on conflict and are labeled "org update".
-- App tables: `competitor { id, wca_id (unique, validated), wca_oauth_sub, name }`, `registration { id, competitor_id, comp_wca_id, events_json, status }`, `tx_submission { id, registration_id, sender_number, txn_id, amount_bdt int, status (pending/accepted/rejected), decided_by/at, note }`, `lost_found { id, comp_wca_id, item, photo_r2?, status, reporter_contact }`, `opt_in { channel, handle, consent_at }`.
-- Deferred: `gallery_album/photo` schema reserved in migrations but no UI in v1.
+- App tables: `competitor { id, wca_id (unique, validated), wca_oauth_sub, name }`, `registration { id, competitor_id, comp_wca_id, events_json, status (fee track), wca_accepted bool default false, wca_accepted_by/at }` — fee verification and WCA acceptance are SEPARATE states; the second is a manual delegate tick after acting on the WCA site. `tx_submission { id, registration_id, sender_number, txn_id, amount_bdt int, status (pending/accepted/rejected), decided_by/at, note }`, `lost_found { id, comp_wca_id, item, photo_r2?, status, reporter_contact }`, `opt_in { channel, handle, consent_at }`, `contact_message { id, name, email, wca_id?, category, body, status, at }`.
+- History + audit (new, from design review): `record_snapshot { event, kind (single/average), value_centis, holder_wca_id, holder_name, comp_wca_id, export_date }` — nightly append-only (only when changed); powers Progression views. `comp_champion { comp_wca_id, winner_wca_id, winning_value_centis, derived_at, override_winner_wca_id? }` — derived by the sync job from per-comp 3x3x3 finals; admin-overridable. `audit_log { id, actor, action, entity, entity_id, at, meta_json }` — every admin verification/content decision. `guardian_consent { competitor_id, guardian_name, relation, consent_at, verified_by? }` — simple checkbox version, no e-signatures. `email_outbox { id, to_addr, template, payload_json, status (queued/sent/failed), attempts, sent_at }` — Resend flush reads this; templates: `payment-verified`, `payment-rejected`, `guardian-consent-recorded`.
+- Deferred: `gallery_album/photo` schema reserved in migrations but no UI in v1. Psych sheet is a derived read view (Phase 2, B10), not a table. PDF slip is a print-CSS route (`/dashboard/registrations/[id]/slip`), no PDF library.
 
 WCA field reference: official v0 `/competitions?country_iso2=BD&start=&end=`, `/competitions/:id/wcif/public`, OAuth `/oauth/*`; unofficial `/v1/competitions/:id.json`, `/v1/persons/:wca_id.json`, ranks/results.
 
-## 5. Rich-text decision — TipTap (not TinyMCE)
+## 5. Rich-text decision — Editor.js (not TipTap, not TinyMCE)
 
-- TipTap: headless, MIT-licensed, JSON document output, React-friendly, no cloud key, small bundle when limited to fixed toolbar (bold/italic/lists/links/headings). JSON → sanitized HTML at render keeps ISR pages fast and safe.
-- TinyMCE: heavier bundle, cloud API key or self-hosted GPL path, HTML-string output that needs heavier sanitizing, more features than non-dev admins need.
-- Rule: fixed toolbar only (no embeds/scripts/tables in v1); store TipTap JSON in `*_json` columns; render via allowlisted serializer; strip everything else.
+Evaluated 2026-09-14 against our constraints (D1 JSON storage, ISR static render on Cloudflare, non-dev admins, fixed toolset, no cloud keys).
+
+- Editor.js (chosen): block-style, Apache-2.0, free, actively maintained (v2.31.x, ~234k weekly downloads). Output is flat JSON (`{ blocks: [{ id, type, data }] }`) — trivial to store in D1, eyeball in a row, and render per block. Installed tools ARE the allowlist (paragraph, header, nested-list, quote, image, delimiter + bold/italic/link/marker inline), so sanitization is structural: skip unknown block types, sanitize inline HTML in `text` fields. `editorjs-html` (MIT, zero deps) renders blocks → HTML in Node at build time — a natural fit for ISR. The image tool's custom-uploader hook points straight at our Worker → R2 upload; no default cloud. Editor weight lives only in `/admin`, never in the public <200 KB budget.
+- TipTap (rejected, stays fallback): MIT core, first-class React, powerful ProseMirror document model — but output is a nested tree needing a recursive renderer, the schema allows more than we need (lockdown burden is on us), and server render drags the ProseMirror stack into the build. Right tool if we ever need tables, collaboration, or complex inline semantics — revisit then.
+- TinyMCE (rejected): heavier bundle, cloud API key or self-hosted GPL path, raw-HTML-string output with the heaviest sanitizing burden, more features than our admins need.
+- Editor.js caveats (managed): no nested/container blocks (we don't need them); table tool is immature (excluded from v1); official React wrapper doesn't exist — one thin manual wrapper (~50 lines: init on mount, `save()` on submit) covers our single admin use; pin every `@editorjs/*` version in `package.json`.
+- Rule: v1 toolset = paragraph, header, nested-list, quote, image (custom R2 uploader ONLY), delimiter, link/marker/bold/italic inline. No table, embeds, attaches, code, or raw-HTML blocks. Store Editor.js JSON in `*_json` columns; render via allowlisted per-block parsers; strip everything else.
 
 ## 6. Routes (v1)
 
-Public: `/`, `/about`, `/people`, `/competitions`, `/competitions/[slug]`, `/records`, `/faq`, `/news`, `/news/[slug]`, `/lost-found`, `/sponsors`, `/worlds-2027`, `/contact`. Dashboards: `/dashboard` (WCA OAuth), `/admin` (Access; includes payment queue). Reserved (no UI v1): `/volunteers`, `/gallery`, `/rankings/[event]`, `/bn/*`. No other routes without a feature-list tick.
+Public: `/`, `/about`, `/people`, `/competitions`, `/competitions/[slug]`, `/records`, `/faq`, `/news`, `/news/[slug]`, `/lost-found`, `/sponsors`, `/worlds-2027`, `/contact`. Dashboards: `/dashboard` (WCA OAuth), `/dashboard/registrations/[id]/slip` (print CSS), `/admin` (Access; includes payment queue). Reserved (no UI v1): `/volunteers`, `/gallery`, `/rankings/[event]`, `/bn/*`. No other routes without a feature-list tick.
 
 ## 7. Non-functional budgets
 
@@ -84,4 +93,7 @@ Public: `/`, `/about`, `/people`, `/competitions`, `/competitions/[slug]`, `/rec
 - Auth: Access policy for `/admin/*` + API `admin:*`; WCA OAuth (authorization code, `state`+PKCE) for `/dashboard`; sessions httpOnly + SameSite=Lax; never store WCA passwords; validate `wca_id` against cache at link time.
 - Privacy: no public DOB/phone/address; photo consent flag required for minors; explicit opt-in for broadcasts; Turnstile + rate limits on all forms; never log bodies/tokens.
 - Money: integers (BDT) end to end; TxID free-text + human decision in v1 with `decided_by/at` audit; gateway IPN must re-query before marking paid in Phase 2.
+- Email: Resend free tier (≤100/day); outbox flush every 5 min with backoff; failures retry 3× then stay `failed` (dashboard remains canonical — never block a verification on email). No bulk/newsletter sends through this path.
+- Snapshots: append-only, write only on change; retention unbounded in v1 (~12k rows/yr — trivial).
+- Content accuracy (from design review): one status lockup component ("Prospective WCA Regional Organization") used everywhere; no fabricated WCA regulation/article citations — link real WCA pages or say nothing; every displayed stat derives from the WCA-cache job (no hand-typed counts); host city is one admin field; countdowns are day-precision unless <48h out; "LIVE" labels only for truly-live data; internal feature tags never render.
 - Resilience: WCA fetch fails → stale KV + "cached data, see WCA live" banner; D1 write fails → fail closed with retry (TxID also BCCs organizer inbox in v1 so nothing is silently lost).

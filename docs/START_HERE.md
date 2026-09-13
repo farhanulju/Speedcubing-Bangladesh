@@ -2,7 +2,7 @@
 
 ## What this org is
 
-Speedcubing Bangladesh is the WCA-recognized Regional Organization for Bangladesh. It runs official competitions (Dhaka, Chattogram, Rajshahi, Jhenaidah, …), manages delegates/organizers/volunteers, publishes results and records, and is now raising funds to send competitors to Worlds 2027 (Sweden).
+Speedcubing Bangladesh is the prospective WCA Regional Organization (candidate status) for Bangladesh. It runs official competitions (Dhaka, Chattogram, Rajshahi, Jhenaidah, …), manages delegates/organizers/volunteers, publishes results and records, and is now raising funds to send competitors to Worlds 2027 (Sweden).
 
 80%+ of visitors will be on mobile. English UI for v1; Bangla is a future locale.
 

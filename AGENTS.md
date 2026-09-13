@@ -28,15 +28,16 @@ Do not create top-level folders without a decision entry. Do not store secrets (
 ## 2. Hard rules
 
 - **English only for v1.** No `bn/` routes, no Bangla CMS fields, no Bangla fonts. Structure content so a `bn` locale can be added later (D1 `locale` column + UI dictionaries, no hardcoded copy in components), but do not ship it.
-- **Cloudflare free tier only.** Pages, Workers, D1, KV, R2, Turnstile, Access. No Vercel, Supabase, Firebase, paid CMS, or Google Forms (no embeds/iframes). If free-tier limits block something, log it in `DECISION_REGISTER.md` and degrade gracefully — do not silently add a vendor. Discourse is the single recorded future exception (needs its own host + decision).
+- **Cloudflare free tier + two exceptions.** Pages, Workers, D1, KV, R2, Turnstile, Access. No Vercel, Supabase, Firebase, paid CMS, or Google Forms (no embeds/iframes). Exceptions (both recorded, neither may widen without a register entry): Resend free tier for transactional email only; Discourse only if a forum is ever approved. If free-tier limits block something else, log it in `DECISION_REGISTER.md` and degrade gracefully.
 - **WCA is source of truth.** Competitions, results, persons, ranks, records come from WCA official API v0 (OAuth/WCIF) and the WST-endorsed unofficial REST API (daily static JSON) via a scheduled Worker cache. Users log in with WCA OAuth and validate their WCA ID; local rows mirror WCA and never replace its acceptance. Never scrape WCA HTML. Never invent results. Always link back to `worldcubeassociation.org` and `live.worldcubeassociation.org`.
 - **One definition per concept.** Volunteer roster shape, competition announcement shape, and donation total logic are defined once (see `docs/architecture/ARCHITECTURE.md`) and reused by `web/`. D1 is the store; the admin dashboard is the editor.
 - **Worlds fundraising is a separate page** (`/worlds-2027`), not a homepage section. Donation totals are edited in the admin dashboard in v1; automated reconciliation is Phase 2.
-- **Repo holds no content.** `web/src/content/` is banned. Announcements, pages, people, sponsors, FAQ, news, comp overrides, and Worlds copy are D1 rows managed at `/admin` with TipTap (fixed toolbar, JSON → sanitized HTML).
+- **Repo holds no content.** `web/src/content/` is banned. Announcements, pages, people, sponsors, FAQ, news, comp overrides, and Worlds copy are D1 rows managed at `/admin` with Editor.js (allowlisted blocks, JSON → sanitized HTML).
 - **Three surfaces.** Public site (ISR) + `/dashboard` (logged-in cuber: registrations, payment status, history) + `/admin` (content, announcements, payment verification queue, lost-found inbox). Admin routes + `admin:*` APIs require Cloudflare Access; user APIs require WCA OAuth session.
 - **Payments are manual + human-verified in v1** via the payment dashboard (accept/reject + note + audit). TxID flow fails closed and BCCs the organizer inbox so nothing is silently lost.
 - **Volunteer data is public by design** (name, focus area, member-since) but tiers/notes are internal-only. Never render internal fields (enforce at the query layer). Volunteer and gallery public UI are deferred in v1, but their tables/buckets stay reserved. Many members are minors — no public DOB, phone, or address. Photo only with consent.
-- **No registration-phone scraping.** Broadcast/WhatsApp opt-ins must be explicit. Never reuse WCA registration contact data for marketing.
+- **No registration-phone scraping.** Broadcast/WhatsApp opt-ins must be explicit. Never reuse WCA registration contact data for marketing. v1 opt-ins are email-only.
+- **Content accuracy is load-bearing.** One "Prospective WCA Regional Organization" lockup component, used everywhere. No fabricated WCA regulation/article citations — link real WCA pages or say nothing. Every displayed stat derives from the WCA-cache job. Host city is one admin value. Countdowns are day-precision unless <48h out. "LIVE" only for truly-live data. Internal feature tags and claimant IDs never render. bKash numbers masked + Reveal.
 - **Mobile-first.** Mid-range Android on Bangladeshi networks is the baseline. Budget: <200 KB JS per route, images via R2 + resizing, no heavy client frameworks for content pages.
 - **Money is whole taka.** All BDT amounts are integers. No paisa in UI, forms, or DB.
 
@@ -55,4 +56,6 @@ Do not create top-level folders without a decision entry. Do not store secrets (
 - Feature review checklist: `docs/product/FEATURE_LIST.md`
 - Architecture + diagram: `docs/architecture/ARCHITECTURE.md`
 - Roadmap: `plan/ROADMAP.md`
+- Executable build order: `plan/BUILD_PLAN.md` (work in WP order; do not skip Depends)
+- Design scorecard + punchlist: `plan/DESIGN_REVIEW_ROUND2.md`
 - Web runbook: `web/README.md` + `web/AGENTS.md`
