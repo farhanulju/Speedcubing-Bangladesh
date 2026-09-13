@@ -8,16 +8,16 @@ Speedcubing Bangladesh is the WCA-recognized Regional Organization for Banglades
 
 ## Source-of-truth order
 
-1. WCA (`worldcubeassociation.org`, WCA Live) for competitions, results, persons, records. We cache and link; we never fork.
-2. This repo for org decisions, website content (announcements, people, sponsors), and plans.
+1. WCA (`worldcubeassociation.org`, WCA Live) for competitions, results, persons, records. We cache and link; local rows mirror, never fork acceptance.
+2. D1 (via the admin dashboard) for website content (announcements, people, sponsors, news). This repo holds decisions, plans, and code — never content.
 3. Socials (Facebook, WhatsApp Channel) for distribution only — never as the canonical record.
 
 ## Boundaries
 
-- Website (`web/`) is informational + opt-in forms in v1. Registration acceptance happens on WCA. Payment v1 is manual bKash/Nagad Send-Money + TxID form; automated gateway (SSLCommerz/ShurjoPay) is Phase 2.
+- Website (`web/`) is three surfaces in v1: public site + user dashboard (WCA OAuth, registrations, payment status, history) + admin dashboard (Access-gated content + payment queue). Registration acceptance stays on WCA. Payment v1 is manual bKash/Nagad Send-Money + TxID form with human verification; automated gateway (SSLCommerz/ShurjoPay) is Phase 2.
 - Worlds 2027 fundraising is a separate page (`/worlds-2027`), not a homepage widget.
-- No blog/forum in v1 (board decision). News-style updates ship as competition announcements + gallery + records.
-- Cloudflare free tier only: Pages, Workers, D1, KV, R2, Turnstile.
+- News ships in v1 via the admin dashboard; no forum in v1 (Discourse is the recorded future exception). Volunteer and gallery public UI are deferred; competition history replaces regional sub-pages.
+- Cloudflare free tier only: Pages, Workers, D1, KV, R2, Turnstile, Access. No Google Forms — all forms are Workers + D1 + Turnstile.
 
 ## How to work
 

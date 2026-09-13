@@ -1,40 +1,36 @@
 # ROADMAP
 
-Phased plan. Scope gate: `docs/product/FEATURE_LIST.md`. Stack gate: `docs/architecture/ARCHITECTURE.md`. English-only v1, Cloudflare-only, WCA-cached.
+Phased plan. Scope gate: `docs/product/FEATURE_LIST.md` (review applied 2026-09-14). Stack gate: `docs/architecture/ARCHITECTURE.md`. English-only v1, Cloudflare-only, WCA-cached. No Google Forms. No content in repo.
 
-## Phase 0 — Review (this week)
+## Phase 0 — Review (done 2026-09-14)
 
-- [ ] Board ticks MVP rows A1–A15 in `FEATURE_LIST.md` (tick = build now, cross = defer).
-- [ ] Confirm unknowns in `docs/project-memory/CURRENT_STATE.md`: payment-number owner, TxID verifier, photo-consent flow, newsletter provider, volunteer approver, Worlds candidate criteria + refund policy.
-- [ ] Lock UI direction from `speedcubing.org.au` (reference for polish) with `westcoastcubing.com` IA (reference for structure).
-- [ ] Create Cloudflare account + R2 bucket + D1 database (free tier); store IDs in dashboard, never in git.
+- [x] Board ticked MVP rows A1–A8, A11–A21 in `FEATURE_LIST.md`; deferred A9 volunteers UI, A10 gallery UI; promoted records (A16); added WCA auth + user dashboard (A17), admin dashboard (A18), payment dashboard (A19), news (A20), competition history (A21).
+- [ ] Confirm remaining unknowns in `docs/project-memory/CURRENT_STATE.md`: payment-number owner, TxID verifier roster, photo-consent flow, newsletter provider, Worlds candidate criteria + refund policy, WCA OAuth app credentials, Cloudflare Access seats.
 
-Exit: ticked feature list + owner per row.
+Exit: owner per MVP row + Cloudflare account/D1/R2/KV provisioned.
 
-## Phase 1 — MVP (6–8 weeks after review)
+## Phase 1 — MVP (after review)
 
-Static site on Cloudflare Pages + Workers API + D1 + R2 + Turnstile. Daily WCA cron → KV.
+Three surfaces, one stack (Pages + Workers + D1 + KV + R2 + Turnstile + Access). Daily WCA cron → KV.
 
-1. Shell + design system (EN strings externalized for future `bn/`), header/footer, SEO/sitemap/analytics.
-2. Content collections in repo: announcements, people, sponsors, FAQ, comp overrides.
-3. Competitions list + detail template wired to WCA cache (upcoming BD + past + WCA/Live links).
-4. Manual payment v1: fee-tier display + bKash/Nagad steps + TxID form → D1 → organizer inbox.
-5. Volunteer roster (public) + join form (private fields); gallery manual albums; lost-found form; contact + opt-in forms.
-6. Worlds 2027 separate page with manual total + donor wall (opt-in) + refund policy.
-7. UAT on mid-range Android; content freeze; launch + link-in-bio swap.
+1. Shell + design system (EN strings externalized for future `bn/`), header/footer, SEO/sitemap/analytics (A1, A15).
+2. D1 content schema + admin dashboard with TipTap (A18): announcements, pages/about, people, sponsors, FAQ, news, comp overrides, Worlds page, donation totals. **No `src/content/` in repo.**
+3. Public content pages wired to D1 (A2, A3, A5 overrides, A7, A8, A12, A13, A14, A20) + competitions list/detail from WCA cache (A4, A5) + records (A16) + history archive (A21).
+4. WCA OAuth + user dashboard (A17): login, WCA ID validation, local competitor profile, my registrations, payment status, my history.
+5. Manual payments end-to-end (A6 + A19): fee tiers → Send-Money steps → TxID form (Turnstile) → D1 queue → admin accept/reject → status in user dashboard.
+6. Lost-found + contact + opt-in forms, all Cloudflare-native (A11, A14). Simple Workers + D1; no Durable Objects, no Google embeds.
+7. UAT on mid-range Android (public + `/dashboard` + `/admin`); content entered via admin (no content freeze on git); launch + link-in-bio swap.
 
-Exit: a stranger can find next comp, understand fees/payment, meet the org, join as volunteer, and donate — all on mobile.
+Exit: a stranger can find the next comp, understand fees/payment, meet the org, register with a verified WCA ID, track payment, and read news/records — all on mobile. An admin can publish everything without a deploy.
 
-## Phase 2 — Good-to-have (3–9 months, needs owners)
+## Phase 2 — parked (needs tick + owner)
 
-- Records + rankings auto (B1–B2). Payments v2 via SSLCommerz/ShurjoPay (B3). Gallery + volunteer backends (B4–B5). Organizer/school toolkit (B6). Donation receipts + expense log (B7). News posts (B8). Search (B9).
+- Rankings (B2). Gateway payments (B3). Gallery UI activation (B4). Volunteer UI activation (B5). Organizer toolkit (B6). Donation receipts + expense log (B7). Search (B9).
 
-Each item needs a feature-list tick + data owner before build starts.
+## Phase 3 — future (volume/hosting-gated)
 
-## Phase 3 — Future (Year 2+, volume-gated)
-
-- WCA OAuth dashboard, live hub, regional sub-pages (only at 20+ comps/yr), school portal, membership, PWA push, forum (moderation-gated), open API.
+- Own registration UX (WCA stays canonical publish target). Live hub. School/membership: not needed. Forum: Discourse only (own host + moderation decision first). Open API on demand.
 
 ## What we are not doing
 
-Blog/forum in v1, Bangla UI in v1, automated payments in v1, regional sub-pages in v1, any non-Cloudflare vendor. See `FEATURE_LIST.md` non-goals.
+Google Forms/iframes, repo content files, gallery/volunteer public UI in v1, Bangla UI in v1, gateway payments in v1, regional sub-pages, school portal, membership, any non-Cloudflare vendor (Discourse is the single recorded future exception). See `FEATURE_LIST.md` non-goals.
