@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import Placeholder from '../../components/Placeholder.astro';
+
+// Dashboard requires a WCA OAuth session (WP-30) — never prerendered.
+export const prerender = false;
+---
+
+<Base title="Dashboard">
+  <Placeholder
+    route="User dashboard"
+    scope="A17 profile, PBs, registrations + 4-step tracker, history, seeds, guardian consent, prefs (WP-32)"
+  />
+</Base>

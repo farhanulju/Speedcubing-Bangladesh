@@ -1,0 +1,29 @@
+{
+  "name": "speedcubing-bd-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "cf:types": "wrangler types",
+    "db:migrate": "wrangler d1 migrations apply speedbd --local",
+    "db:migrate:remote": "wrangler d1 migrations apply speedbd --remote"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.0.0",
+    "@fontsource/plus-jakarta-sans": "^5.2.5",
+    "@fontsource/space-grotesk": "^5.2.5",
+    "@tailwindcss/vite": "^4.1.0",
+    "astro": "^5.13.0",
+    "tailwindcss": "^4.1.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.0",
+    "@cloudflare/workers-types": "^5.20260911.1",
+    "typescript": "^5.9.0",
+    "wrangler": "^4.0.0"
+  }
+}

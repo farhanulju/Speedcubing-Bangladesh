@@ -1,0 +1,10 @@
+# Local dev secrets — NEVER commit real values (see plan/OPS_HANDOFF.md WP-00).
+# Copy to .dev.vars and fill in. Production values live in Cloudflare dashboard secrets.
+
+SESSION_SECRET=dev-only-change-me
+WCA_CLIENT_ID=
+WCA_CLIENT_SECRET=
+RESEND_API_KEY=
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=
+ORGANIZER_INBOX=organizers@example.org

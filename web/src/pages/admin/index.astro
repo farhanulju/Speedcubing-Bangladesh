@@ -1,0 +1,14 @@
+---
+import Base from '../../layouts/Base.astro';
+import Placeholder from '../../components/Placeholder.astro';
+
+// Admin requires Cloudflare Access (WP-16) — never prerendered.
+export const prerender = false;
+---
+
+<Base title="Admin">
+  <Placeholder
+    route="Admin dashboard"
+    scope="A18 content CRUD (Editor.js), announcements, payment queue (A19), inboxes, donors (WP-13…WP-16)"
+  />
+</Base>

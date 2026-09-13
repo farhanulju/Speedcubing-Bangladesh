@@ -1,0 +1,19 @@
+---
+interface Props {
+  route: string;
+  scope: string;
+}
+
+const { route, scope } = Astro.props;
+---
+
+<section class="container-x py-16">
+  <div class="card-brutal shadow-brutal max-w-2xl p-8">
+    <p class="data-font text-xs font-bold uppercase tracking-[0.08em] text-speed-orange">Scaffold placeholder</p>
+    <h1 class="mt-2 text-3xl font-extrabold tracking-tight">{route}</h1>
+    <p class="mt-3 text-slate-600">
+      {scope} ships in BUILD_PLAN M1–M3. Content for this route is managed in
+      <code class="data-font">/admin</code> (D1) — this repo holds no content.
+    </p>
+  </div>
+</section>

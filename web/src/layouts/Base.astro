@@ -1,0 +1,99 @@
+---
+import '../styles/tokens.css';
+import { en } from '../i18n/en';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'Speedcubing Bangladesh — WCA competitions, records, and community.' } = Astro.props;
+const path = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title} — Speedcubing Bangladesh</title>
+  </head>
+  <body class="bg-paper font-display text-ink antialiased">
+    <a href="#main" class="sr-only focus:not-sr-only">Skip to content</a>
+
+    <header class="border-b-2 border-ink bg-white">
+      <div class="container-x flex items-center justify-between gap-4 py-3">
+        <a href="/" class="leading-tight">
+          <span class="block text-lg font-extrabold tracking-tight">{en.brand.name}</span>
+          <span class="data-font block text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-brand">
+            {en.brand.status}
+          </span>
+        </a>
+        <nav class="hidden items-center gap-6 md:flex" aria-label="Primary">
+          {
+            en.nav.map((item) => (
+              <a
+                href={item.href}
+                aria-current={path === item.href || path.startsWith(item.href + '/') ? 'page' : undefined}
+                class="text-sm font-semibold hover:text-emerald-brand"
+              >
+                {item.label}
+              </a>
+            ))
+          }
+          <a href={en.auth.loginHref} class="btn-pill border-2 border-ink bg-speed-orange px-4 py-2 text-sm text-white shadow-brutal">
+            {en.auth.login}
+          </a>
+        </nav>
+        <details class="md:hidden">
+          <summary class="btn-pill cursor-pointer border-2 border-ink bg-white px-4 py-2 text-sm" aria-label="Open menu">
+            Menu
+          </summary>
+          <nav class="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-b-2 border-ink bg-white p-4" aria-label="Mobile">
+            {
+              en.nav.map((item) => (
+                <a href={item.href} class="rounded-lg px-3 py-2 text-base font-semibold hover:bg-paper">
+                  {item.label}
+                </a>
+              ))
+            }
+            <a href={en.auth.loginHref} class="btn-pill mt-2 border-2 border-ink bg-speed-orange px-4 py-2 text-center text-white">
+              {en.auth.login}
+            </a>
+          </nav>
+        </details>
+      </div>
+      <!-- TODO WP-13/A7: pinned announcement bar renders here when set in D1. -->
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="mt-16 bg-ink text-white">
+      <div class="container-x py-10">
+        <p class="text-xl font-extrabold tracking-tight">{en.brand.name}</p>
+        <p class="data-font mt-1 text-[11px] font-bold uppercase tracking-[0.08em] text-cube-yellow">
+          {en.brand.status}
+        </p>
+        <nav class="mt-6 flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">
+          {
+            en.footer.links.map((item) =>
+              'external' in item && item.external ? (
+                <a href={item.href} target="_blank" rel="noopener" class="text-sm text-white/80 hover:text-white">
+                  {item.label}
+                </a>
+              ) : (
+                <a href={item.href} class="text-sm text-white/80 hover:text-white">
+                  {item.label}
+                </a>
+              ),
+            )
+          }
+        </nav>
+        <p class="mt-6 text-xs text-white/60">{en.footer.legal}</p>
+      </div>
+    </footer>
+  </body>
+</html>

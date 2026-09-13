@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import "@fontsource/plus-jakarta-sans/400.css";
+@import "@fontsource/plus-jakarta-sans/600.css";
+@import "@fontsource/plus-jakarta-sans/700.css";
+@import "@fontsource/plus-jakarta-sans/800.css";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/700.css";
+
+/* Design tokens ported from Stitch (WP-02). Single source for brand values. */
+@theme {
+  --color-emerald-brand: #006a4e;
+  --color-emerald-deep: #00503a;
+  --color-speed-orange: #f4511e;
+  --color-electric-violet: #5a28ce;
+  --color-ink: #121417;
+  --color-paper: #f8f9fa;
+  --color-cube-yellow: #ffd200;
+  --color-cube-blue: #0065ff;
+
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-grotesk: "Space Grotesk", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Neo-brutalist primitives (Stitch system). */
+.card-brutal {
+  background: #fff;
+  border: 2px solid var(--color-ink);
+  border-radius: 1rem;
+}
+
+.shadow-brutal {
+  box-shadow: 4px 4px 0 var(--color-ink);
+}
+
+.shadow-brutal-lg {
+  box-shadow: 6px 6px 0 var(--color-ink);
+}
+
+.btn-pill {
+  border-radius: 9999px;
+  font-weight: 700;
+}
+
+.data-font {
+  font-family: var(--font-grotesk);
+  font-variant-numeric: tabular-nums;
+}
+
+.container-x {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .container-x {
+    padding-inline: 2rem;
+  }
+}

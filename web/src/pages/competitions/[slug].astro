@@ -1,0 +1,18 @@
+---
+import Base from '../../layouts/Base.astro';
+import Placeholder from '../../components/Placeholder.astro';
+
+export const prerender = true;
+
+// M2 (WP-22) populates paths from the WCA cache + D1 overrides.
+export async function getStaticPaths() {
+  return [];
+}
+---
+
+<Base title="Competition">
+  <Placeholder
+    route="Competition detail"
+    scope="A5 dates, venue, fee tiers, schedule, events/limits, payment steps, refund policy, WCA + Live buttons, dual-status roster (WP-22)"
+  />
+</Base>

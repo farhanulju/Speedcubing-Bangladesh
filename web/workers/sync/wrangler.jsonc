@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developers.cloudflare.com/workers/wrangler/configuration/",
+  "name": "speedbd-sync",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/index.ts",
+  "triggers": {
+    "crons": ["0 20 * * *", "*/5 * * * *"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "speedbd",
+      "database_id": "REPLACE_WITH_D1_ID__see_plan_OPS_HANDOFF_md"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "WCA_CACHE",
+      "id": "REPLACE_WITH_KV_ID__see_plan_OPS_HANDOFF_md"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
-# Web — website (placeholder until scaffold)
+# Web — website (M0 scaffolded, builds green)
 
-Scaffold only the ticked MVP rows in `docs/product/FEATURE_LIST.md` (review applied 2026-09-14).
+Scaffold only the ticked MVP rows in `docs/product/FEATURE_LIST.md`. M0 status: install ✓, `astro check` ✓, `astro build` ✓, dev-serve smoke (/, /dashboard, /api/health) ✓. Routes are placeholders until M2/M3; workers are typed stubs until M1/M4.
 
 ## Planned stack (locked by `docs/architecture/ARCHITECTURE.md`)
 

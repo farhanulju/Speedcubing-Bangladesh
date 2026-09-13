@@ -18,4 +18,4 @@ Cloudflare free tier + two exceptions (Resend transactional email; Discourse onl
 - Sync: WCA pull + snapshot appends + champion derivation live in `workers/sync-wca.ts`; manual "refresh cache" admin action is rate-limited (1/10 min) and never writes to WCA.
 - Images: R2 keys `/{year}/{comp-slug}/{file}`; stills only; AVIF/WebP via resizing; `og:image` must resolve without JS.
 - Budgets: <200 KB JS per public route (ISR, no client fetching for content); dashboards may hydrate per route.
-- Verify with `npm run build` before review. Mobile (360px) screenshots for every new public route plus `/dashboard` and `/admin` states touched.
+- Verify with `npm run check` AND `npm run build` before review (both must be green). Mobile (360px) screenshots for every new public route plus `/dashboard` and `/admin` states touched. Smoke-test new endpoints with dev-serve curl (`/api/health` pattern).

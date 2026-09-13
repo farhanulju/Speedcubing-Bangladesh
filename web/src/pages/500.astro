@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+
+export const prerender = true;
+---
+
+<Base title="Something went wrong">
+  <section class="container-x py-16">
+    <div class="card-brutal shadow-brutal max-w-xl p-8">
+      <h1 class="text-3xl font-extrabold tracking-tight">500 — Dropped solve</h1>
+      <p class="mt-3 text-slate-600">
+        Something broke on our side. Nothing you submitted was lost silently — try again, or
+        <a class="font-semibold text-emerald-brand underline" href="/contact">contact us</a>.
+      </p>
+    </div>
+  </section>
+</Base>

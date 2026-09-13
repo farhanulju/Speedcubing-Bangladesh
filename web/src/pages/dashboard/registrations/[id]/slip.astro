@@ -1,0 +1,11 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import Placeholder from '../../../../components/Placeholder.astro';
+
+// Print-CSS slip (WP-34). Session-scoped; never prerendered.
+export const prerender = false;
+---
+
+<Base title="Registration slip">
+  <Placeholder route="Registration slip" scope="A6 print stylesheet → A4 PDF from mobile Chrome (WP-34)" />
+</Base>

@@ -1,0 +1,15 @@
+---
+import Base from '../../layouts/Base.astro';
+import Placeholder from '../../components/Placeholder.astro';
+
+export const prerender = true;
+
+// M2 (WP-23) populates paths from D1 news rows.
+export async function getStaticPaths() {
+  return [];
+}
+---
+
+<Base title="News article">
+  <Placeholder route="News article" scope="A20 Editor.js body, cover, meta (WP-23)" />
+</Base>
