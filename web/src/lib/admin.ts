@@ -185,6 +185,11 @@ export class HttpError extends Error {
   }
 }
 
+export function toError(err: unknown): Response {
+  if (err instanceof HttpError) return Response.json({ error: err.message }, { status: err.status });
+  return Response.json({ error: 'internal' }, { status: 500 });
+}
+
 // Fail-closed auth. Local dev: ADMIN_DEV_BYPASS=1 in .dev.vars (gitignored).
 // Production: Cloudflare Access JWT (verified in WP-16; until then this throws).
 export function requireAdmin(request: Request, env: SpeedbdEnv & { ADMIN_DEV_BYPASS?: string }): AdminActor {

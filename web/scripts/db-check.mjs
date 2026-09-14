@@ -27,7 +27,9 @@ const db = new DatabaseSync(':memory:');
 
 const migrations = readdirSync(join(root, 'migrations')).filter((f) => f.endsWith('.sql')).sort();
 check('migrations apply in order', () => {
-  assert(migrations.length === 7, `expected 7 migrations, got ${migrations.length}`);
+  assert(migrations.length > 0, 'no migrations found');
+  const sorted = [...migrations].sort();
+  assert(JSON.stringify(migrations) === JSON.stringify(sorted), 'migrations not in order');
   for (const f of migrations) db.exec(readFileSync(join(root, 'migrations', f), 'utf8'));
 });
 

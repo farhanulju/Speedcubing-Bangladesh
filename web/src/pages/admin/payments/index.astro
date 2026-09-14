@@ -1,0 +1,102 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { listTxQueue } from '../../../lib/payments';
+import { getEnv } from '../../../lib/bindings';
+
+export const prerender = false;
+
+const status = Astro.url.searchParams.get('status') ?? '';
+const comp = Astro.url.searchParams.get('comp') ?? '';
+
+let rows: Awaited<ReturnType<typeof listTxQueue>> = [];
+let dbError: string | null = null;
+try {
+  rows = await listTxQueue(getEnv(Astro.locals), {
+    status: status || undefined,
+    comp: comp || undefined,
+  });
+} catch (err) {
+  dbError = err instanceof Error ? err.message : 'database unavailable';
+}
+
+const pills = [
+  { label: 'All', href: '/admin/payments', active: !status },
+  { label: 'Pending', href: '/admin/payments?status=pending', active: status === 'pending' },
+  { label: 'Accepted', href: '/admin/payments?status=accepted', active: status === 'accepted' },
+  { label: 'Rejected', href: '/admin/payments?status=rejected', active: status === 'rejected' },
+];
+---
+
+<Base title="Admin — Payment queue">
+  <section class="container-x py-10">
+    <a href="/admin" class="text-sm font-semibold text-emerald-brand underline">← Admin</a>
+    <h1 class="mt-1 text-3xl font-extrabold tracking-tight">Payment queue</h1>
+    <p class="mt-2 max-w-2xl text-slate-600">
+      Manual verification only. Open each ticket, match amount + TxID against the wallet statement yourself,
+      then accept or reject. Approval marks the fee verified on our site — WCA acceptance is a separate manual tick.
+    </p>
+    <div class="mt-6 flex flex-wrap gap-2">
+      {
+        pills.map((p) => (
+          <a
+            href={p.href}
+            class={`btn-pill border-2 border-ink px-4 py-1 text-sm ${p.active ? 'bg-ink text-white' : 'bg-white'}`}
+          >
+            {p.label}
+          </a>
+        ))
+      }
+    </div>
+    {
+      dbError ? (
+        <div class="card-brutal mt-6 p-6">
+          <p class="font-bold">Database unavailable</p>
+          <p class="data-font mt-1 text-sm text-slate-600">{dbError}</p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div class="card-brutal mt-6 p-6">
+          <p class="font-bold">Queue clear.</p>
+          <p class="mt-1 text-sm text-slate-600">No submissions match this filter.</p>
+        </div>
+      ) : (
+        <div class="card-brutal mt-6 overflow-x-auto">
+          <table class="w-full min-w-200 text-left text-sm">
+            <thead>
+              <tr class="border-b-2 border-ink">
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Competitor</th>
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Comp</th>
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Amount</th>
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">TxID</th>
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Submitted</th>
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Status</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr class="border-b border-slate-200 last:border-0">
+                  <td class="px-4 py-2 font-semibold">
+                    {r.competitor_name}
+                    <span class="data-font block text-xs font-normal text-slate-500">{r.wca_id ?? 'no WCA ID'}</span>
+                  </td>
+                  <td class="data-font px-4 py-2">{r.comp_wca_id}</td>
+                  <td class="data-font px-4 py-2">৳{r.amount_bdt}</td>
+                  <td class="data-font px-4 py-2">{r.txn_id}</td>
+                  <td class="data-font px-4 py-2">{r.created_at}</td>
+                  <td class="px-4 py-2">
+                    <span class="data-font rounded-full border px-2 py-0.5 text-xs font-bold">{r.tx_status}</span>
+                  </td>
+                  <td class="px-4 py-2 text-right">
+                    <a class="font-semibold text-emerald-brand underline" href={`/admin/payments/${r.id}`}>
+                      Inspect
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </section>
+</Base>

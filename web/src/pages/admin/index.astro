@@ -11,9 +11,25 @@ const tables = Object.values(ADMIN_TABLES);
   <section class="container-x py-10">
     <h1 class="text-3xl font-extrabold tracking-tight">Admin dashboard</h1>
     <p class="mt-2 text-slate-600">
-      Content lives in D1 — no deploys to publish. Payment queue and inboxes land in WP-14/WP-15.
+      Content lives in D1 — no deploys to publish. Verification is human; the queue only organizes it.
     </p>
-    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <h2 class="mt-8 text-xl font-extrabold">Operations</h2>
+    <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <a href="/admin/payments" class="card-brutal shadow-brutal block border-speed-orange p-5 hover:-translate-y-0.5">
+        <p class="text-lg font-extrabold">Payment queue</p>
+        <p class="data-font mt-1 text-xs uppercase tracking-wider text-slate-500">TxID verify → accept/reject</p>
+      </a>
+      <a href="/admin/lost-found" class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+        <p class="text-lg font-extrabold">Lost &amp; found inbox</p>
+        <p class="data-font mt-1 text-xs uppercase tracking-wider text-slate-500">ticket states</p>
+      </a>
+      <a href="/admin/contact" class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+        <p class="text-lg font-extrabold">Contact inbox</p>
+        <p class="data-font mt-1 text-xs uppercase tracking-wider text-slate-500">message states</p>
+      </a>
+    </div>
+    <h2 class="mt-8 text-xl font-extrabold">Content</h2>
+    <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {
         tables.map((t) => (
           <a href={`/admin/${t.table}`} class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">

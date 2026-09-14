@@ -2,6 +2,7 @@
 
 Newest first. One line per meaningful change.
 
+- 2026-09-14 — WP-14 + WP-15 shipped: payment queue UI + atomic decision txn (fee track + audit + outbox, 409 guard, manual WCA tick) + lost-found/contact inboxes; migration 0008 (competitor.email); `db:seed`; full local-D1 flow verified incl. side-effect assertions; `check`+`build` green.
 - 2026-09-14 — WP-13 admin CRUD shipped: registry-driven API + index/list/edit pages with EditorField; end-to-end local-D1 verified (CRUD, 400/404 paths, attr-JSON proof); fixed optional-editor + required-checkbox coercion. Auth: switched machine gh identity to farhanulju after farhanulbevy 403 (READ-only); push restored.
 
 - 2026-09-14 — M1 (no WP-00): WP-10 schema green via `npm run db:check` (seed + constraints); WP-12 Editor.js pinned exact + allowlisted parsers + EditorField; WP-11 uploader (503 fail-closed) + media route (400/404) smoke-verified; `check`+`build` green.

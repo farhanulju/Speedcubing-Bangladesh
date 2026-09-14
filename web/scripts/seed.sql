@@ -29,8 +29,8 @@ INSERT INTO donation_page (id, target_bdt, raised_manual_bdt, policy_json, world
 INSERT INTO donor (id, name, amount_bdt, consent, sort_order, updated_by, updated_at) VALUES
 ('sample-donor', 'Sample Family', 25000, 1, 0, 'seed', '2026-09-14');
 
-INSERT INTO competitor (id, wca_id, wca_oauth_sub, name, created_at) VALUES
-('sample-competitor', '2026SAMP01', 'oauth-sub-sample', 'Sample Competitor', '2026-09-14');
+INSERT INTO competitor (id, wca_id, wca_oauth_sub, name, email, created_at) VALUES
+('sample-competitor', '2026SAMP01', 'oauth-sub-sample', 'Sample Competitor', 'sample@example.org', '2026-09-14');
 
 INSERT INTO registration (id, competitor_id, comp_wca_id, events_json, status, wca_accepted, created_at) VALUES
 ('sample-registration', 'sample-competitor', 'SampleComp2026', '["333","222"]', 'pending', 0, '2026-09-14');

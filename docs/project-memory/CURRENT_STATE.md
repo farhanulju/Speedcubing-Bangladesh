@@ -11,11 +11,12 @@ Updated: 2026-09-14 (M0 scaffold built green). Newest first. This is the file th
 - Execution: `plan/BUILD_PLAN.md` WP-00…WP-53 across M0–M5 with acceptance criteria, API/cron/secrets tables, launch runbook.
 - M0 DONE: `web/` scaffold builds green — Astro 5 + TS + Tailwind v4 (Cloudflare adapter), Stitch tokens + EN dicts + unified lockup shell, 13 public routes + `/dashboard` + `/admin` + print-slip + `/api/health` + 404/500 (placeholders with WP pointers), shared `workers/api.ts`, standalone `workers/sync` cron worker (stubs), D1 migrations 0001–0007, `.dev.vars.example`. `npm run check` + `npm run build` + dev-serve smoke (/, /dashboard, /api/health, slug-404) pass. workers-types v5 (wrangler 4.131 peer). Ops handoff: `plan/OPS_HANDOFF.md`.
 - M1 admin core DONE (local, no WP-00): generic CRUD framework (`src/lib/admin.ts` registry + coercion + audit) with query-param API (`/api/admin/:table`, auth fails closed, dev-bypass for local), admin index/list/edit pages with `AdminForm` + `EditorField`; verified end-to-end against local D1 (create/list/get/validate-400/unknown-404/edit-page/edit-attr-JSON/delete/singleton) + `check`+`build` green. Auth note: machine gh identity switched to farhanulju (owner) after farhanulbevy proved READ-only; pushes flow again.
+- M1 ops DONE: WP-14 payment queue (filterable list, inspection page, atomic accept/reject + note → fee track + audit + Resend outbox enqueue, 409 replay guard, separate manual WCA-accepted tick) + WP-15 lost-found/contact inboxes (status workflows + audit); migration 0008 (competitor.email); `db:seed` script; full flow smoke-verified on local D1 incl. DB side-effect assertions. Public UI for these flows is M2/M3.
 
 ## Current focus
 
 - HUMAN: execute `plan/OPS_HANDOFF.md` (WP-00) and reply "WP-00 done" — remote deploy waits on it.
-- AGENTS next: WP-14 payment queue UI + actions → WP-15 inboxes (lost-found/contact/donors UI polish) → WP-16 Access verification. All buildable locally.
+- AGENTS next: M2 public pages — WP-21 content pages + Turnstile public-form endpoints, WP-22 competitions, WP-23 records/news/sponsors/worlds. WP-16 Access JWT verify waits on WP-00 app (code seams ready).
 
 ## Gaps / unknowns
 

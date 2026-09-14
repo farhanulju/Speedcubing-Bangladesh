@@ -1,6 +1,15 @@
 import { getEnv } from '../../../lib/bindings';
 import type { SpeedbdEnv } from '../../../lib/bindings';
-import { deleteRow, getRow, getTable, listRows, requireAdmin, upsertRow, HttpError } from '../../../lib/admin';
+import {
+  HttpError,
+  deleteRow,
+  getRow,
+  getTable,
+  listRows,
+  requireAdmin,
+  toError,
+  upsertRow,
+} from '../../../lib/admin';
 
 export const prerender = false;
 
@@ -82,9 +91,4 @@ export async function DELETE({
   } catch (err) {
     return toError(err);
   }
-}
-
-function toError(err: unknown): Response {
-  if (err instanceof HttpError) return Response.json({ error: err.message }, { status: err.status });
-  return Response.json({ error: 'internal' }, { status: 500 });
 }

@@ -11,6 +11,7 @@
     "cf:types": "wrangler types",
     "db:migrate": "wrangler d1 migrations apply speedbd --local",
     "db:migrate:remote": "wrangler d1 migrations apply speedbd --remote",
+    "db:seed": "wrangler d1 execute speedbd --local --file=scripts/seed.sql",
     "db:check": "node scripts/db-check.mjs"
   },
   "dependencies": {

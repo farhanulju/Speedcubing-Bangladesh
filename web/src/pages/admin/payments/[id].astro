@@ -1,0 +1,174 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { getTx } from '../../../lib/payments';
+import { getEnv } from '../../../lib/bindings';
+
+export const prerender = false;
+
+const { id } = Astro.params;
+let row: Awaited<ReturnType<typeof getTx>> = null;
+let dbError: string | null = null;
+try {
+  if (!id) throw new Error('missing id');
+  row = await getTx(getEnv(Astro.locals), id);
+} catch (err) {
+  dbError = err instanceof Error ? err.message : 'database unavailable';
+}
+
+const decided = row && row.tx_status !== 'pending';
+const events: string[] = (() => {
+  try {
+    const v = JSON.parse(row?.events_json ?? '[]');
+    return Array.isArray(v) ? v.map(String) : [];
+  } catch {
+    return [];
+  }
+})();
+---
+
+<Base title="Admin — Inspect payment">
+  <section class="container-x max-w-3xl py-10">
+    <a href="/admin/payments" class="text-sm font-semibold text-emerald-brand underline">← Payment queue</a>
+    <h1 class="mt-1 text-3xl font-extrabold tracking-tight">Quick payment inspection</h1>
+    {
+      dbError ? (
+        <div class="card-brutal mt-6 p-6">
+          <p class="font-bold">Database unavailable</p>
+          <p class="data-font mt-1 text-sm text-slate-600">{dbError}</p>
+        </div>
+      ) : !row ? (
+        <div class="card-brutal mt-6 p-6">
+          <p class="font-bold">Ticket not found.</p>
+        </div>
+      ) : (
+        <>
+          <div class="card-brutal shadow-brutal mt-6 p-6">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <p class="text-xl font-extrabold">{row.competitor_name}</p>
+              <p class="data-font text-2xl font-bold">৳{row.amount_bdt} <span class="text-sm font-normal">BDT</span></p>
+            </div>
+            <p class="data-font mt-1 text-sm text-slate-600">
+              {row.wca_id ?? 'no WCA ID'} • {row.comp_wca_id}
+            </p>
+            <p class="mt-2 text-sm">
+              Events: {events.length > 0 ? events.join(', ') : '—'}
+            </p>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <div class="rounded-lg bg-paper p-3">
+                <p class="data-font text-xs uppercase tracking-wider text-slate-500">Sender</p>
+                <p class="data-font font-bold">{row.sender_number}</p>
+              </div>
+              <div class="rounded-lg bg-paper p-3">
+                <p class="data-font text-xs uppercase tracking-wider text-slate-500">Submitted TxID</p>
+                <p class="data-font font-bold">{row.txn_id}</p>
+              </div>
+            </div>
+            <p class="mt-3 text-sm">
+              Fee track: <strong>{row.reg_status}</strong> • WCA acceptance:{' '}
+              <strong>{row.wca_accepted ? 'accepted (manual tick)' : 'pending manual action'}</strong>
+            </p>
+            {decided && (
+              <p class="mt-2 text-sm text-slate-600">
+                Decided by {row.decided_by ?? '—'} on {row.decided_at ?? '—'}
+                {row.note ? ` — “${row.note}”` : ''}
+              </p>
+            )}
+          </div>
+
+          {!decided ? (
+            <form data-decide-form={row.id} class="card-brutal mt-4 p-6">
+              <label class="flex flex-col gap-1">
+                <span class="text-sm font-bold">Delegate inspection notes</span>
+                <span class="text-xs text-slate-500">
+                  Record what you checked (e.g. statement line). No auto-match exists — your eyes are the verification.
+                </span>
+                <input name="note" type="text" maxlength="500" placeholder="Confirmed match on statement line #…" class="rounded-lg border-2 border-ink px-3 py-2" />
+              </label>
+              <p data-form-error class="hidden rounded-lg border-2 border-red-700 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" />
+              <div class="mt-4 flex flex-wrap gap-3">
+                <button type="submit" name="decision" value="accepted" class="btn-pill border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
+                  Confirm &amp; verify spot
+                </button>
+                <button type="submit" name="decision" value="rejected" class="btn-pill border-2 border-ink bg-white px-6 py-2">
+                  Reject with note
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form data-wca-form={row.registration_id} class="card-brutal mt-4 p-6">
+              <p class="text-sm font-bold">WCA acceptance (manual)</p>
+              <p class="mt-1 text-xs text-slate-500">
+                Tick ONLY after accepting this competitor on the WCA site yourself. This never writes to WCA.
+              </p>
+              <p data-form-error class="hidden rounded-lg border-2 border-red-700 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" />
+              <div class="mt-3">
+                {row.wca_accepted ? (
+                  <button type="submit" value="false" class="btn-pill border-2 border-ink bg-white px-6 py-2">
+                    Untick WCA accepted
+                  </button>
+                ) : (
+                  <button type="submit" value="true" class="btn-pill border-2 border-ink bg-ink px-6 py-2 text-white">
+                    Tick WCA accepted
+                  </button>
+                )}
+              </div>
+            </form>
+          )}
+        </>
+      )
+    }
+  </section>
+</Base>
+
+<script>
+  document.querySelectorAll('[data-decide-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = form.querySelector('[data-form-error]') as HTMLElement;
+      errEl.classList.add('hidden');
+      try {
+        const clicked = (e as SubmitEvent).submitter as HTMLButtonElement | null;
+        const data = new FormData(form);
+        const res = await fetch('/api/admin/tx-decision', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            id: form.dataset.decideForm,
+            decision: clicked?.value ?? 'rejected',
+            note: String(data.get('note') ?? ''),
+          }),
+        });
+        const body = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(body.error || 'decision failed');
+        window.location.reload();
+      } catch (err) {
+        errEl.textContent = err instanceof Error ? err.message : 'decision failed';
+        errEl.classList.remove('hidden');
+      }
+    });
+  });
+
+  document.querySelectorAll('[data-wca-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = form.querySelector('[data-form-error]') as HTMLElement;
+      errEl.classList.add('hidden');
+      try {
+        const clicked = (e as SubmitEvent).submitter as HTMLButtonElement | null;
+        const res = await fetch('/api/admin/wca-accepted', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ registration_id: form.dataset.wcaForm, accepted: clicked?.value === 'true' }),
+        });
+        const body = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(body.error || 'update failed');
+        window.location.reload();
+      } catch (err) {
+        errEl.textContent = err instanceof Error ? err.message : 'update failed';
+        errEl.classList.remove('hidden');
+      }
+    });
+  });
+</script>
