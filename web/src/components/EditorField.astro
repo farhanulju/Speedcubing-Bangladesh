@@ -1,0 +1,84 @@
+---
+// EditorField — Editor.js mount point for /admin forms (WP-12).
+// Pinned tool versions live in web/package.json (exact, no ^).
+// Usage: <EditorField holderId="body" uploadEndpoint="/api/uploads" initialData={jsonString} />
+// Save from the host form: await window.__speedbdSaveEditor('body') → EditorDocument
+interface Props {
+  holderId: string;
+  uploadEndpoint: string;
+  initialData?: string;
+}
+
+const { holderId, uploadEndpoint, initialData = '{"blocks":[]}' } = Astro.props;
+---
+
+<div
+  data-editor-field={holderId}
+  data-upload-endpoint={uploadEndpoint}
+  data-initial={initialData}
+  class="card-brutal min-h-48 p-4"
+>
+  <div id={holderId}></div>
+</div>
+
+<script>
+  import EditorJS from '@editorjs/editorjs';
+  import Header from '@editorjs/header';
+  import NestedList from '@editorjs/nested-list';
+  import Quote from '@editorjs/quote';
+  import ImageTool from '@editorjs/image';
+  import Delimiter from '@editorjs/delimiter';
+  import type { BlockToolConstructable } from '@editorjs/editorjs';
+
+  declare global {
+    interface Window {
+      __speedbdSaveEditor: (holderId: string) => Promise<unknown>;
+    }
+  }
+
+  const editors = new Map<string, EditorJS>();
+  // Community tools drift from core tool typings across releases — cast once,
+  // here, with versions pinned exact in package.json (see ARCHITECTURE §5).
+  const asTool = (t: unknown): BlockToolConstructable => t as BlockToolConstructable;
+
+  // Thin manual wrapper (no official React/Astro wrapper — see ARCHITECTURE §5).
+  function initField(node: Element) {
+    const el = node as HTMLElement;
+    const holderId = el.dataset.editorField;
+    if (!holderId || editors.has(holderId)) return;
+    let initial = { blocks: [] };
+    try {
+      initial = JSON.parse(el.dataset.initial || '{"blocks":[]}');
+    } catch {
+      initial = { blocks: [] };
+    }
+    const editor = new EditorJS({
+      holder: holderId,
+      data: initial,
+      tools: {
+        header: { class: asTool(Header), inlineToolbar: true, config: { levels: [2, 3, 4], defaultLevel: 2 } },
+        list: { class: asTool(NestedList), inlineToolbar: true },
+        quote: { class: asTool(Quote), inlineToolbar: true },
+        image: {
+          class: asTool(ImageTool),
+          config: {
+            // Custom R2 uploader ONLY — no default cloud (standing rule).
+            endpoints: { byFile: el.dataset.uploadEndpoint },
+            field: 'image',
+            types: 'image/*',
+          },
+        },
+        delimiter: asTool(Delimiter),
+      },
+    });
+    editors.set(holderId, editor);
+  }
+
+  document.querySelectorAll('[data-editor-field]').forEach(initField);
+
+  window.__speedbdSaveEditor = async (holderId: string) => {
+    const editor = editors.get(holderId);
+    if (!editor) throw new Error(`no editor mounted for ${holderId}`);
+    return editor.save();
+  };
+</script>
