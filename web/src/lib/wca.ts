@@ -67,13 +67,13 @@ export function getRecords(env: { WCA_CACHE: KVNamespace }) {
   return readKey<{ asOfExportDate: string; records: EventRecord[] }>(env, 'wca:records:BD');
 }
 
-// Raw upstream rank rows are stored verbatim (personId, best, rank tiers).
-// Dashboard joins display names from the wca:person cache (M3), fetching
-// missing persons on demand. Never store names here — persons change.
+// Raw upstream rank rows are stored verbatim under `items` (personId, best,
+// rank tiers). Dashboard joins display names from the wca:person cache (M3),
+// fetching missing persons on demand. Never store names here — persons change.
 export function getRanks(env: { WCA_CACHE: KVNamespace }, event: string, type: 'single' | 'average') {
   return readKey<{
     asOfExportDate: string;
-    rows: { personId: string; eventId: string; best: number; rank: { world: number; continent: number; country: number } }[];
+    items: { personId: string; eventId: string; best: number; rank: { world: number; continent: number; country: number } }[];
   }>(env, `wca:ranks:BD:${event}:${type}`);
 }
 

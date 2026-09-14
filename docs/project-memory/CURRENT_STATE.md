@@ -2,7 +2,7 @@
 
 Updated: 2026-09-14 (M0 scaffold built green). Newest first. This is the file the next agent reads to avoid reconstructing context from chat.
 
-## Implemented (M0 code + full docs — no M1+ features yet)
+## Implemented (M0–M4 code + full docs — WP-00 deploy pending)
 
 - Repo is the org source of truth (`README.md`, `AGENTS.md`/`CLAUDE.md`, `docs/`, `plan/`, `web/`).
 - Scope: `docs/product/FEATURE_LIST.md` MVP = A1–A8, A11–A22 (A22 transactional email added post-review). Deferred: A9 volunteers UI, A10 gallery UI, search, school, membership, regional pages.
@@ -16,10 +16,12 @@ Updated: 2026-09-14 (M0 scaffold built green). Newest first. This is the file th
 
 - M4 sync DONE (local, no WP-00): daily cron worker pulls official v0 (registration windows/limits, WCIF rounds) + unofficial static (comps/BD, per-event ranks, holder persons, per-comp 333 results); strips ALL emails; KV cache + nightly snapshots + derived champions; outbox flush via Resend (skips cleanly without keys). Proven LIVE via `wrangler dev --test-scheduled` against real WCA: 28 comps, 17 canonical record lines, 31 snapshots, 26 champions, zero emails in KV. Unit harness `test:sync` 5/5 on real compiled code. Learnings: canonical-17 allowlist (upstream ships removed events), FMC-in-moves + MBLD-omitted display rule, per-config local D1/KV state (migrate both).
 
+- M3 accounts + money DONE (local; live OAuth waits on WP-00 app): HMAC sessions (`test-auth` 6/6), WCA OAuth routes (endpoints/scopes/me-shape verified from thewca/wca-oauth; null-WCA newcomer path), registration/tx/consent/me endpoints (ownership, pending-only, dup-TxID 409, WCA-validated), dashboard (profile, PBs, 4-step tracker, history, consent, print slip), `smoke-m3` 5/5 via dev session seam. Notable fixes: KV shape standardized to upstream `items` (was the dashboard 500), list-fallback for names/registration, kv-seed shapes through real compiled shapers.
+
 ## Current focus
 
 - HUMAN: execute `plan/OPS_HANDOFF.md` (WP-00) and reply "WP-00 done" — remote deploy waits on it.
-- AGENTS next: M3 accounts + money — WP-30 WCA OAuth routes, WP-31 registration + TxID submit endpoints, WP-32 dashboard wiring (registrations, consent, history), WP-34 print slip. OAuth live-test waits on WP-00 app; everything else builds locally.
+- AGENTS next: M5 content + launch — WP-50 punchlist sweep, WP-51 seeding runbook, WP-52 QA matrix, WP-53 cutover. Needs WP-00 (remote) + human content entry; code-complete after this line except OAuth live-test.
 
 ## Gaps / unknowns
 

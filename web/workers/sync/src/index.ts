@@ -103,7 +103,7 @@ async function runSync(env: SyncEnv): Promise<void> {
         };
         if (doc && Array.isArray(doc.items)) {
           rankFiles.set(`${kind}:${event}`, doc.items);
-          await kvPut(env, `wca:ranks:BD:${event}:${kind}`, { asOfExportDate: today, rows: doc.items });
+          await kvPut(env, `wca:ranks:BD:${event}:${kind}`, { asOfExportDate: today, items: doc.items });
         }
       }),
     ),

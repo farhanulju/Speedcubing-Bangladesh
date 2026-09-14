@@ -1,11 +1,75 @@
 ---
 import Base from '../../../../layouts/Base.astro';
-import Placeholder from '../../../../components/Placeholder.astro';
+import { getEnv } from '../../../../lib/bindings';
+import { getCompetitor, getMyRegistrations } from '../../../../lib/registrations';
+import { optionalUser } from '../../../../lib/session';
+import { getCompetition } from '../../../../lib/wca';
 
-// Print-CSS slip (WP-34). Session-scoped; never prerendered.
 export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const session = await optionalUser(Astro.request, Astro.locals);
+if (!session) return Astro.redirect('/api/auth/login');
+
+const env = getEnv(Astro.locals);
+const me = await getCompetitor(env, session.cid);
+if (!me) return Astro.redirect('/api/auth/login');
+const { id } = Astro.params;
+const regs = await getMyRegistrations(env, session.cid);
+const reg = regs.find((r) => r.id === id);
+if (!reg) return new Response('Not found', { status: 404 });
+const comp = await getCompetition(env, reg.comp_wca_id);
+const events: string[] = (() => {
+  try {
+    const v = JSON.parse(reg.events_json);
+    return Array.isArray(v) ? v.map(String) : [];
+  } catch {
+    return [];
+  }
+})();
 ---
 
 <Base title="Registration slip">
-  <Placeholder route="Registration slip" scope="A6 print stylesheet → A4 PDF from mobile Chrome (WP-34)" />
+  <section class="container-x max-w-2xl py-10">
+    <div class="card-brutal p-8" data-slip>
+      <p class="data-font text-xs font-bold uppercase tracking-widest">Speedcubing Bangladesh • Registration slip</p>
+      <h1 class="mt-2 text-3xl font-extrabold">{reg.comp_name}</h1>
+      <dl class="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+        <div><dt class="data-font text-xs uppercase text-slate-500">Competitor</dt><dd class="font-bold">{me.name}</dd></div>
+        <div><dt class="data-font text-xs uppercase text-slate-500">WCA ID</dt><dd class="data-font">{me.wca_id ?? 'newcomer'}</dd></div>
+        <div><dt class="data-font text-xs uppercase text-slate-500">Events</dt><dd>{events.join(', ') || '—'}</dd></div>
+        <div><dt class="data-font text-xs uppercase text-slate-500">Fee status</dt><dd>{reg.status}</dd></div>
+        <div>
+          <dt class="data-font text-xs uppercase text-slate-500">Payment</dt>
+          <dd class="data-font">{reg.latest_tx ? `৳${reg.latest_tx.amount_bdt} • ${reg.latest_tx.txn_id} (${reg.latest_tx.status})` : 'not submitted'}</dd>
+        </div>
+        <div><dt class="data-font text-xs uppercase text-slate-500">WCA acceptance</dt><dd>{reg.wca_accepted ? 'accepted (manual)' : 'pending'}</dd></div>
+      </dl>
+      <p class="data-font mt-4 text-xs text-slate-500">
+        {comp.data ? `${comp.data.venue}, ${comp.data.city} • ${comp.data.start_date}` : ''} • slip {reg.id}
+      </p>
+    </div>
+    <div class="mt-4 flex gap-3" data-no-print>
+      <button onclick="window.print()" class="btn-pill border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
+        Print / PDF
+      </button>
+      <a href="/dashboard" class="btn-pill border-2 border-ink bg-white px-6 py-2">Back</a>
+    </div>
+  </section>
 </Base>
+
+<style>
+  @media print {
+    header,
+    footer,
+    [data-no-print] {
+      display: none !important;
+    }
+    body {
+      background: #fff;
+    }
+    [data-slip] {
+      box-shadow: none !important;
+    }
+  }
+</style>

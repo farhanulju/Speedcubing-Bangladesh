@@ -2,6 +2,8 @@
 
 Newest first. One line per meaningful change.
 
+- 2026-09-14 — M3 accounts + money shipped: HMAC sessions, WCA OAuth routes, registration/tx/consent/me endpoints, dashboard + print slip; `test-auth` 6/6, `smoke-m3` 5/5; fixed KV `items` shape + list fallbacks + shaping kv-seed.
+
 - 2026-09-14 — M4 sync worker shipped + proven LIVE (`--test-scheduled` vs real WCA: 28 comps, 17 records, 31 snapshots, 26 champions, 0 emails); `test-sync` 5/5; canonical-17 filter + FMC/MBLD display rules; per-config local-state lesson recorded.
 
 - 2026-09-14 — M2 public site shipped: 13 data pages (KV+D1, SSR + edge s-maxage), Turnstile public endpoints (contact/lost-found+photo-pdf/opt-in), migration 0009 (worlds wallets), fixtures + `kv:seed`, `smoke:m2` 10/10 green; fixed fixture wca_id, seed slug, R2-stream quirk, test-secret quirk.

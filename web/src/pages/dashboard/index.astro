@@ -1,14 +1,186 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Placeholder from '../../components/Placeholder.astro';
+import { getEnv } from '../../lib/bindings';
+import { getCompetitor, getConsent, getMyRegistrations } from '../../lib/registrations';
+import { optionalUser } from '../../lib/session';
+import { formatCenti, getRanks } from '../../lib/wca';
 
-// Dashboard requires a WCA OAuth session (WP-30) — never prerendered.
 export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'no-store');
+
+const session = await optionalUser(Astro.request, Astro.locals);
+if (!session) return Astro.redirect('/api/auth/login');
+
+const env = getEnv(Astro.locals);
+const me = await getCompetitor(env, session.cid);
+if (!me) return Astro.redirect('/api/auth/login');
+const regs = await getMyRegistrations(env, session.cid);
+const consent = await getConsent(env, session.cid);
+
+// Personal bests from the ranks cache (dashboard-only scan; null when unknown).
+let pbSingle: number | null = null;
+let pbAverage: number | null = null;
+if (me.wca_id) {
+  const [s, a] = await Promise.all([getRanks(env, '333', 'single'), getRanks(env, '333', 'average')]);
+  pbSingle = s.data?.items.find((r) => r.personId === me.wca_id)?.best ?? null;
+  pbAverage = a.data?.items.find((r) => r.personId === me.wca_id)?.best ?? null;
+}
+
+const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
+  wca: hasWcaId,
+  events: true as boolean,
+  fee: r.status === 'verified' ? ('done' as const) : r.latest_tx ? ('pending' as const) : ('todo' as const),
+  wcaAccepted: r.wca_accepted === 1,
+});
 ---
 
 <Base title="Dashboard">
-  <Placeholder
-    route="User dashboard"
-    scope="A17 profile, PBs, registrations + 4-step tracker, history, seeds, guardian consent, prefs (WP-32)"
-  />
+  <section class="container-x py-10">
+    <div class="card-brutal shadow-brutal p-6">
+      <p class="text-2xl font-extrabold">{me.name}</p>
+      <p class="data-font mt-1 text-sm text-slate-600">
+        {me.wca_id ? (
+          <a class="underline" href={`https://www.worldcubeassociation.org/persons/${me.wca_id}`} target="_blank" rel="noopener">
+            WCA: {me.wca_id}
+          </a>
+        ) : (
+          'No WCA ID yet — assigned after your first competition.'
+        )}
+      </p>
+      <div class="mt-3 flex flex-wrap gap-4">
+        <div>
+          <p class="data-font text-xs uppercase tracking-wider text-slate-500">3x3 single PB</p>
+          <p class="data-font text-xl font-bold">{pbSingle !== null ? formatCenti(pbSingle) : '—'}</p>
+        </div>
+        <div>
+          <p class="data-font text-xs uppercase tracking-wider text-slate-500">3x3 average PB</p>
+          <p class="data-font text-xl font-bold">{pbAverage !== null ? formatCenti(pbAverage) : '—'}</p>
+        </div>
+      </div>
+      <p class="mt-3">
+        <a href="/api/auth/logout" class="text-sm font-bold text-slate-600 underline">Log out</a>
+      </p>
+    </div>
+
+    <h2 class="mt-8 text-2xl font-extrabold">Active registrations</h2>
+    {
+      regs.length === 0 ? (
+        <p class="mt-3 text-slate-600">
+          Nothing yet — pick a competition to register. <a class="font-bold text-emerald-brand underline" href="/competitions">Browse competitions</a>
+        </p>
+      ) : (
+        <div class="mt-3 flex flex-col gap-4">
+          {regs.map((r) => {
+            const st = stepOf(r, me.wca_id !== null);
+            const events: string[] = (() => {
+              try {
+                const v = JSON.parse(r.events_json);
+                return Array.isArray(v) ? v.map(String) : [];
+              } catch {
+                return [];
+              }
+            })();
+            return (
+              <div class="card-brutal p-5">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                  <p class="text-lg font-extrabold">{r.comp_name}</p>
+                  <span class="data-font rounded-full border px-2 py-0.5 text-xs font-bold">{r.status}</span>
+                </div>
+                <ol class="mt-3 grid gap-2 text-sm sm:grid-cols-4">
+                  <li>{st.wca ? '✅ WCA ID validated' : '⬜ No WCA ID yet'}</li>
+                  <li>✅ {events.length} event{events.length === 1 ? '' : 's'} selected</li>
+                  <li>
+                    {st.fee === 'done' ? '✅ Fee verified' : st.fee === 'pending' ? '⏳ Payment under review' : '⬜ TxID not submitted'}
+                  </li>
+                  <li>{st.wcaAccepted ? '✅ Accepted on WCA' : '⬜ WCA acceptance pending'}</li>
+                </ol>
+                {r.latest_tx && (
+                  <p class="data-font mt-2 text-xs text-slate-600">
+                    Latest Tx: {r.latest_tx.txn_id} • ৳{r.latest_tx.amount_bdt} • {r.latest_tx.status}
+                  </p>
+                )}
+                <p class="mt-2">
+                  <a class="text-sm font-bold text-emerald-brand underline" href={`/dashboard/registrations/${r.id}/slip`}>
+                    Registration slip (print)
+                  </a>
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )
+    }
+
+    <h2 class="mt-8 text-2xl font-extrabold">Competition history</h2>
+    <p class="mt-1 text-sm text-slate-600">Archived results live on your WCA profile.</p>
+    <p class="mt-2">
+      {me.wca_id ? (
+        <a class="btn-pill inline-block border-2 border-ink bg-white px-5 py-2 text-sm shadow-brutal" href={`https://www.worldcubeassociation.org/persons/${me.wca_id}`} target="_blank" rel="noopener">
+          Full WCA profile &amp; rank history
+        </a>
+      ) : (
+        <span class="text-sm text-slate-600">Your history appears here after your first competition.</span>
+      )}
+    </p>
+
+    <h2 class="mt-8 text-2xl font-extrabold">Guardian consent</h2>
+    {
+      consent ? (
+        <div class="card-brutal mt-3 p-5">
+          <p class="text-sm">
+            Consent on file — {consent.guardian_name} ({consent.relation}), {consent.consent_at}
+            {consent.verified_by ? `, verified by ${consent.verified_by}` : ''}.
+          </p>
+        </div>
+      ) : (
+        <form data-consent-form class="card-brutal mt-3 flex max-w-xl flex-col gap-3 p-5">
+          <p class="text-sm text-slate-600">Under-18 competitors need a guardian on record.</p>
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-bold">Guardian name *</span>
+            <input name="guardian_name" type="text" required maxlength="120" class="rounded-lg border-2 border-ink px-3 py-2" />
+          </label>
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-bold">Relation *</span>
+            <input name="relation" type="text" required maxlength="40" placeholder="parent" class="rounded-lg border-2 border-ink px-3 py-2" />
+          </label>
+          <label class="flex items-center gap-2 text-sm font-bold">
+            <input name="agree" type="checkbox" class="h-5 w-5 accent-emerald-brand" /> I am the guardian and I consent
+          </label>
+          <p data-form-msg class="hidden text-sm font-semibold"></p>
+          <button type="submit" class="btn-pill w-fit border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
+            Record consent
+          </button>
+        </form>
+      )
+    }
+  </section>
 </Base>
+
+<script>
+  document.querySelectorAll('[data-consent-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector('[data-form-msg]') as HTMLElement;
+      msg.classList.remove('hidden');
+      try {
+        const data = new FormData(form);
+        const res = await fetch('/api/consent', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            guardian_name: String(data.get('guardian_name') ?? ''),
+            relation: String(data.get('relation') ?? ''),
+            agree: (form.querySelector('[name="agree"]') as HTMLInputElement).checked,
+          }),
+        });
+        const body = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(body.error || 'save failed');
+        window.location.reload();
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'save failed';
+        msg.classList.add('text-red-700');
+      }
+    });
+  });
+</script>
