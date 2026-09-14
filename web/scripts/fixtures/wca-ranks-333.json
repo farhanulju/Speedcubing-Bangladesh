@@ -1,0 +1,7 @@
+{
+  "asOfExportDate": "2026-09-13",
+  "rows": [
+    { "wca_id": "2026FIXT01", "name": "Fixture Holder", "best_centis": 694 },
+    { "wca_id": "2026SAMP01", "name": "Sample Competitor", "best_centis": 842 }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "asOfExportDate": "2026-09-13",
+  "wca_id": "DhakaSpringOpen2026",
+  "name": "Dhaka Spring Open 2026",
+  "city": "Dhaka",
+  "venue": "National Sports Council Gymnasium",
+  "address": "Purana Paltan, Dhaka",
+  "start_date": "2026-04-17",
+  "end_date": "2026-04-18",
+  "events": ["333", "222", "444", "333oh", "pyram", "skewb"],
+  "competitor_limit": 120,
+  "url": "https://www.worldcubeassociation.org/competitions/DhakaSpringOpen2026",
+  "live_url": "https://live.worldcubeassociation.org/competitions/DhakaSpringOpen2026",
+  "schedule_note": null,
+  "event_detail": [
+    { "event": "333", "rounds": 3, "format": "Average of 5", "time_limit_centis": 30000, "cutoff_centis": null },
+    { "event": "222", "rounds": 2, "format": "Average of 5", "time_limit_centis": 9000, "cutoff_centis": null },
+    { "event": "444", "rounds": 2, "format": "Average of 5", "time_limit_centis": 18000, "cutoff_centis": 7500 }
+  ]
+}

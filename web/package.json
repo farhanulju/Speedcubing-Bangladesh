@@ -12,7 +12,9 @@
     "db:migrate": "wrangler d1 migrations apply speedbd --local",
     "db:migrate:remote": "wrangler d1 migrations apply speedbd --remote",
     "db:seed": "wrangler d1 execute speedbd --local --file=scripts/seed.sql",
-    "db:check": "node scripts/db-check.mjs"
+    "kv:seed": "wrangler kv key put \"wca:competitions:BD\" --binding WCA_CACHE --local --path scripts/fixtures/wca-competitions.json && wrangler kv key put \"wca:competition:DhakaSpringOpen2026\" --binding WCA_CACHE --local --path scripts/fixtures/wca-competition-DhakaSpringOpen2026.json && wrangler kv key put \"wca:records:BD\" --binding WCA_CACHE --local --path scripts/fixtures/wca-records.json && wrangler kv key put \"wca:ranks:BD:333\" --binding WCA_CACHE --local --path scripts/fixtures/wca-ranks-333.json",
+    "db:check": "node scripts/db-check.mjs",
+    "smoke:m2": "node scripts/smoke-m2.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.0.0",

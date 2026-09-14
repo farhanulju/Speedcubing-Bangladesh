@@ -1,18 +1,139 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Placeholder from '../../components/Placeholder.astro';
+import ContentBody from '../../components/ContentBody.astro';
+import { countRegistrations, getCompOverride } from '../../lib/content';
+import { EDGE_CACHE_VALUE, tryLoad } from '../../lib/page';
+import { getCompetition } from '../../lib/wca';
 
-export const prerender = true;
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
 
-// M2 (WP-22) populates paths from the WCA cache + D1 overrides.
-export async function getStaticPaths() {
-  return [];
+const { slug } = Astro.params;
+const detail = await tryLoad(
+  Astro.locals,
+  (env) => getCompetition(env, slug ?? ''),
+  { data: null, asOfExportDate: null, stale: true },
+);
+const comp = detail.data;
+if (!comp && slug) {
+  // Unknown locally — the canonical page always exists on WCA.
+  return Astro.redirect(`https://www.worldcubeassociation.org/competitions/${slug}`, 302);
 }
+if (!comp) return new Response('Not found', { status: 404 });
+
+const override = await tryLoad(Astro.locals, (env) => getCompOverride(env, comp.wca_id), null);
+const siteRegs = await tryLoad(Astro.locals, (env) => countRegistrations(env, comp.wca_id), 0);
+
+let feeTiers: Record<string, unknown> = {};
+try {
+  if (override?.fee_tiers_json) feeTiers = JSON.parse(override.fee_tiers_json) as Record<string, unknown>;
+} catch {
+  feeTiers = {};
+}
+const wallets = {
+  bkash: typeof feeTiers.bkash_wallet === 'string' ? feeTiers.bkash_wallet : null,
+  nagad: typeof feeTiers.nagad_wallet === 'string' ? feeTiers.nagad_wallet : null,
+};
+const fees = Object.entries(feeTiers).filter(([k]) => !['bkash_wallet', 'nagad_wallet'].includes(k));
 ---
 
-<Base title="Competition">
-  <Placeholder
-    route="Competition detail"
-    scope="A5 dates, venue, fee tiers, schedule, events/limits, payment steps, refund policy, WCA + Live buttons, dual-status roster (WP-22)"
-  />
+<Base title={comp.name}>
+  <section class="container-x max-w-4xl py-12">
+    <a href="/competitions" class="text-sm font-semibold text-emerald-brand underline">← Competitions</a>
+    <p class="data-font mt-3 inline-block rounded-full border-2 border-ink bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider">
+      Official WCA competition
+    </p>
+    <h1 class="mt-2 text-4xl font-extrabold tracking-tight">{comp.name}</h1>
+    <p class="data-font mt-2 text-slate-600">
+      {comp.start_date} → {comp.end_date} • {comp.venue}, {comp.city}
+    </p>
+    <p class="mt-1 text-sm text-slate-600">
+      {comp.address} • Cap: {comp.competitor_limit ?? 'TBA'}
+      {comp.competitor_limit ? ` (${siteRegs} registered on this site)` : ''}
+    </p>
+    <div class="mt-4 flex flex-wrap gap-3">
+      <a href="/dashboard" class="btn-pill border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
+        Register &amp; Submit Payment
+      </a>
+      <a href={comp.url} target="_blank" rel="noopener" class="btn-pill border-2 border-ink bg-white px-6 py-2 shadow-brutal">
+        Official WCA Page
+      </a>
+      {
+        comp.live_url && (
+          <a href={comp.live_url} target="_blank" rel="noopener" class="btn-pill border-2 border-ink bg-white px-6 py-2 shadow-brutal">
+            Live Results
+          </a>
+        )
+      }
+    </div>
+
+    <div class="card-brutal mt-8 p-6">
+      <h2 class="text-2xl font-extrabold">Sanctioned events</h2>
+      <p class="mt-2 text-sm">{comp.events.join(' • ') || 'See the WCA page for the event list.'}</p>
+      {
+        comp.event_detail.length > 0 && (
+          <div class="mt-3 overflow-x-auto">
+            <table class="w-full min-w-150 text-left text-sm">
+              <thead>
+                <tr class="border-b-2 border-ink">
+                  <th class="data-font px-3 py-2 text-xs uppercase tracking-wider text-slate-500">Event</th>
+                  <th class="data-font px-3 py-2 text-xs uppercase tracking-wider text-slate-500">Rounds</th>
+                  <th class="data-font px-3 py-2 text-xs uppercase tracking-wider text-slate-500">Format</th>
+                  <th class="data-font px-3 py-2 text-xs uppercase tracking-wider text-slate-500">Limit</th>
+                  <th class="data-font px-3 py-2 text-xs uppercase tracking-wider text-slate-500">Cutoff</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comp.event_detail.map((e) => (
+                  <tr class="border-b border-slate-200 last:border-0">
+                    <td class="px-3 py-2 font-bold">{e.event}</td>
+                    <td class="data-font px-3 py-2">{e.rounds}</td>
+                    <td class="px-3 py-2">{e.format}</td>
+                    <td class="data-font px-3 py-2">{e.time_limit_centis !== null ? `${(e.time_limit_centis / 100).toFixed(2)}s` : '—'}</td>
+                    <td class="data-font px-3 py-2">{e.cutoff_centis !== null ? `${(e.cutoff_centis / 100).toFixed(2)}s` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+    </div>
+
+    {
+      (fees.length > 0 || wallets.bkash || wallets.nagad || override?.venue_note) && (
+        <div class="card-brutal mt-6 p-6">
+          <h2 class="text-2xl font-extrabold">Registration &amp; payment</h2>
+          {fees.length > 0 && (
+            <dl class="mt-3 flex flex-wrap gap-4">
+              {fees.map(([k, v]) => (
+                <div>
+                  <dt class="data-font text-xs uppercase tracking-wider text-slate-500">{k}</dt>
+                  <dd class="data-font text-xl font-bold">৳{String(v)}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+          {(wallets.bkash || wallets.nagad) && (
+            <div class="mt-3 flex flex-col gap-1 text-sm">
+              {wallets.bkash && <p class="data-font">bKash: {wallets.bkash}</p>}
+              {wallets.nagad && <p class="data-font">Nagad: {wallets.nagad}</p>}
+              <p class="text-xs text-slate-500">Send Money, then submit the TxID from your dashboard. Whole taka only.</p>
+            </div>
+          )}
+          {override?.venue_note && <p class="mt-3 text-sm">{override.venue_note}</p>}
+          {override?.payment_steps_json && (
+            <div class="prose mt-3 max-w-none text-sm">
+              <ContentBody docJson={override.payment_steps_json} />
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    <p class="mt-6 max-w-3xl text-xs text-slate-500">
+      WCA ID validation required. Acceptance on WCA is finalized manually by delegates after fee verification.
+      Registration counts above cover this site only — the WCA roster is canonical.
+    </p>
+  </section>
 </Base>

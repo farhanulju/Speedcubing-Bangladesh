@@ -1,10 +1,48 @@
 ---
 import Base from '../layouts/Base.astro';
-import Placeholder from '../components/Placeholder.astro';
+import { getPeople } from '../lib/content';
+import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
 
-export const prerender = true;
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
+
+const people = await tryLoad(Astro.locals, (env) => getPeople(env), []);
 ---
 
 <Base title="Our People">
-  <Placeholder route="Our People" scope="A3 execs + delegates with WCA-ID links; volunteer names when roster exists (WP-21)" />
+  <section class="container-x py-12">
+    <h1 class="text-4xl font-extrabold tracking-tight">The Community Behind the Cubes</h1>
+    <p class="mt-2 max-w-2xl text-slate-600">
+      Delegates, executives, and volunteers. Contact details stay private — profiles show public
+      competition information only.
+    </p>
+    {
+      people.length === 0 ? (
+        <p class="mt-6 text-slate-600">Roster publishes here once the team enters it in /admin.</p>
+      ) : (
+        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {people.map((p) => (
+            <div class="card-brutal shadow-brutal p-5">
+              {p.photo_r2 && (
+                <img src={`/api/media/${p.photo_r2}`} alt="" loading="lazy" class="mb-3 aspect-square w-full rounded-lg border-2 border-ink object-cover" />
+              )}
+              <p class="text-lg font-extrabold">{p.name}</p>
+              <p class="text-sm font-semibold text-emerald-brand">{p.role}</p>
+              <p class="data-font mt-2 text-xs text-slate-500">
+                {p.wca_id ? (
+                  <a class="underline" href={`https://www.worldcubeassociation.org/persons/${p.wca_id}`} target="_blank" rel="noopener">
+                    {p.wca_id}
+                  </a>
+                ) : (
+                  'community member'
+                )}
+                {p.focus_area ? ` • ${p.focus_area}` : ''}
+                {p.member_since ? ` • since ${p.member_since}` : ''}
+              </p>
+            </div>
+          ))}
+        </div>
+      )
+    }
+  </section>
 </Base>

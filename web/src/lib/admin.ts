@@ -150,6 +150,8 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
       { name: 'id', label: 'ID', kind: 'readonly' },
       { name: 'target_bdt', label: 'Target (BDT, whole taka)', kind: 'number', required: true },
       { name: 'raised_manual_bdt', label: 'Raised manual total (BDT)', kind: 'number', required: true },
+      { name: 'bkash_wallet', label: 'bKash receiving wallet', kind: 'text', hint: 'Rendered in full with copy button (payment destination)' },
+      { name: 'nagad_wallet', label: 'Nagad receiving wallet', kind: 'text' },
       { name: 'policy_json', label: 'Refund policy', kind: 'editor' },
       { name: 'worlds_host_city', label: 'Host city (single value)', kind: 'text', required: true },
     ],

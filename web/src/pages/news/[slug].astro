@@ -1,15 +1,34 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Placeholder from '../../components/Placeholder.astro';
+import ContentBody from '../../components/ContentBody.astro';
+import { getNewsItem } from '../../lib/content';
+import { getEnv } from '../../lib/bindings';
 
-export const prerender = true;
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
 
-// M2 (WP-23) populates paths from D1 news rows.
-export async function getStaticPaths() {
-  return [];
+const { slug } = Astro.params;
+let item: Awaited<ReturnType<typeof getNewsItem>> = null;
+try {
+  if (slug) item = await getNewsItem(getEnv(Astro.locals), slug);
+} catch {
+  item = null;
 }
+if (!item) return new Response('Not found', { status: 404 });
 ---
 
-<Base title="News article">
-  <Placeholder route="News article" scope="A20 Editor.js body, cover, meta (WP-23)" />
+<Base title={item.title}>
+  <article class="container-x max-w-3xl py-12">
+    <a href="/news" class="text-sm font-semibold text-emerald-brand underline">← News</a>
+    <h1 class="mt-1 text-4xl font-extrabold tracking-tight">{item.title}</h1>
+    <p class="data-font mt-2 text-sm text-slate-500">{item.published_at ?? ''}</p>
+    {
+      item.cover_r2 && (
+        <img src={`/api/media/${item.cover_r2}`} alt="" class="mt-6 aspect-video w-full rounded-2xl border-2 border-ink object-cover" />
+      )
+    }
+    <div class="prose mt-6 max-w-none">
+      <ContentBody docJson={item.body_json} />
+    </div>
+  </article>
 </Base>

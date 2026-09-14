@@ -1,0 +1,20 @@
+---
+import { renderDocument } from '../lib/editor';
+
+// Renders an Editor.js JSON document with the allowlisted parsers (WP-21).
+// Unknown blocks are dropped; inline HTML is sanitized. Invalid JSON → empty.
+interface Props {
+  docJson: string | null | undefined;
+}
+
+const { docJson } = Astro.props;
+
+let html = '';
+try {
+  if (docJson) html = renderDocument(JSON.parse(docJson)).html;
+} catch {
+  html = '';
+}
+---
+
+<Fragment set:html={html} />

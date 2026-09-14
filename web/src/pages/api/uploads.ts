@@ -22,9 +22,11 @@ export async function putImage(
 ): Promise<string> {
   const ext = extForMime(file.type);
   if (!ext) throw new Error(`rejected mime: ${file.type}`);
-  if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) throw new Error('rejected size');
+  // Buffered (not streamed): identical bytes on Node, workerd, and miniflare R2.
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (bytes.byteLength <= 0 || bytes.byteLength > MAX_UPLOAD_BYTES) throw new Error('rejected size');
   const key = buildUploadKey(year, compSlug, ext);
-  await env.MEDIA.put(key, file.stream(), {
+  await env.MEDIA.put(key, bytes, {
     httpMetadata: { contentType: file.type, cacheControl: 'public, max-age=31536000, immutable' },
   });
   return `/api/media/${key}`;

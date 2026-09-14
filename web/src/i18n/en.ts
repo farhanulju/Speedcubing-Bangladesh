@@ -45,6 +45,16 @@ export const en = {
     verifyOnWca: 'Verify on worldcubeassociation.org',
     cachedNotice: 'Showing cached data — see WCA Live for the latest.',
   },
+  home: {
+    badge: 'Prospective WCA Regional Organization',
+    headline: 'Fueling the Passion for Speedcubing in Bangladesh.',
+    sub: 'From first sub-1-minute solves to national records — join official WCA competitions across Bangladesh.',
+    ctaComps: 'View Competitions',
+    ctaAbout: 'About Us',
+    recordsTitle: "Bangladesh's Best Records",
+    compsTitle: 'Upcoming Competitions',
+    worldsTitle: 'Bangladesh to WCA World Championship 2027',
+  },
 } as const;
 
 export type Dict = typeof en;

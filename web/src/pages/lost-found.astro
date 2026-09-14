@@ -1,10 +1,100 @@
 ---
 import Base from '../layouts/Base.astro';
-import Placeholder from '../components/Placeholder.astro';
+import TurnstileWidget from '../components/TurnstileWidget.astro';
+import { getLostFoundLog } from '../lib/content';
+import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
+import { getCompetitions } from '../lib/wca';
 
-export const prerender = true;
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
+
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+const log = await tryLoad(Astro.locals, (env) => getLostFoundLog(env), []);
+const comps = await tryLoad(Astro.locals, (env) => getCompetitions(env), { data: null, asOfExportDate: null, stale: true });
+const compItems = comps.data?.items ?? [];
 ---
 
 <Base title="Lost & Found">
-  <Placeholder route="Lost & Found" scope="A11 Cloudflare-native form + public recovery log (no claimant IDs) (WP-21)" />
+  <section class="container-x grid max-w-5xl gap-8 py-12 md:grid-cols-2">
+    <div>
+      <h1 class="text-4xl font-extrabold tracking-tight">Lost &amp; Found Desk</h1>
+      <p class="mt-2 text-slate-600">
+        Report a missing item or check recovered inventory. Reporter contacts stay private —
+        the log below shows items and statuses only.
+      </p>
+      <form data-lf-form class="card-brutal shadow-brutal mt-6 flex flex-col gap-4 p-6" enctype="multipart/form-data">
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-bold">Competition (optional)</span>
+          <select name="comp_wca_id" class="rounded-lg border-2 border-ink px-3 py-2">
+            <option value="">—</option>
+            {compItems.map((c) => (
+              <option value={c.wca_id}>{c.name}</option>
+            ))}
+          </select>
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-bold">Item description *</span>
+          <input name="item" type="text" required maxlength="200" placeholder="e.g. GAN 12 MagLev, blue core" class="rounded-lg border-2 border-ink px-3 py-2" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-bold">Your contact (phone or email) *</span>
+          <input name="reporter_contact" type="text" required maxlength="160" class="rounded-lg border-2 border-ink px-3 py-2" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-bold">Photo or receipt <span class="font-normal text-slate-500">(png/jpg/pdf, ≤8 MB)</span></span>
+          <input name="photo" type="file" accept="image/png,image/jpeg,image/webp,image/avif,application/pdf" class="text-sm" />
+        </label>
+        <TurnstileWidget siteKey={siteKey} />
+        <p data-form-msg class="hidden text-sm font-semibold"></p>
+        <button type="submit" class="btn-pill border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
+          Submit Lost Item Ticket
+        </button>
+      </form>
+    </div>
+    <div>
+      <h2 class="text-2xl font-extrabold">Recent unclaimed items</h2>
+      {
+        log.length === 0 ? (
+          <p class="mt-3 text-slate-600">Nothing in custody right now.</p>
+        ) : (
+          <div class="mt-3 flex flex-col gap-3">
+            {log.map((r) => (
+              <div class="card-brutal p-4">
+                <div class="flex flex-wrap items-baseline justify-between gap-2">
+                  <p class="font-extrabold">{r.item}</p>
+                  <span class="data-font rounded-full border px-2 py-0.5 text-xs font-bold">{r.status}</span>
+                </div>
+                <p class="data-font mt-1 text-xs text-slate-500">{r.comp_wca_id ?? 'general'}</p>
+              </div>
+            ))}
+          </div>
+        )
+      }
+    </div>
+  </section>
 </Base>
+
+<script>
+  document.querySelectorAll('[data-lf-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector('[data-form-msg]') as HTMLElement;
+      msg.classList.remove('hidden');
+      try {
+        const data = new FormData(form);
+        const tokenEl = form.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement | null;
+        data.set('turnstile_token', tokenEl?.value ?? '');
+        const res = await fetch('/api/lost-found', { method: 'POST', body: data });
+        const body = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(body.error || 'submit failed');
+        msg.textContent = 'Ticket received. Delegates will follow up on your contact.';
+        msg.classList.add('text-emerald-brand');
+        form.reset();
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'submit failed';
+        msg.classList.add('text-red-700');
+      }
+    });
+  });
+</script>

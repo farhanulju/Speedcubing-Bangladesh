@@ -1,10 +1,105 @@
 ---
 import Base from '../layouts/Base.astro';
-import Placeholder from '../components/Placeholder.astro';
+import ContentBody from '../components/ContentBody.astro';
+import TurnstileWidget from '../components/TurnstileWidget.astro';
+import { getPage } from '../lib/content';
+import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
 
-export const prerender = true;
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
+
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+const info = await tryLoad(Astro.locals, (env) => getPage(env, 'contact-info'), null);
 ---
 
 <Base title="Contact">
-  <Placeholder route="Contact" scope="A14 Turnstile form, channels, division opt-in (email-only v1) (WP-21)" />
+  <section class="container-x grid max-w-5xl gap-8 py-12 md:grid-cols-2">
+    <div>
+      <h1 class="text-4xl font-extrabold tracking-tight">Get in Touch</h1>
+      {info && (
+        <div class="prose mt-4 max-w-none">
+          <ContentBody docJson={info.body_json} />
+        </div>
+      )}
+      <div class="card-brutal mt-6 p-5">
+        <p class="font-extrabold">Official channels</p>
+        <p class="mt-1 text-sm text-slate-600">
+          WhatsApp Channel and group links are posted with each competition announcement —
+          follows are always explicit opt-ins, never scraped.
+        </p>
+      </div>
+    </div>
+    <form data-contact-form class="card-brutal shadow-brutal flex flex-col gap-4 p-6">
+      <label class="flex flex-col gap-1">
+        <span class="text-sm font-bold">Full name *</span>
+        <input name="name" type="text" required maxlength="120" class="rounded-lg border-2 border-ink px-3 py-2" />
+      </label>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-bold">Email *</span>
+          <input name="email" type="email" required maxlength="160" class="rounded-lg border-2 border-ink px-3 py-2" />
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-bold">WCA ID <span class="font-normal text-slate-500">(optional)</span></span>
+          <input name="wca_id" type="text" maxlength="20" placeholder="e.g. 2018RAHM04" class="rounded-lg border-2 border-ink px-3 py-2" />
+        </label>
+      </div>
+      <label class="flex flex-col gap-1">
+        <span class="text-sm font-bold">Subject *</span>
+        <select name="category" class="rounded-lg border-2 border-ink px-3 py-2">
+          <option value="general">General question</option>
+          <option value="competition">Competition</option>
+          <option value="sponsorship">Sponsorship</option>
+          <option value="volunteer">Volunteering</option>
+          <option value="press">Press</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label class="flex flex-col gap-1">
+        <span class="text-sm font-bold">Message *</span>
+        <textarea name="message" required minlength="10" maxlength="5000" rows="5" class="rounded-lg border-2 border-ink px-3 py-2"></textarea>
+      </label>
+      <TurnstileWidget siteKey={siteKey} />
+      <p data-form-msg class="hidden text-sm font-semibold"></p>
+      <button type="submit" class="btn-pill border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
+        Send Message
+      </button>
+      <p class="text-xs text-slate-500">Typical response time: under 24 hours from delegates.</p>
+    </form>
+  </section>
 </Base>
+
+<script>
+  document.querySelectorAll('[data-contact-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector('[data-form-msg]') as HTMLElement;
+      msg.classList.remove('hidden');
+      try {
+        const data = new FormData(form);
+        const tokenEl = form.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement | null;
+        const res = await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            name: String(data.get('name') ?? ''),
+            email: String(data.get('email') ?? ''),
+            wca_id: String(data.get('wca_id') ?? ''),
+            category: String(data.get('category') ?? 'general'),
+            message: String(data.get('message') ?? ''),
+            turnstile_token: tokenEl?.value ?? '',
+          }),
+        });
+        const body = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(body.error || 'send failed');
+        msg.textContent = 'Message received. We will reply by email.';
+        msg.classList.add('text-emerald-brand');
+        form.reset();
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'send failed';
+        msg.classList.add('text-red-700');
+      }
+    });
+  });
+</script>

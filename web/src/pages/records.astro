@@ -1,10 +1,94 @@
 ---
 import Base from '../layouts/Base.astro';
-import Placeholder from '../components/Placeholder.astro';
+import { getRecordSnapshots } from '../lib/content';
+import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
+import { formatCenti, getRecords } from '../lib/wca';
 
-export const prerender = true;
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
+
+const recs = await tryLoad(Astro.locals, (env) => getRecords(env), { data: null, asOfExportDate: null, stale: true });
+const snaps = await tryLoad(Astro.locals, (env) => getRecordSnapshots(env), []);
+const records = recs.data?.records ?? [];
+
+const byEvent: Record<string, { kind: string; value_centis: number; holder_name: string | null; export_date: string }[]> = {};
+for (const s of snaps) {
+  (byEvent[s.event] ??= []).push(s);
+}
 ---
 
 <Base title="National Records">
-  <Placeholder route="National Records" scope="A16 NR table, spotlight cards, Progression (snapshots), daily-update stamp (WP-23, WP-41)" />
+  <section class="container-x py-12">
+    <h1 class="text-4xl font-extrabold tracking-tight">Bangladesh National Records</h1>
+    <p class="mt-2 text-slate-600">
+      Updated daily from the official WCA database export
+      {recs.asOfExportDate ? <span class="data-font"> (v{recs.asOfExportDate})</span> : ''}
+      . <a class="font-bold text-emerald-brand underline" href="https://www.worldcubeassociation.org/results/records" target="_blank" rel="noopener">Verify on WCA</a>
+    </p>
+    {
+      records.length === 0 ? (
+        <p class="mt-6 text-slate-600">Records sync daily — the table appears after the first sync.</p>
+      ) : (
+        <div class="card-brutal mt-6 overflow-x-auto">
+          <table class="w-full min-w-180 text-left text-sm">
+            <thead>
+              <tr class="border-b-2 border-ink">
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Event</th>
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Single</th>
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Average</th>
+                <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">History</th>
+              </tr>
+            </thead>
+            <tbody>
+              {records.map((r) => {
+                const hist = (byEvent[r.event] ?? []).slice(0, 8);
+                return (
+                  <tr class="border-b border-slate-200 align-top last:border-0">
+                    <td class="px-4 py-3 font-extrabold">{r.event_name}</td>
+                    <td class="px-4 py-3">
+                      {r.single ? (
+                        <>
+                          <span class="data-font text-lg font-bold">{formatCenti(r.single.value_centis)}</span>
+                          <span class="block text-xs text-slate-600">
+                            {r.single.holder} • {r.single.comp}
+                          </span>
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td class="px-4 py-3">
+                      {r.average ? (
+                        <>
+                          <span class="data-font text-lg font-bold">{formatCenti(r.average.value_centis)}</span>
+                          <span class="block text-xs text-slate-600">
+                            {r.average.holder} • {r.average.comp}
+                          </span>
+                        </>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td class="data-font px-4 py-3 text-xs text-slate-600">
+                      {hist.length < 2 ? (
+                        'Accumulates with daily syncs'
+                      ) : (
+                        <ol>
+                          {hist.map((h) => (
+                            <li>
+                              {h.export_date}: {formatCenti(h.value_centis)}
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </section>
 </Base>

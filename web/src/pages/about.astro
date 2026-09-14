@@ -1,10 +1,62 @@
 ---
 import Base from '../layouts/Base.astro';
-import Placeholder from '../components/Placeholder.astro';
+import ContentBody from '../components/ContentBody.astro';
+import { getPage } from '../lib/content';
+import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
+import { getCompetitions, getRecords } from '../lib/wca';
 
-export const prerender = true;
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
+
+const story = await tryLoad(Astro.locals, (env) => getPage(env, 'about'), null);
+const comps = await tryLoad(Astro.locals, (env) => getCompetitions(env), { data: null, asOfExportDate: null, stale: true });
+const recs = await tryLoad(Astro.locals, (env) => getRecords(env), { data: null, asOfExportDate: null, stale: true });
+const items = comps.data?.items ?? [];
+const cities = [...new Set(items.map((c) => c.city))].filter(Boolean);
 ---
 
 <Base title="About">
-  <Placeholder route="About" scope="A2 story, mission, legal identity, financial-report slot (WP-21)" />
+  <section class="container-x py-12">
+    <h1 class="text-4xl font-extrabold tracking-tight">About Speedcubing Bangladesh</h1>
+    <p class="mt-2 max-w-2xl text-slate-600">
+      The community and prospective Regional Organization growing competitive speedcubing across Bangladesh
+      under World Cube Association standards.
+    </p>
+    <div class="mt-6 grid gap-4 sm:grid-cols-3">
+      <div class="card-brutal p-5">
+        <p class="data-font text-3xl font-bold">{items.length}</p>
+        <p class="text-sm text-slate-600">WCA competitions in cache</p>
+      </div>
+      <div class="card-brutal p-5">
+        <p class="data-font text-3xl font-bold">{recs.data?.records.length ?? 0}</p>
+        <p class="text-sm text-slate-600">National record lines tracked</p>
+      </div>
+      <div class="card-brutal p-5">
+        <p class="data-font text-3xl font-bold">{cities.length}</p>
+        <p class="text-sm text-slate-600">Active cities</p>
+      </div>
+    </div>
+    {
+      /* NOTE: no hand-typed "active cubers" stat — that derivation is undefined.
+         Stats above all derive from the WCA-cache job (content-accuracy rule). */
+    }
+    {
+      story && (
+        <div class="card-brutal mt-8 p-6">
+          <h2 class="text-2xl font-extrabold">{story.title}</h2>
+          <div class="prose mt-3 max-w-none">
+            <ContentBody docJson={story.body_json} />
+          </div>
+        </div>
+      )
+    }
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="/people" class="btn-pill border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
+        Meet the people
+      </a>
+      <a href="/competitions" class="btn-pill border-2 border-ink bg-white px-6 py-2 shadow-brutal">
+        Find a competition
+      </a>
+    </div>
+  </section>
 </Base>

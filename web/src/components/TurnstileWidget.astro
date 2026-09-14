@@ -1,0 +1,12 @@
+---
+// Cloudflare Turnstile widget (WP-21). Site key is public; pass explicitly.
+// Forms read the token from [name="cf-turnstile-response"] at submit time.
+interface Props {
+  siteKey: string;
+}
+
+const { siteKey } = Astro.props;
+---
+
+<script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<div class="cf-turnstile" data-sitekey={siteKey} data-theme="light"></div>

@@ -1,10 +1,65 @@
 ---
 import Base from '../layouts/Base.astro';
-import Placeholder from '../components/Placeholder.astro';
+import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
+import { getCompetitions } from '../lib/wca';
 
-export const prerender = true;
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
+
+const city = Astro.url.searchParams.get('city') ?? '';
+const comps = await tryLoad(Astro.locals, (env) => getCompetitions(env), { data: null, asOfExportDate: null, stale: true });
+const items = comps.data?.items ?? [];
+const cities = [...new Set(items.map((c) => c.city))].filter(Boolean).sort();
+const shown = city ? items.filter((c) => c.city === city) : items;
 ---
 
 <Base title="Competitions">
-  <Placeholder route="Competitions" scope="A4 upcoming auto-list (BD) + past list, city filter, WCA calendar link-out (WP-22)" />
+  <section class="container-x py-12">
+    <h1 class="text-4xl font-extrabold tracking-tight">Competitions in Bangladesh</h1>
+    <p class="mt-2 text-slate-600">
+      Official WCA-sanctioned events. Results verify on the WCA database.
+      {comps.asOfExportDate && <span class="data-font"> Cache: {comps.asOfExportDate}.</span>}
+    </p>
+    {
+      cities.length > 0 && (
+        <div class="mt-6 flex flex-wrap gap-2">
+          <a href="/competitions" class={`btn-pill border-2 border-ink px-4 py-1 text-sm ${!city ? 'bg-ink text-white' : 'bg-white'}`}>
+            All Bangladesh
+          </a>
+          {cities.map((c) => (
+            <a
+              href={`/competitions?city=${encodeURIComponent(c)}`}
+              class={`btn-pill border-2 border-ink px-4 py-1 text-sm ${city === c ? 'bg-ink text-white' : 'bg-white'}`}
+            >
+              {c}
+            </a>
+          ))}
+        </div>
+      )
+    }
+    {
+      shown.length === 0 ? (
+        <p class="mt-6 text-slate-600">
+          No competitions in the cache yet.{' '}
+          <a class="font-bold text-emerald-brand underline" href="https://www.worldcubeassociation.org/competitions?region=Bangladesh" target="_blank" rel="noopener">
+            Full WCA calendar
+          </a>
+        </p>
+      ) : (
+        <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {shown.map((c) => (
+            <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+              <p class="data-font text-xs font-bold uppercase tracking-wider text-speed-orange">{c.city}</p>
+              <p class="mt-1 text-lg font-extrabold">{c.name}</p>
+              <p class="data-font mt-1 text-sm text-slate-600">
+                {c.start_date} → {c.end_date}
+              </p>
+              <p class="mt-1 text-sm text-slate-600">{c.venue}</p>
+              <p class="mt-2 text-xs text-slate-500">{c.events.join(' • ')}</p>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </section>
 </Base>

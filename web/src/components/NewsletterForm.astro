@@ -1,0 +1,54 @@
+---
+import TurnstileWidget from './TurnstileWidget.astro';
+
+// Email-only newsletter opt-in (WP-21). Phone collection needs an explicit-consent
+// flow and is deferred — the endpoint rejects non-email channels.
+interface Props {
+  siteKey: string;
+  compact?: boolean;
+}
+
+const { siteKey, compact } = Astro.props;
+---
+
+<form data-optin-form class={`${compact ? '' : 'card-brutal shadow-brutal p-6'} flex flex-col gap-3`}>
+  <label class="flex flex-col gap-1">
+    <span class="text-sm font-bold">Get competition alerts</span>
+    <input name="handle" type="email" required maxlength="160" placeholder="you@example.org" class="rounded-lg border-2 border-ink px-3 py-2" />
+  </label>
+  <TurnstileWidget siteKey={siteKey} />
+  <p data-form-msg class="hidden text-sm font-semibold"></p>
+  <button type="submit" class="btn-pill border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
+    Subscribe
+  </button>
+  <p class="text-xs text-slate-500">Email only. Explicit opt-in, unsubscribe anytime. No scraped numbers, ever.</p>
+</form>
+
+<script>
+  document.querySelectorAll('[data-optin-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector('[data-form-msg]') as HTMLElement;
+      msg.classList.remove('hidden');
+      try {
+        const data = new FormData(form);
+        const tokenEl = form.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement | null;
+        const token = tokenEl?.value ?? '';
+        const res = await fetch('/api/opt-in', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ channel: 'email', handle: String(data.get('handle') ?? ''), turnstile_token: token }),
+        });
+        const body = (await res.json()) as { error?: string; duplicate?: boolean };
+        if (!res.ok) throw new Error(body.error || 'subscribe failed');
+        msg.textContent = body.duplicate ? 'Already subscribed — you are on the list.' : 'Subscribed. Watch your inbox.';
+        msg.classList.add('text-emerald-brand');
+        form.reset();
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'subscribe failed';
+        msg.classList.add('text-red-700');
+      }
+    });
+  });
+</script>

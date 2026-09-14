@@ -2,6 +2,8 @@
 
 Newest first. One line per meaningful change.
 
+- 2026-09-14 — M2 public site shipped: 13 data pages (KV+D1, SSR + edge s-maxage), Turnstile public endpoints (contact/lost-found+photo-pdf/opt-in), migration 0009 (worlds wallets), fixtures + `kv:seed`, `smoke:m2` 10/10 green; fixed fixture wca_id, seed slug, R2-stream quirk, test-secret quirk.
+
 - 2026-09-14 — WP-14 + WP-15 shipped: payment queue UI + atomic decision txn (fee track + audit + outbox, 409 guard, manual WCA tick) + lost-found/contact inboxes; migration 0008 (competitor.email); `db:seed`; full local-D1 flow verified incl. side-effect assertions; `check`+`build` green.
 - 2026-09-14 — WP-13 admin CRUD shipped: registry-driven API + index/list/edit pages with EditorField; end-to-end local-D1 verified (CRUD, 400/404 paths, attr-JSON proof); fixed optional-editor + required-checkbox coercion. Auth: switched machine gh identity to farhanulju after farhanulbevy 403 (READ-only); push restored.
 

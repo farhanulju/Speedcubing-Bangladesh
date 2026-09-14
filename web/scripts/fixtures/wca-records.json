@@ -1,0 +1,23 @@
+{
+  "asOfExportDate": "2026-09-13",
+  "records": [
+    {
+      "event": "333",
+      "event_name": "3x3x3 Cube",
+      "single": { "value_centis": 582, "holder": "Fixture Holder", "wca_id": "2026FIXT01", "comp": "Fixture Open 2024", "date": "2024-03-14" },
+      "average": { "value_centis": 694, "holder": "Fixture Holder", "wca_id": "2026FIXT01", "comp": "Fixture Champs 2025", "date": "2025-12-28" }
+    },
+    {
+      "event": "222",
+      "event_name": "2x2x2 Cube",
+      "single": { "value_centis": 119, "holder": "Sample Cubist", "wca_id": "2026FIXT02", "comp": "Fixture Fest 2023", "date": "2023-11-10" },
+      "average": { "value_centis": 204, "holder": "Sample Cubist", "wca_id": "2026FIXT02", "comp": "Fixture Carnival 2024", "date": "2024-05-03" }
+    },
+    {
+      "event": "pyram",
+      "event_name": "Pyraminx",
+      "single": null,
+      "average": { "value_centis": 276, "holder": "Sample Cubist", "wca_id": "2026FIXT02", "comp": "Fixture Nationals 2025", "date": "2025-12-20" }
+    }
+  ]
+}
