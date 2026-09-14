@@ -1,0 +1,50 @@
+---
+import Base from '../../../layouts/Base.astro';
+import AdminForm from '../../../components/AdminForm.astro';
+import { getTable, getRow } from '../../../lib/admin';
+import { getEnv } from '../../../lib/bindings';
+
+export const prerender = false;
+
+const { table, id } = Astro.params;
+const def = table ? getTable(table) : undefined;
+if (!def || !id) return Astro.redirect('/admin');
+
+let row: Record<string, unknown> | null = null;
+let dbError: string | null = null;
+try {
+  if (def.singleton) {
+    row = (await getRow(getEnv(Astro.locals), def, '1')) ?? null;
+    if (!row) row = { id: '1', target_bdt: '', raised_manual_bdt: '', worlds_host_city: 'Sweden' };
+  } else if (id !== 'new') {
+    row = await getRow(getEnv(Astro.locals), def, id);
+  }
+} catch (err) {
+  dbError = err instanceof Error ? err.message : 'database unavailable';
+}
+---
+
+<Base title={`Admin — ${def.label}`}>
+  <section class="container-x max-w-3xl py-10">
+    <a href={`/admin/${def.table}`} class="text-sm font-semibold text-emerald-brand underline">← {def.label}</a>
+    <h1 class="mt-1 text-3xl font-extrabold tracking-tight">
+      {id === 'new' ? 'New entry' : `Edit ${id}`}
+    </h1>
+    {
+      dbError ? (
+        <div class="card-brutal mt-6 p-6">
+          <p class="font-bold">Database unavailable</p>
+          <p class="data-font mt-1 text-sm text-slate-600">{dbError}</p>
+        </div>
+      ) : row === null && id !== 'new' ? (
+        <div class="card-brutal mt-6 p-6">
+          <p class="font-bold">Not found.</p>
+        </div>
+      ) : (
+        <div class="card-brutal mt-6 p-6">
+          <AdminForm def={def} row={row} apiUrl={`/api/admin/${def.table}`} listUrl={`/admin/${def.table}`} />
+        </div>
+      )
+    }
+  </section>
+</Base>

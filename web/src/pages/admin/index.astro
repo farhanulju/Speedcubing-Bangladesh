@@ -1,14 +1,27 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Placeholder from '../../components/Placeholder.astro';
+import { ADMIN_TABLES } from '../../lib/admin';
 
-// Admin requires Cloudflare Access (WP-16) — never prerendered.
 export const prerender = false;
+
+const tables = Object.values(ADMIN_TABLES);
 ---
 
 <Base title="Admin">
-  <Placeholder
-    route="Admin dashboard"
-    scope="A18 content CRUD (Editor.js), announcements, payment queue (A19), inboxes, donors (WP-13…WP-16)"
-  />
+  <section class="container-x py-10">
+    <h1 class="text-3xl font-extrabold tracking-tight">Admin dashboard</h1>
+    <p class="mt-2 text-slate-600">
+      Content lives in D1 — no deploys to publish. Payment queue and inboxes land in WP-14/WP-15.
+    </p>
+    <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        tables.map((t) => (
+          <a href={`/admin/${t.table}`} class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+            <p class="text-lg font-extrabold">{t.label}</p>
+            <p class="data-font mt-1 text-xs uppercase tracking-wider text-slate-500">{t.table}</p>
+          </a>
+        ))
+      }
+    </div>
+  </section>
 </Base>

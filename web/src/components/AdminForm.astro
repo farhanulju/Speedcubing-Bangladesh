@@ -1,0 +1,125 @@
+---
+import EditorField from './EditorField.astro';
+import type { TableDef } from '../lib/admin';
+
+// Generic admin form driven by the TableDef registry (WP-13).
+// Editor.js bodies are collected client-side and POSTed as JSON.
+interface Props {
+  def: TableDef;
+  row: Record<string, unknown> | null;
+  apiUrl: string;
+  listUrl: string;
+}
+
+const { def, row, apiUrl, listUrl } = Astro.props;
+const isNew = row === null;
+const val = (name: string): string => {
+  const v = row?.[name];
+  return v === null || v === undefined ? '' : String(v);
+};
+const checked = (name: string): boolean => row?.[name] === 1 || row?.[name] === true;
+const editorJson = (name: string): string => {
+  const v = row?.[name];
+  if (!v) return '{"blocks":[]}';
+  return typeof v === 'string' ? v : JSON.stringify(v);
+};
+---
+
+<form data-admin-form={def.table} data-api-url={apiUrl} data-list-url={listUrl} class="flex flex-col gap-5">
+  {
+    def.fields.map((f) => (
+      <label class="flex flex-col gap-1">
+        <span class="text-sm font-bold">
+          {f.label} {f.required && <span class="text-speed-orange">*</span>}
+        </span>
+        {f.hint && <span class="text-xs text-slate-500">{f.hint}</span>}
+        {f.kind === 'text' &&
+          (f.name === def.pk && !isNew ? (
+            <span class="data-font rounded-lg border-2 border-ink bg-paper px-3 py-2">{val(f.name)}</span>
+          ) : (
+            <input name={f.name} type="text" value={isNew ? '' : val(f.name)} class="rounded-lg border-2 border-ink px-3 py-2" />
+          ))}
+        {f.kind === 'textarea' && <textarea name={f.name} rows="4" class="rounded-lg border-2 border-ink px-3 py-2">{isNew ? '' : val(f.name)}</textarea>}
+        {f.kind === 'number' && (
+          <input name={f.name} type="number" min="0" step="1" value={isNew ? '' : val(f.name)} class="rounded-lg border-2 border-ink px-3 py-2" />
+        )}
+        {f.kind === 'checkbox' && (
+          <input name={f.name} type="checkbox" checked={checked(f.name)} class="h-5 w-5 accent-emerald-brand" />
+        )}
+        {f.kind === 'select' && (
+          <select name={f.name} class="rounded-lg border-2 border-ink px-3 py-2">
+            {(f.options ?? []).map((o) => (
+              <option value={o} selected={!isNew && val(f.name) === o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        )}
+        {f.kind === 'readonly' && (
+          <span class="data-font rounded-lg border-2 border-ink bg-paper px-3 py-2">{isNew ? '(assigned on save)' : val(f.name)}</span>
+        )}
+        {f.kind === 'editor' && (
+          <EditorField holderId={`ed-${def.table}-${f.name}`} uploadEndpoint="/api/uploads" initialData={editorJson(f.name)} />
+        )}
+      </label>
+    ))
+  }
+  <p data-form-error class="hidden rounded-lg border-2 border-red-700 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800"></p>
+  <div class="flex gap-3">
+    <button type="submit" class="btn-pill border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
+      Save
+    </button>
+    <a href={listUrl} class="btn-pill border-2 border-ink bg-white px-6 py-2">Cancel</a>
+  </div>
+</form>
+
+<script>
+  declare global {
+    interface Window {
+      __speedbdSaveEditor: (holderId: string) => Promise<unknown>;
+    }
+  }
+
+  document.querySelectorAll('[data-admin-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = form.querySelector('[data-form-error]') as HTMLElement;
+      errEl.classList.add('hidden');
+      try {
+        const payload: Record<string, unknown> = {};
+        const data = new FormData(form);
+        // Collect Editor.js documents first (one per editor field).
+        const editors = form.querySelectorAll('[data-editor-field]');
+        for (const node of editors) {
+          const holderId = (node as HTMLElement).dataset.editorField;
+          if (!holderId) continue;
+          const fieldName = holderId.replace(/^ed-[^-]+-/, '');
+          payload[fieldName] = await window.__speedbdSaveEditor(holderId);
+        }
+        data.forEach((v, k) => {
+          if (k in payload) return; // editor value wins
+          payload[k] = v;
+        });
+        // Normalize checkboxes (unchecked boxes are absent from FormData).
+        form.querySelectorAll('input[type="checkbox"]').forEach((box) => {
+          const input = box as HTMLInputElement;
+          if (input.name) payload[input.name] = input.checked;
+        });
+        const apiUrl = form.dataset.apiUrl;
+        if (!apiUrl) throw new Error('missing api url');
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const body = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(body.error || 'save failed');
+        window.location.href = form.dataset.listUrl ?? '/admin';
+      } catch (err) {
+        errEl.textContent = err instanceof Error ? err.message : 'save failed';
+        errEl.classList.remove('hidden');
+      }
+    });
+  });
+</script>

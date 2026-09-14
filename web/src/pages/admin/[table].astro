@@ -1,0 +1,89 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getTable, listRows } from '../../lib/admin';
+import { getEnv } from '../../lib/bindings';
+
+export const prerender = false;
+
+const { table } = Astro.params;
+const def = table ? getTable(table) : undefined;
+if (!def) return Astro.redirect('/admin');
+
+let rows: Record<string, unknown>[] = [];
+let dbError: string | null = null;
+try {
+  rows = await listRows(getEnv(Astro.locals), def);
+} catch (err) {
+  dbError = err instanceof Error ? err.message : 'database unavailable';
+}
+---
+
+<Base title={`Admin — ${def.label}`}>
+  <section class="container-x py-10">
+    <div class="flex items-center justify-between">
+      <div>
+        <a href="/admin" class="text-sm font-semibold text-emerald-brand underline">← Admin</a>
+        <h1 class="mt-1 text-3xl font-extrabold tracking-tight">{def.label}</h1>
+      </div>
+      {
+        !def.singleton && (
+          <a
+            href={`/admin/${def.table}/new`}
+            class="btn-pill border-2 border-ink bg-emerald-brand px-5 py-2 text-sm text-white shadow-brutal"
+          >
+            + New
+          </a>
+        )
+      }
+    </div>
+
+    {
+      dbError ? (
+        <div class="card-brutal mt-6 p-6">
+          <p class="font-bold">Database unavailable</p>
+          <p class="data-font mt-1 text-sm text-slate-600">{dbError}</p>
+          <p class="mt-2 text-sm">Run <code class="data-font">npm run db:migrate</code> (local) — remote needs WP-00.</p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div class="card-brutal mt-6 p-6">
+          <p class="font-bold">No rows yet.</p>
+          {!def.singleton && (
+            <p class="mt-1 text-sm">
+              <a class="font-semibold text-emerald-brand underline" href={`/admin/${def.table}/new`}>
+                Create the first entry
+              </a>
+              .
+            </p>
+          )}
+        </div>
+      ) : (
+        <div class="card-brutal mt-6 overflow-x-auto">
+          <table class="w-full min-w-160 text-left text-sm">
+            <thead>
+              <tr class="border-b-2 border-ink">
+                {def.listColumns.map((c) => (
+                  <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">{c}</th>
+                ))}
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr class="border-b border-slate-200 last:border-0">
+                  {def.listColumns.map((c) => (
+                    <td class="data-font px-4 py-2">{String(r[c] ?? '—')}</td>
+                  ))}
+                  <td class="px-4 py-2 text-right">
+                    <a class="font-semibold text-emerald-brand underline" href={`/admin/${def.table}/${r[def.pk]}`}>
+                      Edit
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
+    }
+  </section>
+</Base>

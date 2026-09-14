@@ -10,12 +10,12 @@ Updated: 2026-09-14 (M0 scaffold built green). Newest first. This is the file th
 - Design: Stitch round 1 + round 2 reviewed (`plan/DESIGN_REVIEW_ROUND2.md`); new screens + mobile verified; punchlist feeds build M5.
 - Execution: `plan/BUILD_PLAN.md` WP-00…WP-53 across M0–M5 with acceptance criteria, API/cron/secrets tables, launch runbook.
 - M0 DONE: `web/` scaffold builds green — Astro 5 + TS + Tailwind v4 (Cloudflare adapter), Stitch tokens + EN dicts + unified lockup shell, 13 public routes + `/dashboard` + `/admin` + print-slip + `/api/health` + 404/500 (placeholders with WP pointers), shared `workers/api.ts`, standalone `workers/sync` cron worker (stubs), D1 migrations 0001–0007, `.dev.vars.example`. `npm run check` + `npm run build` + dev-serve smoke (/, /dashboard, /api/health, slug-404) pass. workers-types v5 (wrangler 4.131 peer). Ops handoff: `plan/OPS_HANDOFF.md`.
-- M1 started WITHOUT WP-00 (all local): WP-10 schema validated (`npm run db:check` — 7 migrations + seed + CHECK/UNIQUE/defaults green); WP-12 Editor.js pinned exact (core 2.31.6 + header/nested-list/quote/image/delimiter), allowlisted server parsers + `EditorField` component (community-tool typing drift contained in one cast); WP-11 R2 uploader endpoint (fails closed 503 until WP-16 auth) + `/api/media` serve route (traversal→400, missing→404) verified via dev smoke.
+- M1 admin core DONE (local, no WP-00): generic CRUD framework (`src/lib/admin.ts` registry + coercion + audit) with query-param API (`/api/admin/:table`, auth fails closed, dev-bypass for local), admin index/list/edit pages with `AdminForm` + `EditorField`; verified end-to-end against local D1 (create/list/get/validate-400/unknown-404/edit-page/edit-attr-JSON/delete/singleton) + `check`+`build` green. Auth note: machine gh identity switched to farhanulju (owner) after farhanulbevy proved READ-only; pushes flow again.
 
 ## Current focus
 
 - HUMAN: execute `plan/OPS_HANDOFF.md` (WP-00) and reply "WP-00 done" — remote deploy waits on it.
-- AGENTS next: WP-13 admin CRUD (content tables + EditorField wiring) → WP-14 payment queue → WP-15 inboxes. All buildable locally; remote `db:migrate:remote` after WP-00.
+- AGENTS next: WP-14 payment queue UI + actions → WP-15 inboxes (lost-found/contact/donors UI polish) → WP-16 Access verification. All buildable locally.
 
 ## Gaps / unknowns
 
