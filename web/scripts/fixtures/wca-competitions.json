@@ -2,32 +2,22 @@
   "asOfExportDate": "2026-09-13",
   "items": [
     {
-      "wca_id": "DhakaSpringOpen2026",
-      "wca_id": "DhakaSpringOpen2026",
+      "id": "DhakaSpringOpen2026",
       "name": "Dhaka Spring Open 2026",
       "city": "Dhaka",
-      "venue": "National Sports Council Gymnasium",
-      "address": "Purana Paltan, Dhaka",
-      "start_date": "2026-04-17",
-      "end_date": "2026-04-18",
+      "date": { "from": "2026-04-17", "till": "2026-04-18", "numberOfDays": 2 },
+      "isCanceled": false,
       "events": ["333", "222", "444", "333oh", "pyram", "skewb"],
-      "competitor_limit": 120,
-      "url": "https://www.worldcubeassociation.org/competitions/DhakaSpringOpen2026",
-      "live_url": "https://live.worldcubeassociation.org/competitions/DhakaSpringOpen2026"
+      "venue": { "name": "National Sports Council Gymnasium", "address": "Purana Paltan, Dhaka" }
     },
     {
-      "wca_id": "ChittagongCubeOpen2026",
+      "id": "ChittagongCubeOpen2026",
       "name": "Chittagong Cube Open 2026",
-      "wca_id": "ChittagongCubeOpen2026",
       "city": "Chittagong",
-      "venue": "GEC Convention Center",
-      "address": "GEC Circle, Chittagong",
-      "start_date": "2026-05-15",
-      "end_date": "2026-05-16",
+      "date": { "from": "2026-05-15", "till": "2026-05-16", "numberOfDays": 2 },
+      "isCanceled": false,
       "events": ["333", "555", "minx", "clock", "333bf"],
-      "competitor_limit": 80,
-      "url": "https://www.worldcubeassociation.org/competitions/ChittagongCubeOpen2026",
-      "live_url": null
+      "venue": { "name": "GEC Convention Center", "address": "GEC Circle, Chittagong" }
     }
   ]
 }

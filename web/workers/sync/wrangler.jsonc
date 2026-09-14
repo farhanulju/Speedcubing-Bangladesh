@@ -1,5 +1,9 @@
 {
   "$schema": "https://developers.cloudflare.com/workers/wrangler/configuration/",
+  // NOTE: local D1/KV state is per config file (./workers/sync/.wrangler),
+  // separate from the web app's ./.wrangler. Run migrations for BOTH locally:
+  //   npm run db:migrate && npx wrangler d1 migrations apply speedbd --local -c workers/sync/wrangler.jsonc
+  // Production shares one remote DB by ID, so this is dev-only divergence.
   "name": "speedbd-sync",
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -11,7 +15,8 @@
     {
       "binding": "DB",
       "database_name": "speedbd",
-      "database_id": "REPLACE_WITH_D1_ID__see_plan_OPS_HANDOFF_md"
+      "database_id": "REPLACE_WITH_D1_ID__see_plan_OPS_HANDOFF_md",
+      "migrations_dir": "../../migrations"
     }
   ],
   "kv_namespaces": [

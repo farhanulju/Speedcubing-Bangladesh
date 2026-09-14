@@ -1,0 +1,7 @@
+{
+  "asOfExportDate": "2026-09-13",
+  "items": [
+    { "personId": "2026FIXT01", "eventId": "333", "best": 582, "rank": { "world": 4000, "continent": 1200, "country": 1 } },
+    { "personId": "2026SAMP01", "eventId": "333", "best": 842, "rank": { "world": 9000, "continent": 2800, "country": 12 } }
+  ]
+}

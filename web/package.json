@@ -10,10 +10,12 @@
     "check": "astro check",
     "cf:types": "wrangler types",
     "db:migrate": "wrangler d1 migrations apply speedbd --local",
+    "db:migrate:sync": "wrangler d1 migrations apply speedbd --local -c workers/sync/wrangler.jsonc",
     "db:migrate:remote": "wrangler d1 migrations apply speedbd --remote",
     "db:seed": "wrangler d1 execute speedbd --local --file=scripts/seed.sql",
-    "kv:seed": "wrangler kv key put \"wca:competitions:BD\" --binding WCA_CACHE --local --path scripts/fixtures/wca-competitions.json && wrangler kv key put \"wca:competition:DhakaSpringOpen2026\" --binding WCA_CACHE --local --path scripts/fixtures/wca-competition-DhakaSpringOpen2026.json && wrangler kv key put \"wca:records:BD\" --binding WCA_CACHE --local --path scripts/fixtures/wca-records.json && wrangler kv key put \"wca:ranks:BD:333\" --binding WCA_CACHE --local --path scripts/fixtures/wca-ranks-333.json",
+    "kv:seed": "wrangler kv key put \"wca:competitions:BD\" --binding WCA_CACHE --local --path scripts/fixtures/wca-competitions.json && wrangler kv key put \"wca:competition:DhakaSpringOpen2026\" --binding WCA_CACHE --local --path scripts/fixtures/wca-competition-DhakaSpringOpen2026.json && wrangler kv key put \"wca:records:BD\" --binding WCA_CACHE --local --path scripts/fixtures/wca-records.json && wrangler kv key put \"wca:ranks:BD:333:single\" --binding WCA_CACHE --local --path scripts/fixtures/wca-ranks-333-single.json && wrangler kv key put \"wca:ranks:BD:333:average\" --binding WCA_CACHE --local --path scripts/fixtures/wca-ranks-333-average.json",
     "db:check": "node scripts/db-check.mjs",
+    "test:sync": "node scripts/test-sync.mjs",
     "smoke:m2": "node scripts/smoke-m2.mjs"
   },
   "dependencies": {

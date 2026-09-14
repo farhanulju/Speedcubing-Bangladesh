@@ -4,7 +4,7 @@ import NewsletterForm from '../components/NewsletterForm.astro';
 import { en } from '../i18n/en';
 import { getDonationPage, getNews, getPinnedAnnouncements, getSponsors } from '../lib/content';
 import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
-import { formatCenti, getCompetitions, getRecords } from '../lib/wca';
+import { formatRecordValue, getCompetitions, getRecords } from '../lib/wca';
 
 // Server-rendered with edge caching (Cloudflare has no Next-style ISR:
 // s-maxage below is the equivalent). Never prerendered — data comes from
@@ -106,7 +106,7 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
               <p class="font-extrabold">{r.event_name}</p>
               {r.single && (
                 <p class="data-font mt-1 text-2xl font-bold">
-                  {formatCenti(r.single.value_centis)} <span class="text-xs font-normal">single • {r.single.holder}</span>
+                  {formatRecordValue(r.event, 'single', r.single.value_centis) ?? '—'} <span class="text-xs font-normal">single • {r.single.holder}</span>
                 </p>
               )}
             </div>

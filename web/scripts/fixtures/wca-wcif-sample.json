@@ -1,0 +1,21 @@
+{
+  "id": "DhakaSpringOpen2026",
+  "name": "Dhaka Spring Open 2026",
+  "competitorLimit": 120,
+  "events": [
+    {
+      "id": "333",
+      "rounds": [
+        { "id": "333-r1", "format": "a", "timeLimit": { "centiseconds": 30000, "cumulativeRoundIds": [] }, "cutoff": null, "scrambleSetCount": 5 },
+        { "id": "333-r2", "format": "a", "timeLimit": { "centiseconds": 30000, "cumulativeRoundIds": [] }, "cutoff": { "numberOfAttempts": 2, "attemptResult": 4500 }, "scrambleSetCount": 3 },
+        { "id": "333-f", "format": "a", "timeLimit": { "centiseconds": 60000, "cumulativeRoundIds": [] }, "cutoff": null, "scrambleSetCount": 3 }
+      ]
+    },
+    {
+      "id": "222",
+      "rounds": [
+        { "id": "222-r1", "format": "a", "timeLimit": { "centiseconds": 9000, "cumulativeRoundIds": [] }, "cutoff": null, "scrambleSetCount": 4 }
+      ]
+    }
+  ]
+}

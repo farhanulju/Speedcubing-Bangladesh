@@ -1,0 +1,9 @@
+{
+  "pagination": { "page": 1, "size": 100 },
+  "total": 3,
+  "items": [
+    { "competitionId": "DhakaSpringOpen2026", "personId": "2026SAMP01", "eventId": "333", "round": "First round", "position": 4, "best": 941, "average": 1012, "format": "Average of 5", "solves": [1126, 941, 1124, 957, 955] },
+    { "competitionId": "DhakaSpringOpen2026", "personId": "2026FIXT01", "eventId": "333", "round": "Second round", "position": 1, "best": 662, "average": 909, "format": "Average of 5", "solves": [662, 943, 947, 888, 896] },
+    { "competitionId": "DhakaSpringOpen2026", "personId": "2026SAMP01", "eventId": "333", "round": "Final", "position": 1, "best": 842, "average": 1070, "format": "Average of 5", "solves": [842, 953, 1175, 1150, 1107] }
+  ]
+}

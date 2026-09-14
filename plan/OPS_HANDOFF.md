@@ -48,6 +48,7 @@ Add each as **secret** (not plain variable):
 - [ ] `SESSION_SECRET` (generate: `openssl rand -base64 32`)
 - [ ] `WCA_CLIENT_ID` / `WCA_CLIENT_SECRET` (from step 9)
 - [ ] `RESEND_API_KEY` (from step 7)
+- [ ] `EMAIL_FROM` (e.g. `Speedcubing BD <noreply@<domain>>` — must match the verified Resend domain)
 - [ ] `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` (from step 5)
 - [ ] `ORGANIZER_INBOX` (e.g. `organizers@<domain>` — TxID fail-closed BCC)
 - [ ] Sync worker: `wrangler secret put RESEND_API_KEY -c workers/sync/wrangler.jsonc` (run from `web/`).
