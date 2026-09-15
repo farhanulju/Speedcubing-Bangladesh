@@ -1,5 +1,5 @@
 ---
-import Base from '../../../layouts/Base.astro';
+import AdminShell from '../../../layouts/AdminShell.astro';
 import { listTxQueue } from '../../../lib/payments';
 import { getEnv } from '../../../lib/bindings';
 
@@ -27,7 +27,7 @@ const pills = [
 ];
 ---
 
-<Base title="Admin — Payment queue">
+<AdminShell title="Payment queue" current="payments">
   <section class="container-x py-10">
     <a href="/admin" class="text-sm font-semibold text-emerald-brand underline">← Admin</a>
     <h1 class="mt-1 text-3xl font-extrabold tracking-tight">Payment queue</h1>
@@ -99,4 +99,4 @@ const pills = [
       )
     }
   </section>
-</Base>
+</AdminShell>

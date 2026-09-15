@@ -2,6 +2,9 @@
 
 Durable decisions. Newest first. Format: `YYYY-MM-DD — Decision — rationale — owner`.
 
+- 2026-09-15 — Admin gets exactly ONE distinct dark shell (`AdminShell`: sidebar + who-am-I badge on every `/admin` page) — mode-confusion safety (an admin must never mistake admin for public view) and identity visibility; supersedes the reviewer-written "unify to one shell" note, which was never a board vote and wrongly blocked a distinct admin chrome — user direction.
+- 2026-09-15 — Admin identity is display-only (`Cf-Access-Authenticated-User-Email` from the edge, dev bypass string locally); it never authorizes — APIs still verify the Access JWT per request, so identity display adds zero attack surface — user direction.
+
 - 2026-09-15 — Comp status pills derive from WCA end-dates and appear only under date-neutral headings; fixture dates stay stale-dated — pills must never contradict their heading, and fixtures double as test-sync inputs (past dates drive champion derivation) — reviewer check.
 - 2026-09-15 — Stitch elements contradicting board rules stay out: PDF slips (print-CSS instead), psych sheets (B10), auto-match/TxID-ok language, WCA-side counts, live-stream labels, fabricated stats/citations, volunteer tiers, claimant IDs — reviewer check against Stitch export 2026-09-15.
 

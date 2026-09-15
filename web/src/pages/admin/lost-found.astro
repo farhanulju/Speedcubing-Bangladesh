@@ -1,5 +1,5 @@
 ---
-import Base from '../../layouts/Base.astro';
+import AdminShell from '../../layouts/AdminShell.astro';
 import { listLostFound, LOST_FOUND_STATUSES } from '../../lib/inbox';
 import { getEnv } from '../../lib/bindings';
 
@@ -15,7 +15,7 @@ try {
 }
 ---
 
-<Base title="Admin — Lost & found inbox">
+<AdminShell title="Lost & found inbox" current="lost-found">
   <section class="container-x py-10">
     <a href="/admin" class="text-sm font-semibold text-emerald-brand underline">← Admin</a>
     <h1 class="mt-1 text-3xl font-extrabold tracking-tight">Lost &amp; found inbox</h1>
@@ -75,7 +75,7 @@ try {
       )
     }
   </section>
-</Base>
+</AdminShell>
 
 <script>
   document.querySelectorAll('[data-inbox-row]').forEach((rowEl) => {

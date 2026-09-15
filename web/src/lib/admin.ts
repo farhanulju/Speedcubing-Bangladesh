@@ -179,6 +179,19 @@ export interface AdminActor {
   actor: string;
 }
 
+// Display-only identity for the admin shell (who-am-I badge). NOT auth:
+// APIs still verify the Access JWT; pages are gated at the edge by Access.
+// The edge passes the verified email in Cf-Access-Authenticated-User-Email,
+// so no crypto runs here. Locally the dev bypass stands in.
+export function adminDisplayActor(
+  request: Request,
+  env: SpeedbdEnv & { ADMIN_DEV_BYPASS?: string },
+): string | null {
+  if (env.ADMIN_DEV_BYPASS === '1') return 'dev-local · bypass on';
+  const email = request.headers.get('Cf-Access-Authenticated-User-Email');
+  return email && email.includes('@') ? email : null;
+}
+
 export class HttpError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -296,6 +309,46 @@ export async function deleteRow(env: SpeedbdEnv, def: TableDef, actor: string, i
   if (!existing) throw new HttpError(404, `${def.table}/${id} not found`);
   await env.DB.prepare(`DELETE FROM ${def.table} WHERE ${def.pk} = ?`).bind(id).run();
   await writeAudit(env, actor, 'delete', def.table, id);
+}
+
+export interface AdminOverview {
+  pendingTx: number;
+  openLostFound: number;
+  openContact: number;
+  publishedCounts: { label: string; n: number }[];
+  recentActivity: { actor: string; action: string; entity: string; entity_id: string; at: string }[];
+}
+
+// Ops-hub numbers for /admin (WP-16 activity feed + stat cards). Every figure
+// is derived from our own D1 — no WCA-side counts, no sync fiction.
+export async function getAdminOverview(env: SpeedbdEnv): Promise<AdminOverview> {
+  const count = async (sql: string): Promise<number> => {
+    const row = (await env.DB.prepare(sql).first()) as null | { n: number };
+    return row?.n ?? 0;
+  };
+  const publishedCounts: AdminOverview['publishedCounts'] = [];
+  for (const [table, label] of [
+    ['announcement', 'Announcements'],
+    ['page', 'Pages'],
+    ['person', 'People'],
+    ['sponsor', 'Sponsors'],
+    ['faq', 'FAQ'],
+    ['news', 'News'],
+  ] as const) {
+    publishedCounts.push({ label, n: await count(`SELECT COUNT(*) AS n FROM ${table} WHERE status='published'`) });
+  }
+  const recentActivity = (
+    await env.DB.prepare(
+      'SELECT actor, action, entity, entity_id, at FROM audit_log ORDER BY rowid DESC LIMIT 10',
+    ).all<AdminOverview['recentActivity'][number]>()
+  ).results;
+  return {
+    pendingTx: await count("SELECT COUNT(*) AS n FROM tx_submission WHERE status='pending'"),
+    openLostFound: await count("SELECT COUNT(*) AS n FROM lost_found WHERE status='open'"),
+    openContact: await count("SELECT COUNT(*) AS n FROM contact_message WHERE status='open'"),
+    publishedCounts,
+    recentActivity,
+  };
 }
 
 export async function writeAudit(

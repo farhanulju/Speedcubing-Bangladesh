@@ -1,18 +1,63 @@
 ---
-import Base from '../../layouts/Base.astro';
-import { ADMIN_TABLES } from '../../lib/admin';
+import AdminShell from '../../layouts/AdminShell.astro';
+import { ADMIN_TABLES, getAdminOverview } from '../../lib/admin';
+import { getEnv } from '../../lib/bindings';
 
 export const prerender = false;
 
 const tables = Object.values(ADMIN_TABLES);
+let overview = null as null | Awaited<ReturnType<typeof getAdminOverview>>;
+let dbError: string | null = null;
+try {
+  overview = await getAdminOverview(getEnv(Astro.locals));
+} catch (err) {
+  dbError = err instanceof Error ? err.message : 'database unavailable';
+}
 ---
 
-<Base title="Admin">
+<AdminShell title="Overview" current="overview">
   <section class="container-x py-10">
     <h1 class="text-3xl font-extrabold tracking-tight">Admin dashboard</h1>
     <p class="mt-2 text-slate-600">
       Content lives in D1 — no deploys to publish. Verification is human; the queue only organizes it.
     </p>
+    {dbError ? (
+      <p class="card-brutal mt-6 p-4 font-bold">Database unavailable</p>
+    ) : (
+      overview && (
+        <>
+          <div class="mt-6 grid gap-4 sm:grid-cols-3">
+            <a href="/admin/payments" class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+              <p class="data-font text-xs uppercase tracking-wider text-slate-500">Pending payments</p>
+              <p class="data-font mt-1 text-3xl font-bold">{overview.pendingTx} <span class="text-sm font-normal">TxIDs waiting</span></p>
+            </a>
+            <a href="/admin/lost-found" class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+              <p class="data-font text-xs uppercase tracking-wider text-slate-500">Open lost &amp; found</p>
+              <p class="data-font mt-1 text-3xl font-bold">{overview.openLostFound} <span class="text-sm font-normal">tickets</span></p>
+            </a>
+            <a href="/admin/contact" class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+              <p class="data-font text-xs uppercase tracking-wider text-slate-500">Open contact</p>
+              <p class="data-font mt-1 text-3xl font-bold">{overview.openContact} <span class="text-sm font-normal">messages</span></p>
+            </a>
+          </div>
+          <div class="card-brutal mt-6 p-5">
+            <h2 class="text-xl font-extrabold">Recent activity</h2>
+            {overview.recentActivity.length === 0 ? (
+              <p class="mt-2 text-sm text-slate-600">No admin actions recorded yet.</p>
+            ) : (
+              <ol class="mt-2 flex flex-col gap-1 text-sm">
+                {overview.recentActivity.map((a) => (
+                  <li>
+                    <span class="font-bold">{a.actor}</span> {a.action} <span class="data-font text-slate-600">{a.entity}/{a.entity_id}</span>
+                    <span class="data-font text-xs text-slate-500"> • {a.at}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </>
+      )
+    )}
     <h2 class="mt-8 text-xl font-extrabold">Operations</h2>
     <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <a href="/admin/payments" class="card-brutal shadow-brutal block border-speed-orange p-5 hover:-translate-y-0.5">
@@ -40,4 +85,4 @@ const tables = Object.values(ADMIN_TABLES);
       }
     </div>
   </section>
-</Base>
+</AdminShell>

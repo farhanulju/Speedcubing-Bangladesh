@@ -1,0 +1,105 @@
+---
+import '../styles/tokens.css';
+import { ADMIN_TABLES, adminDisplayActor } from '../lib/admin';
+import { getEnv } from '../lib/bindings';
+
+// Distinct admin shell: dark sidebar on desktop, dark top bar + menu on
+// mobile. Admin must be unmistakable vs the public view (mode-confusion
+// safety), with a who-am-I badge on every page. Exactly ONE admin shell —
+// no per-section variants. Zero client JS (<details> disclosure only).
+interface Props {
+  title: string;
+  current: string; // 'overview' | 'payments' | 'lost-found' | 'contact' | table name
+}
+
+const { title, current } = Astro.props;
+const actor = adminDisplayActor(Astro.request, getEnv(Astro.locals) as Parameters<typeof adminDisplayActor>[1]);
+
+const ops = [
+  { key: 'overview', href: '/admin', label: 'Overview' },
+  { key: 'payments', href: '/admin/payments', label: 'Payment queue' },
+  { key: 'lost-found', href: '/admin/lost-found', label: 'Lost & found' },
+  { key: 'contact', href: '/admin/contact', label: 'Contact inbox' },
+];
+const contentTables = Object.values(ADMIN_TABLES);
+const linkCls = (active: boolean) =>
+  `block rounded-lg px-3 py-2 text-sm font-semibold ${active ? 'bg-emerald-brand text-white' : 'text-white/75 hover:bg-white/10 hover:text-white'}`;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} — Admin — Speedcubing Bangladesh</title>
+  </head>
+  <body class="bg-paper font-display text-ink antialiased">
+    <a href="#main" class="sr-only focus:not-sr-only">Skip to content</a>
+
+    <div class="min-h-screen md:grid md:grid-cols-[240px_1fr]">
+      {/* Sidebar (desktop) */}
+      <aside class="hidden flex-col bg-ink text-white md:flex">
+        <div class="border-b border-white/15 p-4">
+          <p class="text-base font-extrabold tracking-tight">SPEEDCUBING BD</p>
+          <p class="mt-1 flex flex-wrap items-center gap-2">
+            <span class="data-font rounded-full bg-speed-orange px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">Admin</span>
+          </p>
+          <p class="data-font mt-2 truncate text-xs text-white/60" title={actor ?? 'signed in via Access'}>
+            {actor ?? 'signed in via Access'}
+          </p>
+        </div>
+        <nav class="flex-1 overflow-y-auto p-3" aria-label="Admin">
+          <p class="data-font px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-white/40">Operations</p>
+          {ops.map((item) => (
+            <a href={item.href} aria-current={current === item.key ? 'page' : undefined} class={linkCls(current === item.key)}>
+              {item.label}
+            </a>
+          ))}
+          <p class="data-font px-3 pb-1 pt-4 text-[11px] font-bold uppercase tracking-wider text-white/40">Content</p>
+          {contentTables.map((t) => (
+            <a href={`/admin/${t.table}`} aria-current={current === t.table ? 'page' : undefined} class={linkCls(current === t.table)}>
+              {t.label}
+            </a>
+          ))}
+        </nav>
+        <div class="border-t border-white/15 p-3">
+          <a href="/" class="block rounded-lg px-3 py-2 text-sm font-semibold text-white/75 hover:bg-white/10 hover:text-white">
+            ← View public site
+          </a>
+        </div>
+      </aside>
+
+      <div class="min-w-0">
+        {/* Top bar (mobile) */}
+        <header class="border-b-2 border-ink bg-ink text-white md:hidden">
+          <div class="flex items-center justify-between gap-2 px-4 py-3">
+            <p class="font-extrabold tracking-tight">
+              SPEEDCUBING BD <span class="data-font ml-1 rounded-full bg-speed-orange px-2 py-0.5 align-middle text-[11px] font-bold uppercase">Admin</span>
+            </p>
+            <details class="relative">
+              <summary class="btn-pill cursor-pointer border-2 border-white/40 px-4 py-1.5 text-sm" aria-label="Open admin menu">
+                Menu
+              </summary>
+              <nav class="absolute right-0 top-full z-50 mt-2 max-h-[70vh] w-64 overflow-y-auto rounded-xl border-2 border-ink bg-ink p-3" aria-label="Admin">
+                {ops.map((item) => (
+                  <a href={item.href} class={linkCls(current === item.key)}>{item.label}</a>
+                ))}
+                <p class="data-font px-3 pb-1 pt-3 text-[11px] font-bold uppercase tracking-wider text-white/40">Content</p>
+                {contentTables.map((t) => (
+                  <a href={`/admin/${t.table}`} class={linkCls(current === t.table)}>{t.label}</a>
+                ))}
+                <a href="/" class="mt-2 block rounded-lg px-3 py-2 text-sm font-semibold text-white/75 hover:bg-white/10">← View public site</a>
+              </nav>
+            </details>
+          </div>
+          <p class="data-font truncate px-4 pb-2 text-xs text-white/60">{actor ?? 'signed in via Access'}</p>
+        </header>
+
+        <main id="main">
+          <slot />
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

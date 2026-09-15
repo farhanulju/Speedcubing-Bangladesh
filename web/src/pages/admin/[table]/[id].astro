@@ -1,5 +1,5 @@
 ---
-import Base from '../../../layouts/Base.astro';
+import AdminShell from '../../../layouts/AdminShell.astro';
 import AdminForm from '../../../components/AdminForm.astro';
 import { getTable, getRow } from '../../../lib/admin';
 import { getEnv } from '../../../lib/bindings';
@@ -24,7 +24,7 @@ try {
 }
 ---
 
-<Base title={`Admin — ${def.label}`}>
+<AdminShell title={def.label} current={def.table}>
   <section class="container-x max-w-3xl py-10">
     <a href={`/admin/${def.table}`} class="text-sm font-semibold text-emerald-brand underline">← {def.label}</a>
     <h1 class="mt-1 text-3xl font-extrabold tracking-tight">
@@ -47,4 +47,4 @@ try {
       )
     }
   </section>
-</Base>
+</AdminShell>

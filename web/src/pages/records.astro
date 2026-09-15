@@ -35,6 +35,7 @@ for (const s of snaps) {
       Updated daily from the official WCA database export
       {recs.asOfExportDate ? <span class="data-font"> (v{recs.asOfExportDate})</span> : ''}
       . <a class="font-bold text-emerald-brand underline" href="https://www.worldcubeassociation.org/results/records" target="_blank" rel="noopener">Verify on WCA</a>
+      {' '}<a class="btn-pill ml-2 inline-block border-2 border-ink bg-white px-4 py-1 text-sm shadow-brutal" href="/api/records.csv" download>CSV Export</a>
     </p>
     <form method="get" action="/records" class="mt-6 flex max-w-xl gap-2">
       <input

@@ -1,5 +1,5 @@
 ---
-import Base from '../../../layouts/Base.astro';
+import AdminShell from '../../../layouts/AdminShell.astro';
 import { getTx } from '../../../lib/payments';
 import { getEnv } from '../../../lib/bindings';
 
@@ -26,7 +26,7 @@ const events: string[] = (() => {
 })();
 ---
 
-<Base title="Admin — Inspect payment">
+<AdminShell title="Inspect payment" current="payments">
   <section class="container-x max-w-3xl py-10">
     <a href="/admin/payments" class="text-sm font-semibold text-emerald-brand underline">← Payment queue</a>
     <h1 class="mt-1 text-3xl font-extrabold tracking-tight">Quick payment inspection</h1>
@@ -118,7 +118,7 @@ const events: string[] = (() => {
       )
     }
   </section>
-</Base>
+</AdminShell>
 
 <script>
   document.querySelectorAll('[data-decide-form]').forEach((formEl) => {

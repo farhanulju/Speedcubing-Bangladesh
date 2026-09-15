@@ -27,7 +27,7 @@ entry (`plan/SEEDING_RUNBOOK.md`). **Gap** = scoped but not yet built.
 | A13 | Built + Content | Manual totals, masked Reveal wallets, opt-in donor wall; candidates/criteria/refund copy pending |
 | A14 | Built | Contact + email-only opt-in, Turnstile-gated; WhatsApp stays link-text per copy |
 | A15 | Partial | Per-page title/meta + skip link only. Missing: `og:image`, sitemap, analytics beacon, link-in-bio page |
-| A16 | Built, 1 gap | NR table + daily stamp; `record_snapshot` collected by cron. Gap: Progression view |
+| A16 | Built, 1 gap | NR table + daily stamp + CSV export + inline snapshot history; `record_snapshot` collected by cron. Gap: dedicated Progression view |
 | A17 | Built, needs WP-00 | Dashboard (PBs with `—` fallback, tracker, history link-out, consent card); live login needs WP-00 |
 | A18 | Built, needs WP-00 | Registry CRUD + Editor.js + audit; Access JWT verify coded, app provisioning pending |
 | A19 | Built | Queue, atomic accept/reject, 409 guard, manual WCA tick — local-verified |
