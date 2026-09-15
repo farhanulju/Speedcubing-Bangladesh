@@ -5,6 +5,7 @@
 - `DESIGN_REVIEW_ROUND2.md` — Stitch round-2 scorecard (fixed / partial / open / new issues) + pre-build punchlist consumed by BUILD_PLAN M5.
 - `OPS_HANDOFF.md` — WP-00 human-only dashboard clicks (accounts, D1/KV/R2 IDs, Turnstile, Access, Resend, WCA OAuth, secrets, sync-worker deploy). Agents stop at this file's door and resume after "WP-00 done".
 - `SEEDING_RUNBOOK.md` — WP-51 content entry: owner matrix, placeholder inventory + purge audits, photo-consent gate, donor/Worlds checklist, sign-off.
+- `QA_MATRIX.md` — WP-52 verification: harness results, failure-drill detail, routes×viewports state, remote-pending list.
 - Future per-sprint notes go here as `plan/sprint-YYYY-MM-DD.md` (create only when a sprint starts).
 
 Rule: no code for unticked features. To change scope, tick the box in `FEATURE_LIST.md` via board review first, then update `ROADMAP.md` in the same PR.

@@ -2,7 +2,8 @@
 -- NEVER production data. Placeholders are purged in WP-51 before launch.
 
 INSERT INTO announcement (slug, title, date, comp_wca_id, body_json, pinned, status, updated_by, updated_at) VALUES
-('sample-registration-open', 'Sample: registration opens Friday 8 PM', '2026-09-14', NULL, '{"blocks":[{"type":"paragraph","data":{"text":"Sample announcement body."}}]}', 1, 'published', 'seed', '2026-09-14');
+('sample-registration-open', 'Sample: registration opens Friday 8 PM', '2026-09-14', NULL, '{"blocks":[{"type":"paragraph","data":{"text":"Sample announcement body."}}]}', 1, 'published', 'seed', '2026-09-14'),
+('sample-venue-map', 'Sample: venue map and reporting time', '2026-09-10', 'DhakaSpringOpen2026', '{"blocks":[{"type":"paragraph","data":{"text":"Sample venue note. Report 30 minutes early."}}]}', 0, 'published', 'seed', '2026-09-10');
 
 INSERT INTO page (slug, title, body_json, status, updated_by, updated_at) VALUES
 ('about', 'Sample story', '{"blocks":[{"type":"header","data":{"text":"Sample","level":2}}]}', 'published', 'seed', '2026-09-14'),
@@ -13,26 +14,38 @@ INSERT INTO page (slug, title, body_json, status, updated_by, updated_at) VALUES
 
 INSERT INTO person (id, name, photo_r2, photo_consent, role, wca_id, focus_area, member_since, links_json, status, updated_by, updated_at) VALUES
 ('sample-delegate', 'Sample Delegate', NULL, 0, 'WCA Delegate', NULL, 'Dhaka', '2024-01', '{}', 'published', 'seed', '2026-09-14'),
-('sample-exec', 'Sample Executive', NULL, 0, 'Head of Competitions', NULL, 'Dhaka', '2025-06', '{}', 'published', 'seed', '2026-09-14');
+('sample-exec', 'Sample Executive', NULL, 0, 'Head of Competitions', NULL, 'Dhaka', '2025-06', '{}', 'published', 'seed', '2026-09-14'),
+('sample-media', 'Sample Media Lead', NULL, 0, 'Head of Media', NULL, 'Chittagong', '2025-01', '{}', 'published', 'seed', '2026-09-14'),
+('sample-outreach', 'Sample Outreach', NULL, 0, 'School Outreach Coordinator', NULL, 'Sylhet', '2025-09', '{}', 'published', 'seed', '2026-09-14');
 
 INSERT INTO sponsor (id, name, logo_r2, tier, url, sort_order, status, updated_by, updated_at) VALUES
-('sample-sponsor', 'Sample Sponsor Ltd', NULL, 'gold', 'https://example.org', 0, 'published', 'seed', '2026-09-14');
+('sample-sponsor', 'Sample Sponsor Ltd', NULL, 'gold', 'https://example.org', 0, 'published', 'seed', '2026-09-14'),
+('sample-silver', 'Sample Foods BD', NULL, 'silver', 'https://example.org', 1, 'published', 'seed', '2026-09-14'),
+('sample-community', 'Sample Cube Shop', NULL, 'community', 'https://example.org', 2, 'published', 'seed', '2026-09-14');
 
 INSERT INTO faq (id, q, a_json, sort_order, status, updated_by, updated_at) VALUES
-('sample-faq-1', 'Sample: do I need to be fast?', '{"blocks":[{"type":"paragraph","data":{"text":"No — sample answer."}}]}', 0, 'published', 'seed', '2026-09-14');
+('sample-faq-1', 'Sample: do I need to be fast?', '{"blocks":[{"type":"paragraph","data":{"text":"No — sample answer."}}]}', 0, 'published', 'seed', '2026-09-14'),
+('sample-faq-2', 'Sample: do I need my own cube?', '{"blocks":[{"type":"paragraph","data":{"text":"Yes — bring your own cube and mark it so you recognise it."}}]}', 1, 'published', 'seed', '2026-09-14'),
+('sample-faq-3', 'Sample: when do I get a WCA ID?', '{"blocks":[{"type":"paragraph","data":{"text":"After your first competition — it appears on your WCA profile."}}]}', 2, 'published', 'seed', '2026-09-14'),
+('sample-faq-4', 'Sample: can spectators watch for free?', '{"blocks":[{"type":"paragraph","data":{"text":"Yes — spectators are free at our competitions."}}]}', 3, 'published', 'seed', '2026-09-14');
 
 INSERT INTO news (slug, title, published_at, body_json, cover_r2, status, updated_by, updated_at) VALUES
-('sample-recap', 'Sample competition recap', '2026-09-01', '{"blocks":[{"type":"paragraph","data":{"text":"Sample recap."}}]}', NULL, 'published', 'seed', '2026-09-14');
+('sample-recap', 'Sample competition recap', '2026-09-01', '{"blocks":[{"type":"paragraph","data":{"text":"Sample recap."}}]}', NULL, 'published', 'seed', '2026-09-14'),
+('sample-nr-alert', 'Sample: new national record in 3x3', '2026-09-05', '{"blocks":[{"type":"paragraph","data":{"text":"Sample record post."}}]}', NULL, 'published', 'seed', '2026-09-05'),
+('sample-welcome', 'Sample: welcome to the new site', '2026-08-20', '{"blocks":[{"type":"paragraph","data":{"text":"Sample welcome post."}}]}', NULL, 'published', 'seed', '2026-08-20');
 
 INSERT INTO comp_override (wca_id, payment_steps_json, venue_note, fee_tiers_json, updated_by, updated_at) VALUES
 ('SampleComp2026', '{"blocks":[]}', 'Sample venue note', '{"early":800,"regular":1000}', 'seed', '2026-09-14'),
-('DhakaSpringOpen2026', '{"blocks":[{"type":"paragraph","data":{"text":"Pay early, keep your SMS."}}]}', 'Sample venue note', '{"early":800,"regular":1000,"bkash_wallet":"+8801000000000","nagad_wallet":"+8801000000001"}', 'seed', '2026-09-14');
+ ('DhakaSpringOpen2026', '{"blocks":[{"type":"paragraph","data":{"text":"Pay early, keep your SMS."}}]}', 'Sample venue note', '{"early":800,"regular":1000,"bkash_wallet":"+8801000000000","nagad_wallet":"+8801000000001"}', 'seed', '2026-09-14'),
+ ('ChittagongCubeOpen2026', '{"blocks":[{"type":"paragraph","data":{"text":"Sample payment steps for Chittagong."}}]}', 'Sample Chittagong venue note', '{"early":850,"regular":1050,"bkash_wallet":"+8801000000004","nagad_wallet":"+8801000000005"}', 'seed', '2026-09-14');
 
 INSERT INTO donation_page (id, target_bdt, raised_manual_bdt, policy_json, worlds_host_city, bkash_wallet, nagad_wallet, updated_by, updated_at) VALUES
 (1, 500000, 185000, '{"blocks":[]}', 'Sweden', '+8801000000002', '+8801000000003', 'seed', '2026-09-14');
 
 INSERT INTO donor (id, name, amount_bdt, consent, sort_order, updated_by, updated_at) VALUES
-('sample-donor', 'Sample Family', 25000, 1, 0, 'seed', '2026-09-14');
+('sample-donor', 'Sample Family', 25000, 1, 0, 'seed', '2026-09-14'),
+('sample-donor-2', 'Sample Patron', 10000, 1, 1, 'seed', '2026-09-14'),
+('sample-donor-3', 'Anonymous', NULL, 1, 2, 'seed', '2026-09-14');
 
 INSERT INTO competitor (id, wca_id, wca_oauth_sub, name, email, created_at) VALUES
 ('sample-competitor', '2026SAMP01', 'oauth-sub-sample', 'Sample Competitor', 'sample@example.org', '2026-09-14');

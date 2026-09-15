@@ -22,7 +22,10 @@
   --font-grotesk: "Space Grotesk", ui-monospace, SFMono-Regular, monospace;
 }
 
-/* Neo-brutalist primitives (Stitch system). */
+/* Neo-brutalist primitives (Stitch system).
+   Layered so Tailwind utilities (e.g. bg-electric-violet on a card) win
+   ties: unlayered CSS beats ALL layered utilities in v4 cascade. */
+@layer components {
 .card-brutal {
   background: #fff;
   border: 2px solid var(--color-ink);
@@ -59,3 +62,4 @@
     padding-inline: 2rem;
   }
 }
+} /* end @layer components */

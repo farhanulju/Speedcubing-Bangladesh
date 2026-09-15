@@ -69,7 +69,7 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
   <section class="container-x py-8">
     <div class="flex items-baseline justify-between">
       <h2 class="text-2xl font-extrabold tracking-tight">{en.home.compsTitle}</h2>
-      <a href="/competitions" class="text-sm font-bold text-emerald-brand underline">Full calendar</a>
+      <a href="/competitions" class="shrink-0 text-sm font-bold text-emerald-brand underline">Full calendar</a>
     </div>
     {
       upcoming.length === 0 ? (
@@ -94,7 +94,7 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
   <section class="container-x py-8">
     <div class="flex items-baseline justify-between">
       <h2 class="text-2xl font-extrabold tracking-tight">{en.home.recordsTitle}</h2>
-      <a href="/records" class="text-sm font-bold text-emerald-brand underline">All records</a>
+      <a href="/records" class="shrink-0 text-sm font-bold text-emerald-brand underline">All records</a>
     </div>
     {
       spotlight.length === 0 ? (
@@ -153,7 +153,7 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
       <section class="container-x py-8">
         <div class="flex items-baseline justify-between">
           <h2 class="text-2xl font-extrabold tracking-tight">Latest news</h2>
-          <a href="/news" class="text-sm font-bold text-emerald-brand underline">All news</a>
+          <a href="/news" class="shrink-0 text-sm font-bold text-emerald-brand underline">All news</a>
         </div>
         <div class="mt-4 grid gap-4 md:grid-cols-3">
           {news.map((n) => (

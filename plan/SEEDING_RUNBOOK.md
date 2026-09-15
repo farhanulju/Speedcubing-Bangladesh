@@ -25,15 +25,15 @@ numbers, `TESTTXID1`, `2026SAMP01`, `SampleComp2026`, bodies containing `Sample 
 
 | Table | Placeholder keys | Replace with |
 |---|---|---|
-| `announcement` | `sample-registration-open` | Real announcements, or delete |
+| `announcement` | `sample-registration-open`, `sample-venue-map` | Real announcements, or delete |
 | `page` | `about`, `contact-info`, `sponsors-pitch`, `worlds-story`, `worlds-criteria` | Real copy for all five slugs (routes 404 without them) |
-| `person` | `sample-delegate`, `sample-exec` | Real people; photos only per §4 |
-| `sponsor` | `sample-sponsor` | Real sponsors, or empty table |
-| `faq` | `sample-faq-1` | Real FAQ entries |
-| `news` | `sample-recap` | Real posts, or empty table |
-| `comp_override` | `SampleComp2026`, `DhakaSpringOpen2026` (test wallets!) | Real per-comp overrides; test wallets must go |
+| `person` | `sample-delegate`, `sample-exec`, `sample-media`, `sample-outreach` | Real people; photos only per §4 |
+| `sponsor` | `sample-sponsor`, `sample-silver`, `sample-community` | Real sponsors, or empty table |
+| `faq` | `sample-faq-1` … `sample-faq-4` | Real FAQ entries |
+| `news` | `sample-recap`, `sample-nr-alert`, `sample-welcome` | Real posts, or empty table |
+| `comp_override` | `SampleComp2026`, `DhakaSpringOpen2026`, `ChittagongCubeOpen2026` (test wallets!) | Real per-comp overrides; test wallets must go |
 | `donation_page` (id=1) | Test wallets, 185000/500000 demo totals | Real receiving wallets + verified totals; host city stays `Sweden` unless the board changes it |
-| `donor` | `sample-donor` | Real opt-in donors only (§5) |
+| `donor` | `sample-donor`, `sample-donor-2`, `sample-donor-3` | Real opt-in donors only (§5) |
 | `competitor`, `registration`, `tx_submission` | `sample-*`, `TESTTXID1` | Delete all — runtime-written |
 | `lost_found`, `opt_in`, `contact_message`, `guardian_consent` | `sample-*` | Delete all — runtime-written |
 | `record_snapshot`, `comp_champion` | `SampleComp2026` / 582-centis demo | Delete all — cron rebuilds from the WCA export |

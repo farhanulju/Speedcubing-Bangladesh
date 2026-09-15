@@ -16,8 +16,26 @@
     {
       "event": "pyram",
       "event_name": "Pyraminx",
-      "single": null,
+      "single": { "value_centis": 198, "holder": "Sample Cubist", "wca_id": "2026FIXT02" },
       "average": { "value_centis": 276, "holder": "Sample Cubist", "wca_id": "2026FIXT02" }
+    },
+    {
+      "event": "444",
+      "event_name": "4x4x4 Cube",
+      "single": { "value_centis": 3124, "holder": "Fixture Holder", "wca_id": "2026FIXT01" },
+      "average": { "value_centis": 3560, "holder": "Fixture Holder", "wca_id": "2026FIXT01" }
+    },
+    {
+      "event": "333oh",
+      "event_name": "3x3x3 One-Handed",
+      "single": { "value_centis": 1054, "holder": "Sample Cubist", "wca_id": "2026FIXT02" },
+      "average": { "value_centis": 1288, "holder": "Sample Cubist", "wca_id": "2026FIXT02" }
+    },
+    {
+      "event": "skewb",
+      "event_name": "Skewb",
+      "single": { "value_centis": 321, "holder": "Fixture Holder", "wca_id": "2026FIXT01" },
+      "average": { "value_centis": 455, "holder": "Fixture Holder", "wca_id": "2026FIXT01" }
     }
   ]
 }

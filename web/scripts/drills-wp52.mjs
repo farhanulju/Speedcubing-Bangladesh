@@ -1,8 +1,10 @@
 // scripts/drills-wp52.mjs — WP-52 failure drills (local, text-only).
 // Proves fail-closed public forms, validation gates, unknown-asset handling,
 // and Resend-down fail-open (no RESEND_API_KEY locally by design).
-// Needs: seeded local D1+KV (db:reset + kv:seed), dev server running,
+// Needs: freshly seeded local D1+KV (db:reset + kv:seed), dev server running,
 // ADMIN_DEV_BYPASS=1 + Turnstile test secret in .dev.vars.
+// Re-runs need db:reset first: verified registrations are immutable by design,
+// so the accept drill 409s on a verified comp (that 409 is itself a guard).
 // Usage: node scripts/drills-wp52.mjs http://localhost:XXXX
 // Empty-KV + Access-off drills are manual (see plan/QA_MATRIX.md).
 const base = process.argv[2] ?? 'http://localhost:4321';
@@ -116,7 +118,7 @@ await check('admin CRUD rejects missing required field', async () => {
 
 // --- 4. Resend-down fail-open: decisions work with no RESEND_API_KEY ---
 await check('payment accept works with outbox unsent (Resend down)', async () => {
-  const reg = await postJson('/api/registrations', { comp_wca_id: 'ChittagongCubeOpen2026', events: ['222'] }, H);
+  const reg = await postJson('/api/registrations', { comp_wca_id: 'ChittagongCubeOpen2026', events: ['555'] }, H);
   assert(reg.status === 200, `reg setup failed: ${reg.status}`);
   const tx = await postJson(
     '/api/tx',
@@ -127,10 +129,11 @@ await check('payment accept works with outbox unsent (Resend down)', async () =>
   const decide = await postJson('/api/admin/tx-decision', { id: tx.body.id, decision: 'accepted', note: 'drill statement line' });
   assert(decide.status === 200, `decision failed without Resend: ${decide.status}`);
   const fetched = await getJson(`/api/admin/tx-queue?id=${tx.body.id}`);
-  assert(fetched.body.row?.status === 'accepted', 'decision not persisted');
+  assert(fetched.body.row?.tx_status === 'accepted', 'tx decision not persisted');
+  assert(fetched.body.row?.reg_status === 'verified', 'registration not flipped to verified');
   const mine = await getJson('/api/me/registrations', H);
-  const mineRow = (mine.body.registrations ?? mine.body.rows ?? []).find((r) => r.id === reg.body.id);
-  assert(mineRow && /verified|accepted/i.test(JSON.stringify(mineRow)), 'dashboard not updated after accept');
+  const mineRow = (mine.body.rows ?? []).find((r) => r.id === reg.body.id);
+  assert(mineRow?.status === 'verified', 'dashboard not updated after accept');
 });
 
 if (failures > 0) {
