@@ -192,13 +192,24 @@ export function toError(err: unknown): Response {
   return Response.json({ error: 'internal' }, { status: 500 });
 }
 
+import { verifyAccessJwt } from './access';
+
 // Fail-closed auth. Local dev: ADMIN_DEV_BYPASS=1 in .dev.vars (gitignored).
-// Production: Cloudflare Access JWT (verified in WP-16; until then this throws).
-export function requireAdmin(request: Request, env: SpeedbdEnv & { ADMIN_DEV_BYPASS?: string }): AdminActor {
+// Production: Cloudflare Access JWT (RS256 JWKS verify). No bypass var there,
+// so the dev seam below is inert in production.
+export async function requireAdmin(
+  request: Request,
+  env: SpeedbdEnv & { ADMIN_DEV_BYPASS?: string; ACCESS_TEAM_DOMAIN?: string; ACCESS_AUD?: string },
+): Promise<AdminActor> {
   if (env.ADMIN_DEV_BYPASS === '1') return { actor: 'dev-local' };
   const asserted = request.headers.get('Cf-Access-Jwt-Assertion');
-  if (!asserted) throw new HttpError(503, 'admin auth not configured (WP-16 Access)');
-  throw new HttpError(503, 'Access verification pending WP-16');
+  if (!asserted) throw new HttpError(401, 'admin login required (Cloudflare Access)');
+  const teamDomain = env.ACCESS_TEAM_DOMAIN ?? '';
+  const aud = env.ACCESS_AUD ?? '';
+  if (!teamDomain || !aud) throw new HttpError(503, 'admin auth not configured (WP-00: Access app + AUD)');
+  const identity = await verifyAccessJwt(asserted, { teamDomain, aud }, (url) => fetch(url));
+  if (!identity || (!identity.email && !identity.sub)) throw new HttpError(403, 'admin token rejected');
+  return { actor: identity.email ?? identity.sub ?? 'access-user' };
 }
 
 function coerce(def: FieldDef, raw: unknown): string | number | null {
@@ -234,6 +245,10 @@ export function pickFields(def: TableDef, input: Record<string, unknown>): Recor
     if (f.kind === 'readonly') continue;
     const v = coerce(f, input[f.name]);
     if ((v === null || v === '') && f.required) throw new HttpError(400, `${f.name} is required`);
+    // Empty numbers are omitted so NOT NULL DEFAULT columns (sort orders) fall
+    // back to their DB defaults instead of violating constraints. Nullable
+    // number columns (e.g. donor amounts) default to NULL the same way.
+    if (v === null && f.kind === 'number') continue;
     out[f.name] = v;
   }
   out['updated_by'] = String(input['_actor'] ?? 'admin');

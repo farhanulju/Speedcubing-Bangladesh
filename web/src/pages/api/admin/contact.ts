@@ -19,7 +19,7 @@ export async function GET({
 }): Promise<Response> {
   try {
     const env = getEnv(locals);
-    requireAdmin(request, env as Env);
+    await requireAdmin(request, env as Env);
     const rows = await listContact(env, url.searchParams.get('status') ?? undefined);
     return Response.json({ rows });
   } catch (err) {
@@ -37,7 +37,7 @@ export async function POST({
 }): Promise<Response> {
   try {
     const env = getEnv(locals);
-    const { actor } = requireAdmin(request, env as Env);
+    const { actor } = await requireAdmin(request, env as Env);
     const body = (await request.json()) as { id?: string; status?: string };
     if (!body.id || !body.status) return Response.json({ error: 'id and status are required' }, { status: 400 });
     await setContactStatus(env, actor, body.id, body.status);

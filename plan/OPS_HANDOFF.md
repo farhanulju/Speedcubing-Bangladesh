@@ -51,6 +51,8 @@ Add each as **secret** (not plain variable):
 - [ ] `EMAIL_FROM` (e.g. `Speedcubing BD <noreply@<domain>>` — must match the verified Resend domain)
 - [ ] `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` (from step 5)
 - [ ] `ORGANIZER_INBOX` (e.g. `organizers@<domain>` — TxID fail-closed BCC)
+- [ ] `ACCESS_TEAM_DOMAIN` (e.g. `speedcubingbd.cloudflareaccess.com` — no scheme)
+- [ ] `ACCESS_AUD` (Application Audience tag from the `speedbd-admin` app overview)
 - [ ] Sync worker: `wrangler secret put RESEND_API_KEY -c workers/sync/wrangler.jsonc` (run from `web/`).
 
 Local dev mirror: copy `web/.dev.vars.example` → `web/.dev.vars`, fill values (gitignored).

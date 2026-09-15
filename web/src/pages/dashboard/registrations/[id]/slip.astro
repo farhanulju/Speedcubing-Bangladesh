@@ -58,7 +58,8 @@ const events: string[] = (() => {
   </section>
 </Base>
 
-<style>
+<style is:global>
+  /* Global (not component-scoped): header/footer live in the Base layout. */
   @media print {
     header,
     footer,

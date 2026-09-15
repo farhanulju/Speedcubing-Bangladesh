@@ -35,6 +35,11 @@ const wallets = {
   nagad: typeof feeTiers.nagad_wallet === 'string' ? feeTiers.nagad_wallet : null,
 };
 const fees = Object.entries(feeTiers).filter(([k]) => !['bkash_wallet', 'nagad_wallet'].includes(k));
+function maskWallet(w: string): string {
+  const s = w.trim();
+  if (s.length <= 5) return '•••••';
+  return `${s.slice(0, 3)}••••${s.slice(-2)}`;
+}
 ---
 
 <Base title={comp.name}>
@@ -116,8 +121,18 @@ const fees = Object.entries(feeTiers).filter(([k]) => !['bkash_wallet', 'nagad_w
           )}
           {(wallets.bkash || wallets.nagad) && (
             <div class="mt-3 flex flex-col gap-1 text-sm">
-              {wallets.bkash && <p class="data-font">bKash: {wallets.bkash}</p>}
-              {wallets.nagad && <p class="data-font">Nagad: {wallets.nagad}</p>}
+              {wallets.bkash && (
+                <details class="data-font">
+                  <summary class="cursor-pointer underline">bKash: {maskWallet(wallets.bkash)} — Reveal</summary>
+                  <p class="mt-1">{wallets.bkash}</p>
+                </details>
+              )}
+              {wallets.nagad && (
+                <details class="data-font">
+                  <summary class="cursor-pointer underline">Nagad: {maskWallet(wallets.nagad)} — Reveal</summary>
+                  <p class="mt-1">{wallets.nagad}</p>
+                </details>
+              )}
               <p class="text-xs text-slate-500">Send Money, then submit the TxID from your dashboard. Whole taka only.</p>
             </div>
           )}

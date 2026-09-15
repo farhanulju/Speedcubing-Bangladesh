@@ -19,7 +19,7 @@ export async function GET({
 }): Promise<Response> {
   try {
     const env = getEnv(locals);
-    requireAdmin(request, env as Env);
+    await requireAdmin(request, env as Env);
     const id = url.searchParams.get('id');
     if (id) {
       const row = await getTx(env, id);

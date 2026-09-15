@@ -18,7 +18,7 @@ export async function POST({
 }): Promise<Response> {
   try {
     const env = getEnv(locals);
-    const { actor } = requireAdmin(request, env as Env);
+    const { actor } = await requireAdmin(request, env as Env);
     const body = (await request.json()) as { id?: string; decision?: string; note?: string };
     if (!body.id) return Response.json({ error: 'id is required' }, { status: 400 });
     const result = await decideTx(env, actor, body.id, body.decision as TxDecision, body.note ?? '');

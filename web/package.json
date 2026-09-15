@@ -13,10 +13,13 @@
     "db:migrate:sync": "wrangler d1 migrations apply speedbd --local -c workers/sync/wrangler.jsonc",
     "db:migrate:remote": "wrangler d1 migrations apply speedbd --remote",
     "db:seed": "wrangler d1 execute speedbd --local --file=scripts/seed.sql",
+    "db:reset": "node scripts/db-reset.mjs",
+    "e2e": "node scripts/e2e.mjs",
     "kv:seed": "node scripts/kv-seed.mjs",
     "db:check": "node scripts/db-check.mjs",
     "test:sync": "node scripts/test-sync.mjs",
     "test:auth": "node scripts/test-auth.mjs",
+    "test:access": "node scripts/test-access.mjs",
     "smoke:m2": "node scripts/smoke-m2.mjs"
   },
   "dependencies": {
@@ -36,6 +39,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.0",
     "@cloudflare/workers-types": "^5.20260911.1",
+    "@playwright/test": "^1.63.0",
     "typescript": "^5.9.0",
     "wrangler": "^4.0.0"
   }

@@ -9,3 +9,7 @@ EMAIL_FROM=
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 ORGANIZER_INBOX=organizers@example.org
+# Access gate (WP-16): team domain + app AUD tag from the Access app (WP-00).
+# Absent locally = admin API fails closed (401/503); ADMIN_DEV_BYPASS=1 bypasses for dev only.
+ACCESS_TEAM_DOMAIN=
+ACCESS_AUD=

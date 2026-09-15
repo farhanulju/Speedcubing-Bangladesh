@@ -2,6 +2,8 @@
 
 Newest first. One line per meaningful change.
 
+- 2026-09-15 — WP-50 slice: masked wallet Reveal on Worlds + comp-detail (closes P4); punchlist code-sweep clean (no fabricated citations/Axx tags, lockup canonical, footer links, claimed-log private); public JS 0KB, admin Editor.js 311KB raw/87.5KB gzip (WP-03 public budget holds, admin-only).
+- 2026-09-15 — WP-16 Access JWT shipped (RS256 JWKS verify, fail-closed 401/403/503, dev-bypass seam) + `test-access` 4/4; `requireAdmin` async across 7 admin APIs; number-empty omit fix; e2e Playwright harness (`db:reset`, `e2e.mjs` 7 checks + 8 screenshots) + slip print-CSS `is:global` fix; `check`+`build` green (pending commit).
 - 2026-09-14 — M3 accounts + money shipped: HMAC sessions, WCA OAuth routes, registration/tx/consent/me endpoints, dashboard + print slip; `test-auth` 6/6, `smoke-m3` 5/5; fixed KV `items` shape + list fallbacks + shaping kv-seed.
 
 - 2026-09-14 — M4 sync worker shipped + proven LIVE (`--test-scheduled` vs real WCA: 28 comps, 17 records, 31 snapshots, 26 champions, 0 emails); `test-sync` 5/5; canonical-17 filter + FMC/MBLD display rules; per-config local-state lesson recorded.

@@ -1,6 +1,6 @@
 # CURRENT_STATE
 
-Updated: 2026-09-14 (M0 scaffold built green). Newest first. This is the file the next agent reads to avoid reconstructing context from chat.
+Updated: 2026-09-15 (M0–M4 + WP-16 + e2e verified locally, uncommitted; WP-00 deploy pending). Newest first. This is the file the next agent reads to avoid reconstructing context from chat.
 
 ## Implemented (M0–M4 code + full docs — WP-00 deploy pending)
 
@@ -17,6 +17,8 @@ Updated: 2026-09-14 (M0 scaffold built green). Newest first. This is the file th
 - M4 sync DONE (local, no WP-00): daily cron worker pulls official v0 (registration windows/limits, WCIF rounds) + unofficial static (comps/BD, per-event ranks, holder persons, per-comp 333 results); strips ALL emails; KV cache + nightly snapshots + derived champions; outbox flush via Resend (skips cleanly without keys). Proven LIVE via `wrangler dev --test-scheduled` against real WCA: 28 comps, 17 canonical record lines, 31 snapshots, 26 champions, zero emails in KV. Unit harness `test:sync` 5/5 on real compiled code. Learnings: canonical-17 allowlist (upstream ships removed events), FMC-in-moves + MBLD-omitted display rule, per-config local D1/KV state (migrate both).
 
 - M3 accounts + money DONE (local; live OAuth waits on WP-00 app): HMAC sessions (`test-auth` 6/6), WCA OAuth routes (endpoints/scopes/me-shape verified from thewca/wca-oauth; null-WCA newcomer path), registration/tx/consent/me endpoints (ownership, pending-only, dup-TxID 409, WCA-validated), dashboard (profile, PBs, 4-step tracker, history, consent, print slip), `smoke-m3` 5/5 via dev session seam. Notable fixes: KV shape standardized to upstream `items` (was the dashboard 500), list-fallback for names/registration, kv-seed shapes through real compiled shapers.
+- WP-16 + e2e DONE locally, UNCOMMITTED (needs explicit commit confirm): Access RS256 JWKS verify (`test-access` 4/4), async `requireAdmin` on 7 admin APIs (401/403/503 fail-closed), number-empty omit, Playwright `e2e.mjs` (editor mount, FAQ create, payment accept+409, Turnstile, print CSS `is:global`, mobile shots, dashboard), `db:reset.mjs`; `check`+`build` green.
+- WP-50 slice DONE 2026-09-15: masked wallet Reveal (`maskWallet` + `<details>`) on Worlds + comp-detail (closes P4); code-sweep clean (no citations/Axx tags, canonical lockup only, footer N4, private contacts, daily stamps); public JS 0KB (no `client:` directives), admin Editor.js 311KB raw/87.5KB gzip — WP-03 public budget holds.
 
 ## Current focus
 

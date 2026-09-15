@@ -18,7 +18,7 @@ export async function POST({
 }): Promise<Response> {
   try {
     const env = getEnv(locals);
-    const { actor } = requireAdmin(request, env as Env);
+    const { actor } = await requireAdmin(request, env as Env);
     const body = (await request.json()) as { registration_id?: string; accepted?: boolean };
     if (!body.registration_id) return Response.json({ error: 'registration_id is required' }, { status: 400 });
     await setWcaAccepted(env, actor, body.registration_id, body.accepted === true);

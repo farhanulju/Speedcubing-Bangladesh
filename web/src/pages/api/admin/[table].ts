@@ -34,7 +34,7 @@ export async function GET({
   try {
     const def = tableOr404(params.table ?? '');
     const env = getEnv(locals);
-    requireAdmin(request, env as SpeedbdEnv & { ADMIN_DEV_BYPASS?: string });
+    await requireAdmin(request, env as SpeedbdEnv & { ADMIN_DEV_BYPASS?: string });
     const id = url.searchParams.get('id');
     if (id) {
       const row = await getRow(env, def, id);
@@ -60,7 +60,7 @@ export async function POST({
   try {
     const def = tableOr404(params.table ?? '');
     const env = getEnv(locals);
-    const { actor } = requireAdmin(request, env as SpeedbdEnv & { ADMIN_DEV_BYPASS?: string });
+    const { actor } = await requireAdmin(request, env as SpeedbdEnv & { ADMIN_DEV_BYPASS?: string });
     const input = (await request.json()) as Record<string, unknown>;
     const id = await upsertRow(env, def, actor, input);
     return Response.json({ ok: true, id });
@@ -84,7 +84,7 @@ export async function DELETE({
   try {
     const def = tableOr404(params.table ?? '');
     const env = getEnv(locals);
-    const { actor } = requireAdmin(request, env as SpeedbdEnv & { ADMIN_DEV_BYPASS?: string });
+    const { actor } = await requireAdmin(request, env as SpeedbdEnv & { ADMIN_DEV_BYPASS?: string });
     const id = url.searchParams.get('id') ?? '';
     await deleteRow(env, def, actor, id);
     return Response.json({ ok: true });

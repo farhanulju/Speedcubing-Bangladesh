@@ -13,6 +13,11 @@ const story = await tryLoad(Astro.locals, (env) => getPage(env, 'worlds-story'),
 const criteria = await tryLoad(Astro.locals, (env) => getPage(env, 'worlds-criteria'), null);
 const pct =
   donation && donation.target_bdt > 0 ? Math.min(100, Math.round((donation.raised_manual_bdt / donation.target_bdt) * 100)) : 0;
+function maskWallet(w: string): string {
+  const s = w.trim();
+  if (s.length <= 5) return '•••••';
+  return `${s.slice(0, 3)}••••${s.slice(-2)}`;
+}
 ---
 
 <Base title="Worlds 2027">
@@ -38,8 +43,18 @@ const pct =
           <div class="mt-2 h-3 overflow-hidden rounded-full border border-white/40 bg-black/30">
             <div class="h-full bg-cube-yellow" style={`width:${pct}%`} />
           </div>
-          {donation.bkash_wallet && <p class="data-font mt-3 text-sm">bKash: {donation.bkash_wallet}</p>}
-          {donation.nagad_wallet && <p class="data-font mt-1 text-sm">Nagad: {donation.nagad_wallet}</p>}
+          {donation.bkash_wallet && (
+            <details class="data-font mt-3 text-sm">
+              <summary class="cursor-pointer underline">bKash: {maskWallet(donation.bkash_wallet)} — Reveal</summary>
+              <p class="mt-1">{donation.bkash_wallet}</p>
+            </details>
+          )}
+          {donation.nagad_wallet && (
+            <details class="data-font mt-1 text-sm">
+              <summary class="cursor-pointer underline">Nagad: {maskWallet(donation.nagad_wallet)} — Reveal</summary>
+              <p class="mt-1">{donation.nagad_wallet}</p>
+            </details>
+          )}
         </div>
       )
     }
