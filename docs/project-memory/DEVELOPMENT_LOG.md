@@ -3,6 +3,9 @@
 Newest first. One line per meaningful change.
 
 - 2026-09-15 — WP-50 slice: masked wallet Reveal on Worlds + comp-detail (closes P4); punchlist code-sweep clean (no fabricated citations/Axx tags, lockup canonical, footer links, claimed-log private); public JS 0KB, admin Editor.js 311KB raw/87.5KB gzip (WP-03 public budget holds, admin-only).
+- 2026-09-15 — WP-03 budget guard shipped: `scripts/check-budget.mjs` (`npm run check:budget`) pins @editorjs/* exact, confines Editor.js to EditorField, bans `client:` hydration in public pages, budgets chunks at 200KB gzip; green on current build.
+- 2026-09-15 — WP-51 runbook drafted: `plan/SEEDING_RUNBOOK.md` (owner matrix, placeholder inventory, purge-audit SQL, photo-consent gate, donor/Worlds checklist, sign-off); fixed stale wallet hint in `admin.ts`; `check`+`check:budget` green. Human entry waits on WP-00.
+- 2026-09-15 — Product docs synced to built state: build-status section in `docs/product/FEATURE_LIST.md` (A1–A22 vs code evidence; scope ticks untouched); open gaps named for M5 (A1 countdown, A4 past split, A5 roster, A15 plumbing, A16 progression, A21 archive).
 - 2026-09-15 — WP-16 Access JWT shipped (RS256 JWKS verify, fail-closed 401/403/503, dev-bypass seam) + `test-access` 4/4; `requireAdmin` async across 7 admin APIs; number-empty omit fix; e2e Playwright harness (`db:reset`, `e2e.mjs` 7 checks + 8 screenshots) + slip print-CSS `is:global` fix; `check`+`build` green (pending commit).
 - 2026-09-14 — M3 accounts + money shipped: HMAC sessions, WCA OAuth routes, registration/tx/consent/me endpoints, dashboard + print slip; `test-auth` 6/6, `smoke-m3` 5/5; fixed KV `items` shape + list fallbacks + shaping kv-seed.
 

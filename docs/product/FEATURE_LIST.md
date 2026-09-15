@@ -4,6 +4,40 @@ Review applied 2026-09-14. Ticked `[x]` = approved for MVP build. Unticked `[ ]`
 
 Conventions: `Source` = system of record (D1 = our Cloudflare DB, managed via admin dashboard; WCA = cached, never forked). `CF` = Cloudflare free-tier piece. Effort: S < 3d, M < 2w, L > 2w. English-only v1. Mobile-first. No Google Forms anywhere.
 
+## Build status (updated 2026-09-15 — code state, not scope)
+
+Ticks above are the scope gate and do not move. This section records what is
+already built. Legend: **Built** = code-complete, local-verified
+(`check`+`build`+harnesses green). **Needs WP-00** = code done, live
+credentials/deploy pending (`plan/OPS_HANDOFF.md`). **Content** = needs WP-51
+entry (`plan/SEEDING_RUNBOOK.md`). **Gap** = scoped but not yet built.
+
+| # | Status | Evidence / location |
+|---|--------|---------------------|
+| A1 | Built, 1 gap | `web/src/pages/index.astro` — badge hero, next-3 comps, NR spotlight, sponsors, Worlds banner, news, opt-in. Gap: next-comp countdown + tasks view |
+| A2 | Built + Content | `web/src/pages/about.astro` — copy via `page/about` |
+| A3 | Built + Content | `web/src/pages/people.astro` — photo renders only when `photo_consent=1` (`content.ts`) |
+| A4 | Built, minor gap | `web/src/pages/competitions.astro` — auto-list + city filter + cache stamp. Gap: no past/upcoming split |
+| A5 | Built, 1 gap | `web/src/pages/competitions/[slug].astro` — fees, masked Reveal wallets, WCIF events, Live Results, dual-status notice. Gap: roster with dual statuses |
+| A6 | Built, needs WP-00 | `api/registrations`, `api/tx`, `/dashboard`, print slip — live WCA OAuth needs the WP-00 app |
+| A7 | Built + Content | Pinned bar on Home; header-bar slot still TODO (`Base.astro`) |
+| A8 | Built + Content | `web/src/pages/faq.astro` via admin FAQ |
+| A11 | Built | Form + public log (contacts private, `Claimed ✓` only) + inbox |
+| A12 | Built + Content | Logo wall + deck button; PDF upload pending WP-51 |
+| A13 | Built + Content | Manual totals, masked Reveal wallets, opt-in donor wall; candidates/criteria/refund copy pending |
+| A14 | Built | Contact + email-only opt-in, Turnstile-gated; WhatsApp stays link-text per copy |
+| A15 | Partial | Per-page title/meta + skip link only. Missing: `og:image`, sitemap, analytics beacon, link-in-bio page |
+| A16 | Built, 1 gap | NR table + daily stamp; `record_snapshot` collected by cron. Gap: Progression view |
+| A17 | Built, needs WP-00 | Dashboard (PBs with `—` fallback, tracker, history link-out, consent card); live login needs WP-00 |
+| A18 | Built, needs WP-00 | Registry CRUD + Editor.js + audit; Access JWT verify coded, app provisioning pending |
+| A19 | Built | Queue, atomic accept/reject, 409 guard, manual WCA tick — local-verified |
+| A20 | Built + Content | `web/src/pages/news.astro` + `[slug]` via admin |
+| A21 | Partial | Dashboard history = WCA link-out; past/champion archive view missing (data collected) |
+| A22 | Built, needs WP-00 | Outbox + 3 templates + flush worker coded; Resend key pending, dashboard-canonical fallback verified |
+
+Open gaps feeding M5: A1 countdown, A4 past split, A5 roster, A15 plumbing,
+A16 progression, A21 archive. Phase 2 (B-items) untouched — still parked.
+
 ## A. MVP — approved build list
 
 | # | Tick | Feature / route | Problem it solves | Source | CF | Effort | Depends |
