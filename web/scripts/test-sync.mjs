@@ -126,6 +126,9 @@ await check('competitions merged, emails stripped', () => {
   assert(d.event_detail.length === 2, 'event_detail missing');
   const e333 = d.event_detail.find((e) => e.event === '333');
   assert(e333.rounds === 3 && e333.format === 'Average of 5' && e333.time_limit_centis === 60000, 'bad 333 detail');
+  assert(Array.isArray(d.schedule) && d.schedule.length === 2, 'schedule days missing');
+  assert(d.schedule[0].items.some((i) => i.title.includes('Check-in') && i.start === '08:30'), 'bad schedule item');
+  assert(d.delegates.length === 2 && d.delegates[0].role === 'delegate' && d.delegates[0].wca_id === '2019SAMP01', 'bad delegates');
 });
 
 await check('person cache + snapshots + champion', () => {

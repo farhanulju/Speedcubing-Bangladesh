@@ -14,11 +14,11 @@ entry (`plan/SEEDING_RUNBOOK.md`). **Gap** = scoped but not yet built.
 
 | # | Status | Evidence / location |
 |---|--------|---------------------|
-| A1 | Built, 1 gap | `web/src/pages/index.astro` — badge hero, next-3 comps, NR spotlight, sponsors, Worlds banner, news, opt-in. Gap: next-comp countdown + tasks view |
+| A1 | Built, 1 gap | `web/src/pages/index.astro` — badge hero, next-3 comps, NR spotlight, sponsors, Worlds banner, news, opt-in, N14 countdown (renders only with a future comp). Gap: tasks view |
 | A2 | Built + Content | `web/src/pages/about.astro` — copy via `page/about` |
 | A3 | Built + Content | `web/src/pages/people.astro` — photo renders only when `photo_consent=1` (`content.ts`) |
-| A4 | Built, minor gap | `web/src/pages/competitions.astro` — auto-list + city filter + cache stamp. Gap: no past/upcoming split |
-| A5 | Built, 1 gap | `web/src/pages/competitions/[slug].astro` — fees, masked Reveal wallets, WCIF events, Live Results, dual-status notice. Gap: roster with dual statuses |
+| A4 | Built | `web/src/pages/competitions.astro` — auto-list + city filter + cache stamp + Upcoming/Past archive split |
+| A5 | Built | `web/src/pages/competitions/[slug].astro` — fees, masked Reveal wallets, WCIF events, Live Results, dual-status notice, site roster (names + fee/WCA states + site-reg # + search), WCIF schedule + delegate cards |
 | A6 | Built, needs WP-00 | `api/registrations`, `api/tx`, `/dashboard`, print slip — live WCA OAuth needs the WP-00 app |
 | A7 | Built + Content | Pinned bar on Home; header-bar slot still TODO (`Base.astro`) |
 | A8 | Built + Content | `web/src/pages/faq.astro` via admin FAQ |

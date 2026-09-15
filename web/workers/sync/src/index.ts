@@ -12,7 +12,9 @@ import {
   nrHolder,
   resendSender,
   shapeCompSummary,
+  shapeDelegates,
   shapeEventDetail,
+  shapeSchedule,
   snapshotDiff,
   type CompDetail,
   type CompSummary,
@@ -179,8 +181,10 @@ async function runSync(env: SyncEnv): Promise<void> {
       const wcif = await fetchJson(fetchFn, `${WCA_V0}/competitions/${s.wca_id}/wcif/public`);
       const full: CompDetail = {
         ...s,
-        schedule_note: null, // v1: schedule links out to WCA (WP-22 detail page)
+        schedule_note: null, // legacy; schedule[] below supersedes (detail page links WCA when empty)
         event_detail: shapeEventDetail(wcif),
+        schedule: shapeSchedule(wcif),
+        delegates: shapeDelegates(wcif),
       };
       await kvPut(env, `wca:competition:${s.wca_id}`, { ...full, asOfExportDate: today });
 

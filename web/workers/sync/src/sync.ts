@@ -123,6 +123,131 @@ export interface CompEventDetail {
 export interface CompDetail extends CompSummary {
   schedule_note: string | null;
   event_detail: CompEventDetail[];
+  schedule: ScheduleDay[];
+  delegates: DelegateEntry[];
+}
+
+export interface ScheduleItem {
+  start: string; // HH:MM local (venue, Asia/Dhaka)
+  end: string; // HH:MM local
+  title: string;
+  room: string;
+}
+
+export interface ScheduleDay {
+  date: string; // YYYY-MM-DD
+  label: string; // "Day 1 · Friday, April 17"
+  items: ScheduleItem[];
+}
+
+export interface DelegateEntry {
+  name: string;
+  wca_id: string | null;
+  role: 'delegate' | 'organizer';
+}
+
+interface WcifActivity {
+  name?: string;
+  activityCode?: string;
+  startTime?: string;
+  endTime?: string;
+  childActivities?: WcifActivity[];
+}
+interface WcifRoom {
+  name?: string;
+  activities?: WcifActivity[];
+}
+interface WcifVenue {
+  name?: string;
+  rooms?: WcifRoom[];
+}
+interface WcifPerson {
+  name?: string;
+  wcaId?: string | null;
+  roles?: string[];
+}
+
+const DHAKA_DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DHAKA_MONTH = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function dhakaParts(iso: string): { date: string; hm: string; label: string } | null {
+  const ms = Date.parse(iso);
+  if (Number.isNaN(ms)) return null;
+  const d = new Date(ms + 6 * 3600 * 1000); // venue wall-clock (Asia/Dhaka)
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const date = `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+  return {
+    date,
+    hm: `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`,
+    label: `${DHAKA_DOW[d.getUTCDay()]}, ${DHAKA_MONTH[d.getUTCMonth()]} ${d.getUTCDate()}`,
+  };
+}
+
+// Flatten WCIF schedule → day groups (rooms kept as context). Lenient: unknown
+// shapes yield []. Capped so one giant schedule can't bloat KV.
+export function shapeSchedule(wcif: unknown, cap = 80): ScheduleDay[] {
+  try {
+    const venues = (wcif as { schedule?: { venues?: WcifVenue[] } })?.schedule?.venues;
+    if (!Array.isArray(venues)) return [];
+    const days = new Map<string, { label: string; items: ScheduleItem[] }>();
+    const push = (room: string, a: WcifActivity) => {
+      if (typeof a?.startTime !== 'string' || typeof a?.endTime !== 'string') return;
+      const s = dhakaParts(a.startTime);
+      const e = dhakaParts(a.endTime);
+      if (!s || !e) return;
+      const title = typeof a.name === 'string' && a.name ? a.name : (typeof a.activityCode === 'string' ? a.activityCode : 'Session');
+      let day = days.get(s.date);
+      if (!day) {
+        day = { label: s.label, items: [] };
+        days.set(s.date, day);
+      }
+      day.items.push({ start: s.hm, end: e.hm, title: title.slice(0, 120), room: room.slice(0, 80) });
+    };
+    for (const v of venues) {
+      if (!Array.isArray(v?.rooms)) continue;
+      for (const r of v.rooms) {
+        const room = typeof r?.name === 'string' ? r.name : '';
+        if (!Array.isArray(r?.activities)) continue;
+        for (const a of r.activities) {
+          push(room, a);
+          if (Array.isArray(a?.childActivities)) for (const c of a.childActivities) push(room, c);
+        }
+      }
+    }
+    return [...days.entries()]
+      .sort(([a], [b]) => (a < b ? -1 : 1))
+      .slice(0, 14)
+      .map(([date, d], i) => ({
+        date,
+        label: `Day ${i + 1} · ${d.label}`,
+        items: d.items
+          .sort((a, b) => (a.start < b.start ? -1 : 1))
+          .slice(0, cap),
+      }));
+  } catch {
+    return [];
+  }
+}
+
+// WCIF persons with delegate/organizer roles. Names + WCA IDs are public
+// competition data (same as WCA published lists); nothing else is kept.
+export function shapeDelegates(wcif: unknown, cap = 10): DelegateEntry[] {
+  try {
+    const persons = (wcif as { persons?: WcifPerson[] })?.persons;
+    if (!Array.isArray(persons)) return [];
+    const out: DelegateEntry[] = [];
+    for (const p of persons) {
+      if (typeof p?.name !== 'string' || !p.name) continue;
+      const roles = Array.isArray(p.roles) ? p.roles : [];
+      const role = roles.includes('delegate') ? 'delegate' : roles.includes('organizer') ? 'organizer' : null;
+      if (!role) continue;
+      out.push({ name: p.name.slice(0, 120), wca_id: typeof p.wcaId === 'string' && p.wcaId ? p.wcaId : null, role });
+    }
+    out.sort((a, b) => (a.role === b.role ? (a.name < b.name ? -1 : 1) : a.role === 'delegate' ? -1 : 1));
+    return out.slice(0, cap);
+  } catch {
+    return [];
+  }
 }
 
 export function shapeEventDetail(wcif: unknown): CompEventDetail[] {

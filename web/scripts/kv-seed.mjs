@@ -43,6 +43,8 @@ stage('wca:competition:DhakaSpringOpen2026', {
   ...dhaka,
   schedule_note: null,
   event_detail: sync.shapeEventDetail(wcif),
+  schedule: sync.shapeSchedule(wcif),
+  delegates: sync.shapeDelegates(wcif),
 });
 
 // Records + ranks: shaped fixture / raw upstream passthrough (sync stores raw).

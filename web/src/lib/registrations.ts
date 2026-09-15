@@ -54,6 +54,58 @@ export async function getMyRegistrations(env: SpeedbdEnv, cid: string): Promise<
   return regs.map((r) => ({ ...r, comp_name: names.get(r.comp_wca_id) ?? r.comp_wca_id, latest_tx: latest.get(r.id) ?? null }));
 }
 
+export interface RosterRow {
+  siteRegNo: number;
+  name: string;
+  wca_id: string | null;
+  events: string[];
+  fee: 'verified' | 'pending' | 'todo';
+  wcaAccepted: boolean;
+}
+
+// Public site-registration roster for a comp (A5): names + dual statuses.
+// Names are public competition data (same as WCA published start lists);
+// emails/phones are never selected here.
+export async function getCompRoster(env: SpeedbdEnv, compId: string): Promise<RosterRow[]> {
+  const regs = (
+    await env.DB.prepare(
+      `SELECT r.id, r.events_json, r.status, r.wca_accepted, c.name, c.wca_id
+       FROM registration r JOIN competitor c ON c.id = r.competitor_id
+       WHERE r.comp_wca_id = ? ORDER BY r.created_at, r.id LIMIT 500`,
+    )
+      .bind(compId)
+      .all<{ id: string; events_json: string; status: string; wca_accepted: number; name: string; wca_id: string | null }>()
+  ).results;
+  const txs = (
+    await env.DB.prepare(
+      `SELECT registration_id, status FROM tx_submission WHERE registration_id IN
+       (SELECT id FROM registration WHERE comp_wca_id = ?) ORDER BY created_at DESC`,
+    )
+      .bind(compId)
+      .all<{ registration_id: string; status: string }>()
+  ).results;
+  const latest = new Map<string, string>();
+  for (const t of txs) {
+    if (!latest.has(t.registration_id)) latest.set(t.registration_id, t.status);
+  }
+  return regs.map((r, i) => {
+    let events: string[] = [];
+    try {
+      const v = JSON.parse(r.events_json);
+      if (Array.isArray(v)) events = v.map(String);
+    } catch { /* keep empty */ }
+    const txStatus = latest.get(r.id);
+    return {
+      siteRegNo: i + 1,
+      name: r.name,
+      wca_id: r.wca_id,
+      events,
+      fee: r.status === 'verified' ? 'verified' : txStatus ? 'pending' : 'todo',
+      wcaAccepted: r.wca_accepted === 1,
+    };
+  });
+}
+
 export async function getCompetitor(env: SpeedbdEnv, cid: string) {
   return (await env.DB.prepare('SELECT id, wca_id, name, email FROM competitor WHERE id=?').bind(cid).first()) as null | {
     id: string;

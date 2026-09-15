@@ -25,9 +25,31 @@ export interface CompSummary {
   live_url: string | null;
 }
 
+export interface ScheduleItem {
+  start: string;
+  end: string;
+  title: string;
+  room: string;
+}
+
+export interface ScheduleDay {
+  date: string;
+  label: string;
+  items: ScheduleItem[];
+}
+
+export interface DelegateEntry {
+  name: string;
+  wca_id: string | null;
+  role: 'delegate' | 'organizer';
+}
+
 export interface CompDetail extends CompSummary {
   schedule_note: string | null;
   event_detail: { event: string; rounds: number; format: string; time_limit_centis: number | null; cutoff_centis: number | null }[];
+  // Present once the sync worker has run past this deploy; older KV rows omit them.
+  schedule?: ScheduleDay[];
+  delegates?: DelegateEntry[];
 }
 
 export interface EventRecord {

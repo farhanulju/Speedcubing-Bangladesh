@@ -2,6 +2,9 @@
 
 Durable decisions. Newest first. Format: `YYYY-MM-DD — Decision — rationale — owner`.
 
+- 2026-09-15 — Comp status pills derive from WCA end-dates and appear only under date-neutral headings; fixture dates stay stale-dated — pills must never contradict their heading, and fixtures double as test-sync inputs (past dates drive champion derivation) — reviewer check.
+- 2026-09-15 — Stitch elements contradicting board rules stay out: PDF slips (print-CSS instead), psych sheets (B10), auto-match/TxID-ok language, WCA-side counts, live-stream labels, fabricated stats/citations, volunteer tiers, claimant IDs — reviewer check against Stitch export 2026-09-15.
+
 - 2026-09-14 — English-only website v1; Bangla is a future locale, not a priority — keeps v1 shippable; content structured for later `bn/` locale — board.
 - 2026-09-14 — Worlds fundraising is a separate page (`/worlds-2027`), not a homepage section — needs its own story, progress, donor wall, refund policy — board.
 - 2026-09-14 — Volunteer names/data are public (name, focus area, member-since); tiers and internal notes stay private and are never rendered — recognition without hierarchy drama — board.

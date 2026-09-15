@@ -1,6 +1,7 @@
 ---
 import '../styles/tokens.css';
 import { en } from '../i18n/en';
+import { optionalUser } from '../lib/session';
 
 interface Props {
   title: string;
@@ -9,6 +10,9 @@ interface Props {
 
 const { title, description = 'Speedcubing Bangladesh — WCA competitions, records, and community.' } = Astro.props;
 const path = Astro.url.pathname;
+// Session-aware nav (server-side, zero client JS): logged-in users see
+// Dashboard + Log out instead of WCA Login. Null-safe on static routes.
+const session = await optionalUser(Astro.request, Astro.locals).catch(() => null);
 ---
 
 <!doctype html>
@@ -42,9 +46,24 @@ const path = Astro.url.pathname;
               </a>
             ))
           }
-          <a href={en.auth.loginHref} class="btn-pill border-2 border-ink bg-speed-orange px-4 py-2 text-sm text-white shadow-brutal">
-            {en.auth.login}
-          </a>
+          {session ? (
+            <>
+              <a
+                href="/dashboard"
+                aria-current={path === '/dashboard' || path.startsWith('/dashboard/') ? 'page' : undefined}
+                class="btn-pill border-2 border-ink bg-emerald-brand px-4 py-2 text-sm text-white shadow-brutal"
+              >
+                Dashboard
+              </a>
+              <a href="/api/auth/logout" class="text-sm font-semibold hover:text-emerald-brand">
+                Log Out
+              </a>
+            </>
+          ) : (
+            <a href={en.auth.loginHref} class="btn-pill border-2 border-ink bg-speed-orange px-4 py-2 text-sm text-white shadow-brutal">
+              {en.auth.login}
+            </a>
+          )}
         </nav>
         <details class="md:hidden">
           <summary class="btn-pill cursor-pointer border-2 border-ink bg-white px-4 py-2 text-sm" aria-label="Open menu">
@@ -58,9 +77,20 @@ const path = Astro.url.pathname;
                 </a>
               ))
             }
-            <a href={en.auth.loginHref} class="btn-pill mt-2 border-2 border-ink bg-speed-orange px-4 py-2 text-center text-white">
-              {en.auth.login}
-            </a>
+            {session ? (
+              <>
+                <a href="/dashboard" class="btn-pill mt-2 border-2 border-ink bg-emerald-brand px-4 py-2 text-center text-white">
+                  Dashboard
+                </a>
+                <a href="/api/auth/logout" class="rounded-lg px-3 py-2 text-base font-semibold hover:bg-paper">
+                  Log Out
+                </a>
+              </>
+            ) : (
+              <a href={en.auth.loginHref} class="btn-pill mt-2 border-2 border-ink bg-speed-orange px-4 py-2 text-center text-white">
+                {en.auth.login}
+              </a>
+            )}
           </nav>
         </details>
       </div>

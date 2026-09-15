@@ -17,13 +17,19 @@ if (!me) return Astro.redirect('/api/auth/login');
 const regs = await getMyRegistrations(env, session.cid);
 const consent = await getConsent(env, session.cid);
 
-// Personal bests from the ranks cache (dashboard-only scan; null when unknown).
+// Personal bests + BD ranks from the ranks cache (dashboard-only scan; null when unknown).
 let pbSingle: number | null = null;
 let pbAverage: number | null = null;
+let bdSingle: number | null = null;
+let bdAverage: number | null = null;
 if (me.wca_id) {
   const [s, a] = await Promise.all([getRanks(env, '333', 'single'), getRanks(env, '333', 'average')]);
-  pbSingle = s.data?.items.find((r) => r.personId === me.wca_id)?.best ?? null;
-  pbAverage = a.data?.items.find((r) => r.personId === me.wca_id)?.best ?? null;
+  const rs = s.data?.items.find((r) => r.personId === me.wca_id);
+  const ra = a.data?.items.find((r) => r.personId === me.wca_id);
+  pbSingle = rs?.best ?? null;
+  pbAverage = ra?.best ?? null;
+  bdSingle = rs?.rank?.country ?? null;
+  bdAverage = ra?.rank?.country ?? null;
 }
 
 const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
@@ -50,11 +56,17 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
       <div class="mt-3 flex flex-wrap gap-4">
         <div>
           <p class="data-font text-xs uppercase tracking-wider text-slate-500">3x3 single PB</p>
-          <p class="data-font text-xl font-bold">{pbSingle !== null ? formatCenti(pbSingle) : '—'}</p>
+          <p class="data-font text-xl font-bold">
+            {pbSingle !== null ? formatCenti(pbSingle) : '—'}
+            {bdSingle !== null && <span class="ml-2 text-xs font-bold text-emerald-brand">BD #{bdSingle}</span>}
+          </p>
         </div>
         <div>
           <p class="data-font text-xs uppercase tracking-wider text-slate-500">3x3 average PB</p>
-          <p class="data-font text-xl font-bold">{pbAverage !== null ? formatCenti(pbAverage) : '—'}</p>
+          <p class="data-font text-xl font-bold">
+            {pbAverage !== null ? formatCenti(pbAverage) : '—'}
+            {bdAverage !== null && <span class="ml-2 text-xs font-bold text-emerald-brand">BD #{bdAverage}</span>}
+          </p>
         </div>
       </div>
       <p class="mt-3">
@@ -112,7 +124,29 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
     }
 
     <h2 class="mt-8 text-2xl font-extrabold">Competition history</h2>
-    <p class="mt-1 text-sm text-slate-600">Archived results live on your WCA profile.</p>
+    <p class="mt-1 text-sm text-slate-600">Your registrations on this site. Archived results live on your WCA profile.</p>
+    {regs.length > 0 && (
+      <div class="card-brutal mt-3 overflow-x-auto">
+        <table class="w-full min-w-150 text-left text-sm">
+          <thead>
+            <tr class="border-b-2 border-ink">
+              <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Competition</th>
+              <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Fee</th>
+              <th class="data-font px-4 py-2 text-xs uppercase tracking-wider text-slate-500">Roster</th>
+            </tr>
+          </thead>
+          <tbody>
+            {regs.map((r) => (
+              <tr class="border-b border-slate-200 last:border-0">
+                <td class="px-4 py-2 font-bold">{r.comp_name}</td>
+                <td class="data-font px-4 py-2">{r.status === 'verified' ? `✅ ৳${r.latest_tx?.amount_bdt ?? ''}` : (r.latest_tx ? `⏳ ৳${r.latest_tx.amount_bdt}` : '—')}</td>
+                <td class="data-font px-4 py-2">{r.wca_accepted === 1 ? '✅ Accepted' : 'Pending'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
     <p class="mt-2">
       {me.wca_id ? (
         <a class="btn-pill inline-block border-2 border-ink bg-white px-5 py-2 text-sm shadow-brutal" href={`https://www.worldcubeassociation.org/persons/${me.wca_id}`} target="_blank" rel="noopener">

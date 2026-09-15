@@ -11,6 +11,10 @@ const comps = await tryLoad(Astro.locals, (env) => getCompetitions(env), { data:
 const items = comps.data?.items ?? [];
 const cities = [...new Set(items.map((c) => c.city))].filter(Boolean).sort();
 const shown = city ? items.filter((c) => c.city === city) : items;
+// Date-derived archive split (same honesty rule as card pills).
+const todayStamp = new Date().toISOString().slice(0, 10);
+const upcoming = shown.filter((c) => c.end_date >= todayStamp);
+const past = shown.filter((c) => c.end_date < todayStamp);
 ---
 
 <Base title="Competitions">
@@ -46,19 +50,50 @@ const shown = city ? items.filter((c) => c.city === city) : items;
           </a>
         </p>
       ) : (
-        <div class="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {shown.map((c) => (
-            <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
-              <p class="data-font text-xs font-bold uppercase tracking-wider text-speed-orange">{c.city}</p>
-              <p class="mt-1 text-lg font-extrabold">{c.name}</p>
-              <p class="data-font mt-1 text-sm text-slate-600">
-                {c.start_date} → {c.end_date}
-              </p>
-              <p class="mt-1 text-sm text-slate-600">{c.venue}</p>
-              <p class="mt-2 text-xs text-slate-500">{c.events.join(' • ')}</p>
-            </a>
-          ))}
-        </div>
+        <>
+          <h2 class="mt-8 text-2xl font-extrabold tracking-tight">Upcoming</h2>
+          {upcoming.length === 0 ? (
+            <p class="mt-3 text-slate-600">Nothing upcoming in the cache right now — see past events below.</p>
+          ) : (
+            <div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {upcoming.map((c) => (
+                <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+                  <p class="data-font flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wider">
+                    <span class="text-speed-orange">{c.city}</span>
+                    <span class="rounded-full border border-ink bg-emerald-brand px-2 py-0.5 text-white">Upcoming</span>
+                  </p>
+                  <p class="mt-1 text-lg font-extrabold">{c.name}</p>
+                  <p class="data-font mt-1 text-sm text-slate-600">
+                    {c.start_date} → {c.end_date}
+                  </p>
+                  <p class="mt-1 text-sm text-slate-600">{c.venue}</p>
+                  <p class="mt-2 text-xs text-slate-500">{c.events.join(' • ')}</p>
+                </a>
+              ))}
+            </div>
+          )}
+          {past.length > 0 && (
+            <>
+              <h2 class="mt-10 text-2xl font-extrabold tracking-tight">Past</h2>
+              <div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {past.map((c) => (
+                  <a href={`/competitions/${c.wca_id}`} class="card-brutal block p-5 hover:-translate-y-0.5">
+                    <p class="data-font flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wider">
+                      <span class="text-slate-500">{c.city}</span>
+                      <span class="rounded-full border border-ink bg-white px-2 py-0.5">Past</span>
+                    </p>
+                    <p class="mt-1 text-lg font-extrabold">{c.name}</p>
+                    <p class="data-font mt-1 text-sm text-slate-600">
+                      {c.start_date} → {c.end_date}
+                    </p>
+                    <p class="mt-1 text-sm text-slate-600">{c.venue}</p>
+                    <p class="mt-2 text-xs text-slate-500">{c.events.join(' • ')}</p>
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )
     }
   </section>

@@ -2,6 +2,29 @@
   "id": "DhakaSpringOpen2026",
   "name": "Dhaka Spring Open 2026",
   "competitorLimit": 120,
+  "schedule": {
+    "numberOfDays": 2,
+    "venues": [
+      {
+        "name": "National Sports Council Gymnasium",
+        "rooms": [
+          {
+            "name": "Main Hall",
+            "activities": [
+              { "name": "Check-in and Tutorial", "activityCode": "other-checkin", "startTime": "2026-04-17T08:30:00+06:00", "endTime": "2026-04-17T09:30:00+06:00", "childActivities": [] },
+              { "name": "3x3x3 Cube, Round 1", "activityCode": "333-r1", "startTime": "2026-04-17T09:30:00+06:00", "endTime": "2026-04-17T11:30:00+06:00", "childActivities": [] },
+              { "name": "2x2x2 Cube, Final", "activityCode": "222-f", "startTime": "2026-04-18T09:30:00+06:00", "endTime": "2026-04-18T10:30:00+06:00", "childActivities": [] }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "persons": [
+    { "name": "Sample Delegate", "wcaId": "2019SAMP01", "roles": ["delegate", "competitor"], "assignments": [] },
+    { "name": "Sample Organizer", "wcaId": null, "roles": ["organizer"], "assignments": [] },
+    { "name": "Sample Competitor", "wcaId": "2026SAMP01", "roles": ["competitor"], "assignments": [] }
+  ],
   "events": [
     {
       "id": "333",
