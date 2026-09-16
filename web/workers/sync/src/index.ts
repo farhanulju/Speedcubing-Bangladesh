@@ -225,7 +225,6 @@ async function runDetailStage(env: SyncEnv): Promise<void> {
   let details = 0;
   let champs = 0;
   const oldCutoff = isoDaysAgo(today, 30);
-  const recentCutoff = isoDaysAgo(today, 7);
   // Sequential, NOT Promise.all: a 28-wide burst gets 429s from the WCA API
   // (proven 2026-09-16: parallel WCIF fetches all failed while sequential v0
   // pages succeeded). Wall-clock is cheap here; subrequest budget is not.
@@ -235,9 +234,8 @@ async function runDetailStage(env: SyncEnv): Promise<void> {
       asOfExportDate?: string;
     };
     const hasDetail = Array.isArray(cached?.event_detail) && (cached as { event_detail: unknown[] }).event_detail.length > 0;
-    const old = !!s.end_date && s.end_date < oldCutoff;
-    const recent = !s.end_date || s.end_date >= recentCutoff;
-    const stale = !cached?.asOfExportDate || cached.asOfExportDate < oldCutoff;
+      const old = !!s.end_date && s.end_date < oldCutoff;
+      const stale = !cached?.asOfExportDate || cached.asOfExportDate < oldCutoff;
     if ((!hasDetail || !old || stale) && details < DETAIL_PER_RUN) {
       details++;
       // Unofficial detail confirms the comp still exists upstream; WCIF gives rounds/limits.

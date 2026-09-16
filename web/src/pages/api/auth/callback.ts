@@ -131,10 +131,17 @@ export async function GET({
 
     const secure = new URL(request.url).protocol === 'https:';
     const cookie = await createSession(env.SESSION_SECRET, cid, wcaId);
+    // Return to where login started (login sets speedbd_oauth_next, path-scoped
+    // here). Anything but a same-origin path falls back to /dashboard.
+    const rawNext = readCookie(request.headers.get('cookie'), 'speedbd_oauth_next');
+    const next = rawNext && decodeURIComponent(rawNext).startsWith('/') && !decodeURIComponent(rawNext).startsWith('//')
+      ? decodeURIComponent(rawNext)
+      : '/dashboard';
     // Two Set-Cookie headers — never comma-joined (Expires values contain commas).
-    const headers = new Headers({ location: '/dashboard' });
+    const headers = new Headers({ location: next });
     headers.append('set-cookie', sessionCookieHeader(cookie, secure));
     headers.append('set-cookie', clearStateCookieHeader());
+    headers.append('set-cookie', 'speedbd_oauth_next=; Path=/api/auth/callback; HttpOnly; SameSite=Lax; Max-Age=0');
     return new Response(null, { status: 302, headers });
   } catch {
     return Response.json({ error: 'login failed — please try again' }, { status: 500 });

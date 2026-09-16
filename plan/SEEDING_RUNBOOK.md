@@ -26,7 +26,7 @@ numbers, `TESTTXID1`, `2026SAMP01`, `SampleComp2026`, bodies containing `Sample 
 | Table | Placeholder keys | Replace with |
 |---|---|---|
 | `announcement` | `sample-registration-open`, `sample-venue-map` | Real announcements, or delete |
-| `page` | `about`, `contact-info`, `sponsors-pitch`, `worlds-story`, `worlds-criteria` | Real copy for all five slugs (routes 404 without them) |
+| `page` | `about`, `contact-info`, `sponsors-pitch`, `worlds-story`, `worlds-criteria`, `privacy` | Real copy for all six slugs (`privacy` falls back to a pointer notice when absent) |
 | `person` | `sample-delegate`, `sample-exec`, `sample-media`, `sample-outreach` | Real people; photos only per §4 |
 | `sponsor` | `sample-sponsor`, `sample-silver`, `sample-community` | Real sponsors, or empty table |
 | `faq` | `sample-faq-1` … `sample-faq-4` | Real FAQ entries |

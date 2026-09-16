@@ -126,7 +126,9 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
     <h2 class="mt-8 text-2xl font-extrabold">Competition history</h2>
     <p class="mt-1 text-sm text-slate-600">Your registrations on this site. Archived results live on your WCA profile.</p>
     {regs.length > 0 && (
-      <div class="card-brutal mt-3 overflow-x-auto">
+      <>
+      <p class="data-font mt-3 text-xs text-slate-400 sm:hidden">Swipe sideways for more columns →</p>
+      <div class="card-brutal mt-1 overflow-x-auto">
         <table class="w-full min-w-150 text-left text-sm">
           <thead>
             <tr class="border-b-2 border-ink">
@@ -146,6 +148,7 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
           </tbody>
         </table>
       </div>
+      </>
     )}
     <p class="mt-2">
       {me.wca_id ? (

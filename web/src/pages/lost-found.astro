@@ -16,33 +16,34 @@ const compItems = comps.data?.items ?? [];
 
 <Base title="Lost & Found">
   <section class="container-x grid max-w-5xl gap-8 py-12 md:grid-cols-2">
-    <div>
+    <div class="min-w-0">
       <h1 class="text-4xl font-extrabold tracking-tight">Lost &amp; Found Desk</h1>
       <p class="mt-2 text-slate-600">
         Report a missing item or check recovered inventory. Reporter contacts stay private —
-        the log below shows items and statuses only.
+        the log below shows items and statuses only. Contacts are visible to delegates only and
+        kept until the item is returned — see our <a class="font-bold text-emerald-brand underline" href="/privacy">privacy notice</a>.
       </p>
-      <form data-lf-form class="card-brutal shadow-brutal mt-6 flex flex-col gap-4 p-6" enctype="multipart/form-data">
-        <label class="flex flex-col gap-1">
+      <form data-lf-form class="card-brutal shadow-brutal mt-6 flex min-w-0 flex-col gap-4 p-6" enctype="multipart/form-data">
+        <label class="flex min-w-0 flex-col gap-1">
           <span class="text-sm font-bold">Competition (optional)</span>
-          <select name="comp_wca_id" class="rounded-lg border-2 border-ink px-3 py-2">
+          <select name="comp_wca_id" class="w-full rounded-lg border-2 border-ink px-3 py-2">
             <option value="">—</option>
             {compItems.map((c) => (
               <option value={c.wca_id}>{c.name}</option>
             ))}
           </select>
         </label>
-        <label class="flex flex-col gap-1">
+        <label class="flex min-w-0 flex-col gap-1">
           <span class="text-sm font-bold">Item description *</span>
-          <input name="item" type="text" required maxlength="200" placeholder="e.g. GAN 12 MagLev, blue core" class="rounded-lg border-2 border-ink px-3 py-2" />
+          <input name="item" type="text" required maxlength="200" placeholder="e.g. GAN 12 MagLev, blue core" class="w-full rounded-lg border-2 border-ink px-3 py-2" />
         </label>
-        <label class="flex flex-col gap-1">
+        <label class="flex min-w-0 flex-col gap-1">
           <span class="text-sm font-bold">Your contact (phone or email) *</span>
-          <input name="reporter_contact" type="text" required maxlength="160" class="rounded-lg border-2 border-ink px-3 py-2" />
+          <input name="reporter_contact" type="text" required maxlength="160" class="w-full rounded-lg border-2 border-ink px-3 py-2" />
         </label>
-        <label class="flex flex-col gap-1">
+        <label class="flex min-w-0 flex-col gap-1">
           <span class="text-sm font-bold">Photo or receipt <span class="font-normal text-slate-500">(png/jpg/pdf, ≤8 MB)</span></span>
-          <input name="photo" type="file" accept="image/png,image/jpeg,image/webp,image/avif,application/pdf" class="text-sm" />
+          <input name="photo" type="file" accept="image/png,image/jpeg,image/webp,image/avif,application/pdf" class="w-full max-w-full text-sm" />
         </label>
         <TurnstileWidget siteKey={siteKey} />
         <p data-form-msg class="hidden text-sm font-semibold"></p>
@@ -51,7 +52,7 @@ const compItems = comps.data?.items ?? [];
         </button>
       </form>
     </div>
-    <div>
+    <div class="min-w-0">
       <h2 class="text-2xl font-extrabold">Recent unclaimed items</h2>
       {
         log.length === 0 ? (

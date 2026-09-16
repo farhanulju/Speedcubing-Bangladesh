@@ -47,14 +47,12 @@ try {
       ) : rows.length === 0 ? (
         <div class="card-brutal mt-6 p-6">
           <p class="font-bold">No rows yet.</p>
-          {!def.singleton && (
-            <p class="mt-1 text-sm">
-              <a class="font-semibold text-emerald-brand underline" href={`/admin/${def.table}/new`}>
-                Create the first entry
-              </a>
-              .
-            </p>
-          )}
+          <p class="mt-1 text-sm">
+            <a class="font-semibold text-emerald-brand underline" href={`/admin/${def.table}/new`}>
+              Create the first entry
+            </a>
+            .
+          </p>
         </div>
       ) : (
         <div class="card-brutal mt-6 overflow-x-auto">

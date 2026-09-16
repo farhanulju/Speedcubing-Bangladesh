@@ -31,6 +31,7 @@ export const en = {
       { href: '/lost-found', label: 'Lost & Found' },
       { href: '/faq', label: 'FAQ' },
       { href: '/contact', label: 'Contact Support' },
+      { href: '/privacy', label: 'Privacy' },
     ],
     // Real handles as they arrive; '#' renders nothing (see Base footer).
     socials: [
