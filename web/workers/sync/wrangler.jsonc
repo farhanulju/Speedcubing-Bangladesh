@@ -15,14 +15,15 @@
     {
       "binding": "DB",
       "database_name": "speedbd",
-      "database_id": "REPLACE_WITH_D1_ID__see_plan_OPS_HANDOFF_md",
+      "database_id": "53805520-bdb1-474a-aab5-e4368118a5a5",
       "migrations_dir": "../../migrations"
     }
   ],
   "kv_namespaces": [
     {
       "binding": "WCA_CACHE",
-      "id": "REPLACE_WITH_KV_ID__see_plan_OPS_HANDOFF_md"
+      "id": "082f9d45da744e2a8f2a6825045e4bf8",
+      "preview_id": "5bc0cca379b04480b0bc5b82aa6237f5"
     }
   ]
 }

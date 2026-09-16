@@ -32,9 +32,9 @@ export const en = {
       { href: '/faq', label: 'FAQ' },
       { href: '/contact', label: 'Contact Support' },
     ],
-    // TODO WP-20: replace with real handles.
+    // Real handles as they arrive; '#' renders nothing (see Base footer).
     socials: [
-      { label: 'Facebook', href: '#' },
+      { label: 'Facebook', href: 'https://www.facebook.com/SpeedcubingBD/' },
       { label: 'Instagram', href: '#' },
       { label: 'YouTube', href: '#' },
     ],

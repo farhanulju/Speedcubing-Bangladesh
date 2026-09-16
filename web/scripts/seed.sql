@@ -52,28 +52,44 @@ INSERT INTO competitor (id, wca_id, wca_oauth_sub, name, email, created_at) VALU
 
 INSERT INTO registration (id, competitor_id, comp_wca_id, events_json, status, wca_accepted, created_at) VALUES
 ('sample-registration', 'sample-competitor', 'SampleComp2026', '["333","222"]', 'pending', 0, '2026-09-14'),
-('sample-registration-2', 'sample-competitor', 'DhakaSpringOpen2026', '["333"]', 'pending', 0, '2026-09-14');
+('sample-registration-2', 'sample-competitor', 'DhakaSpringOpen2026', '["333"]', 'pending', 0, '2026-09-14'),
+('sample-registration-3', 'sample-competitor', 'SampleComp2026', '["333","pyram"]', 'verified', 1, '2026-09-13');
 
 INSERT INTO tx_submission (id, registration_id, sender_number, txn_id, amount_bdt, status, created_at) VALUES
 ('sample-tx', 'sample-registration', '+8801000000000', 'TESTTXID1', 800, 'pending', '2026-09-14');
 
+-- Decided examples (as decideTx would write them): one accepted + verified reg,
+-- one rejected. SampleComp2026 is seed-only so queue/demo stays clear of real comps.
+INSERT INTO tx_submission (id, registration_id, sender_number, txn_id, amount_bdt, status, decided_by, decided_at, note, created_at) VALUES
+('sample-tx-2', 'sample-registration-3', '+8801000000005', 'TESTTXID2', 1000, 'accepted', 'seed', '2026-09-13', 'Sample statement line 3', '2026-09-13'),
+('sample-tx-3', 'sample-registration-2', '+8801000000006', 'TESTTXID3', 700, 'rejected', 'seed', '2026-09-14', 'Sample amount mismatch', '2026-09-14');
+
 INSERT INTO lost_found (id, comp_wca_id, item, photo_r2, status, reporter_contact, created_at) VALUES
-('sample-lf', 'SampleComp2026', 'Sample 3x3 cube', NULL, 'open', 'sample@example.org', '2026-09-14');
+('sample-lf', 'SampleComp2026', 'Sample 3x3 cube', NULL, 'open', 'sample@example.org', '2026-09-14'),
+('sample-lf-2', 'SampleComp2026', 'Sample timer display', NULL, 'in_progress', 'sample@example.org', '2026-09-13'),
+('sample-lf-3', 'SampleComp2026', 'Sample 2x2 cube', NULL, 'returned', 'sample@example.org', '2026-09-12');
 
 INSERT INTO opt_in (id, channel, handle, consent_at) VALUES
 ('sample-optin', 'email', 'sample@example.org', '2026-09-14');
 
 INSERT INTO contact_message (id, name, email, wca_id, category, body, status, at) VALUES
-('sample-contact', 'Sample Visitor', 'sample@example.org', NULL, 'general', 'Sample message.', 'open', '2026-09-14');
+('sample-contact', 'Sample Visitor', 'sample@example.org', NULL, 'general', 'Sample message.', 'open', '2026-09-14'),
+('sample-contact-2', 'Sample Parent', 'sample@example.org', NULL, 'competition', 'Sample follow-up message.', 'closed', '2026-09-13');
 
 INSERT INTO guardian_consent (competitor_id, guardian_name, relation, consent_at, verified_by) VALUES
 ('sample-competitor', 'Sample Guardian', 'parent', '2026-09-14', NULL);
 
 INSERT INTO audit_log (actor, action, entity, entity_id, at, meta_json) VALUES
-('seed', 'seed.insert', 'announcement', 'sample-registration-open', '2026-09-14', '{}');
+('seed', 'seed.insert', 'announcement', 'sample-registration-open', '2026-09-14', '{}'),
+('seed', 'tx-accepted', 'tx_submission', 'sample-tx-2', '2026-09-13', '{}'),
+('seed', 'tx-rejected', 'tx_submission', 'sample-tx-3', '2026-09-14', '{}'),
+('seed', 'wca-accepted', 'registration', 'sample-registration-3', '2026-09-13', '{}'),
+('seed', 'lostfound-in_progress', 'lost_found', 'sample-lf-2', '2026-09-13', '{}'),
+('seed', 'contact-closed', 'contact_message', 'sample-contact-2', '2026-09-13', '{}');
 
 INSERT INTO email_outbox (to_addr, template, payload_json, status, attempts, sent_at) VALUES
-('sample@example.org', 'payment-verified', '{}', 'sent', 1, '2026-09-14');
+('sample@example.org', 'payment-verified', '{}', 'sent', 1, '2026-09-14'),
+('sample@example.org', 'payment-rejected', '{}', 'queued', 0, NULL);
 
 INSERT INTO record_snapshot (event, kind, value_centis, holder_wca_id, holder_name, comp_wca_id, export_date) VALUES
 ('333', 'single', 582, '2026SAMP01', 'Sample Holder', 'SampleComp2026', '2026-09-13');

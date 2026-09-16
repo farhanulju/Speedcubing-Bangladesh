@@ -122,6 +122,17 @@ const session = await optionalUser(Astro.request, Astro.locals).catch(() => null
             )
           }
         </nav>
+        {en.footer.socials.some((s) => s.href !== '#') && (
+          <nav class="mt-6 flex flex-wrap gap-x-5 gap-y-2" aria-label="Social">
+            {en.footer.socials
+              .filter((s) => s.href !== '#')
+              .map((s) => (
+                <a href={s.href} target="_blank" rel="noopener" class="text-sm font-bold text-white/80 underline hover:text-white">
+                  {s.label}
+                </a>
+              ))}
+          </nav>
+        )}
         <p class="mt-6 text-xs text-white/60">{en.footer.legal}</p>
       </div>
     </footer>

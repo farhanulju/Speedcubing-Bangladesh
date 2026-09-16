@@ -34,8 +34,8 @@ numbers, `TESTTXID1`, `2026SAMP01`, `SampleComp2026`, bodies containing `Sample 
 | `comp_override` | `SampleComp2026`, `DhakaSpringOpen2026`, `ChittagongCubeOpen2026` (test wallets!) | Real per-comp overrides; test wallets must go |
 | `donation_page` (id=1) | Test wallets, 185000/500000 demo totals | Real receiving wallets + verified totals; host city stays `Sweden` unless the board changes it |
 | `donor` | `sample-donor`, `sample-donor-2`, `sample-donor-3` | Real opt-in donors only (§5) |
-| `competitor`, `registration`, `tx_submission` | `sample-*`, `TESTTXID1` | Delete all — runtime-written |
-| `lost_found`, `opt_in`, `contact_message`, `guardian_consent` | `sample-*` | Delete all — runtime-written |
+| `competitor`, `registration`, `tx_submission` | `sample-*` regs, `TESTTXID1–3` (incl. decided examples) | Delete all — runtime-written |
+| `lost_found`, `opt_in`, `contact_message`, `guardian_consent` | `sample-*` (incl. decided/closed states) | Delete all — runtime-written |
 | `record_snapshot`, `comp_champion` | `SampleComp2026` / 582-centis demo | Delete all — cron rebuilds from the WCA export |
 | `audit_log`, `email_outbox` | One `seed` row each | Leave (system history), or purge with the rest |
 

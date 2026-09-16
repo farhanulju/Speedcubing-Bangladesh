@@ -4,35 +4,39 @@ Agents cannot click Cloudflare/WCA/Resend dashboards. A human does this list onc
 
 ## 1. Cloudflare Pages app
 
-- [ ] Dash → Workers & Pages → Create → Pages → Connect to Git → select `Speedcubing-Bangladesh` repo.
-- [ ] Framework preset: Astro. Root directory: `web`. Build command: `npm run build`. Output: `dist`.
-- [ ] Deploy once (placeholder site is expected). Note the `*.pages.dev` URL → final domain later (M5 cutover).
+- [x] Project `speedbd-web` created via API 2026-09-16 → `https://speedbd-web.pages.dev/` (live after first deploy).
+- [x] GitHub connected (`farhanulju/Speedcubing-Bangladesh`, branch `main`, deployments on). Root dir fixed to `web` via API (was empty — builds would have failed). Build `npm run build`, output `dist`.
+- [x] First deploy built green 2026-09-16 (cf0bf4d). Compat date `2026-09-01` + `nodejs_compat` set via API. The `wrangler.json` warning in logs is harmless (Pages ignores it; dashboard/API is source of truth — file still drives local dev).
+- [ ] Bindings CANNOT go via project PATCH (API 400s) — add in dashboard: project → Settings → Bindings → Add: D1 name `DB` → `speedbd`; KV `WCA_CACHE` → `wca-cache`; R2 `MEDIA` → `speedbd-media`. Without these every data page 500s.
+- [ ] Then Retry deployment (bindings + compat need a fresh deploy). Then the live URL serves the app.
 
 ## 2. D1 database
 
-- [ ] Workers & Pages → D1 → Create → name `speedbd` (region: nearest to Dhaka).
-- [ ] Copy the database ID into `web/wrangler.jsonc` AND `web/workers/sync/wrangler.jsonc` (replace both `REPLACE_WITH_D1_ID` markers).
-- [ ] From `web/`: `npm run db:migrate:remote` (applies `migrations/0001–0007`).
+- [x] Created via API 2026-09-16: `speedbd`, id `53805520-bdb1-474a-aab5-e4368118a5a5`.
+- [x] ID wired into `web/wrangler.jsonc` AND `web/workers/sync/wrangler.jsonc`.
+- [x] Migrations 0001–0009 applied remote; verified 24 tables, 0 rows (no seed data in prod — WP-51 only).
 
 ## 3. KV namespace (WCA cache)
 
-- [ ] Workers & Pages → KV → Create namespace `wca-cache`.
-- [ ] Copy the ID into the same two `wrangler.jsonc` files (`REPLACE_WITH_KV_ID` markers).
+- [x] Created via API 2026-09-16: `wca-cache`, id `082f9d45da744e2a8f2a6825045e4bf8` (+ preview `5bc0cca379b04480b0bc5b82aa6237f5`).
+- [x] IDs wired into the same two `wrangler.jsonc` files.
 
 ## 4. R2 bucket (media)
 
-- [ ] R2 → Create bucket `speedbd-media` (default settings; no public dev URL needed — served via Worker).
+- [x] Bucket `speedbd-media` created via API 2026-09-16 (after human enabled R2). No public dev URL — served via Worker.
 
 ## 5. Turnstile (spam shield)
 
-- [ ] Security → Turnstile → Add site → mode Managed. Add the production domain + `localhost` (dev).
-- [ ] Save Site key + Secret key for step 8.
+- [x] Widget `speedbd-local` created via API 2026-09-16, mode Managed, domains `localhost` + `127.0.0.1` + `speedbd-web.pages.dev` (prod hostname added before first deploy so live forms verify).
+- [x] Site key + Secret stored in root `.env` (gitignored, never commit). Local `.dev.vars` keeps documented test keys (harnesses depend on always-pass).
+- [ ] Add the custom domain to the widget once DNS is known (Turnstile dash → widget → Domains).
 
 ## 6. Access (admin gate)
 
-- [ ] Zero Trust → Access → Add application → Self-hosted. Name `speedbd-admin`.
-- [ ] Protect path: `<pages-domain>/admin*` (tighten to exact admin routes post-M1 if desired).
-- [ ] Policy: Allow → Emails → paste each admin's email (board + delegates only; ≤50 free seats).
+- [x] Zero Trust enabled by human; app `speedbd-admin` created via API 2026-09-16 (destinations `speedbd-web.pages.dev/admin` + `/admin/*`; team `falling-scene-e081.cloudflareaccess.com`, renameable in Zero Trust settings).
+- [x] `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` saved to gitignored root `.env`.
+- [x] Policy `org-admins` (Allow) created via API 2026-09-16, now 8 rules (6 originals + dotted Gmail variant + munemshahriar007@gmail.com). Lesson: Access matches email strings EXACTLY — Gmail ignores dots but Access does not. No Cloudflare account invites needed: email-OTP policies admit any listed Gmail; the 50 free seats count monthly active users automatically.
+- [ ] Add the two `ACCESS_*` values to Pages env (step 8) + redeploy.
 - [ ] Test: logged-out visit to `/admin` redirects to Access login.
 
 ## 7. Resend (transactional email)
@@ -43,24 +47,20 @@ Agents cannot click Cloudflare/WCA/Resend dashboards. A human does this list onc
 
 ## 8. Secrets (Pages project → Settings → Variables & Secrets)
 
-Add each as **secret** (not plain variable):
+Done via API 2026-09-16 (verified: 5 encrypted secrets + 2 plain vars; plain-text secret copies deleted):
 
-- [ ] `SESSION_SECRET` (generate: `openssl rand -base64 32`)
-- [ ] `WCA_CLIENT_ID` / `WCA_CLIENT_SECRET` (from step 9)
-- [ ] `RESEND_API_KEY` (from step 7)
-- [ ] `EMAIL_FROM` (e.g. `Speedcubing BD <noreply@<domain>>` — must match the verified Resend domain)
-- [ ] `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` (from step 5)
-- [ ] `ORGANIZER_INBOX` (e.g. `organizers@<domain>` — TxID fail-closed BCC)
-- [ ] `ACCESS_TEAM_DOMAIN` (e.g. `speedcubingbd.cloudflareaccess.com` — no scheme)
-- [ ] `ACCESS_AUD` (Application Audience tag from the `speedbd-admin` app overview)
-- [ ] Sync worker: `wrangler secret put RESEND_API_KEY -c workers/sync/wrangler.jsonc` (run from `web/`).
+- [x] Secrets: `SESSION_SECRET`, `WCA_CLIENT_SECRET`, `TURNSTILE_SECRET_KEY`, `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD`
+- [x] Plain vars: `PUBLIC_TURNSTILE_SITE_KEY` (exact name — code reads it at build time), `WCA_CLIENT_ID`
+- [ ] `RESEND_API_KEY` — skipped with Resend (step 7). `EMAIL_FROM` / `ORGANIZER_INBOX` unread by code today; add with Resend.
+- [ ] Sync worker: `wrangler secret put RESEND_API_KEY -c workers/sync/wrangler.jsonc` (run from `web/`) — with Resend.
 
 Local dev mirror: copy `web/.dev.vars.example` → `web/.dev.vars`, fill values (gitignored).
 
 ## 9. WCA OAuth app (user login)
 
-- [ ] `worldcubeassociation.org/oauth/applications` → New → callback URL `https://<production-domain>/api/auth/callback` (+ `http://localhost:4321/api/auth/callback` for dev if allowed).
-- [ ] Save client ID/secret into step 8. Scopes: default profile only.
+- [ ] `worldcubeassociation.org/oauth/applications` → app exists (`Speedcubing Bangladesh`). Replace the callback list with exactly: `https://speedbd-web.pages.dev/api/auth/callback` + `http://localhost:4321/api/auth/callback` (remove `https://127.0.0.1` — code builds `origin + /api/auth/callback`, so any other value breaks login).
+- [ ] Scopes: `public email` (matches `WCA_OAUTH_SCOPE` default in `api/auth/login.ts`; needs profile + WCA ID + email).
+- [x] Client ID/secret saved to gitignored root `.env` 2026-09-16 (`WCA_CLIENT_ID`, `WCA_CLIENT_SECRET`, `WCA_OAUTH_SCOPE`, generated `SESSION_SECRET`). Secret was pasted in chat — consider regenerating in WCA dash after setup, then update `.env` + Pages secret.
 
 ## 10. Sync worker deploy
 
@@ -70,4 +70,4 @@ Local dev mirror: copy `web/.dev.vars.example` → `web/.dev.vars`, fill values 
 
 ## Done when
 
-`/api/health` returns `{"ok":true}`, `/admin` challenges via Access, D1 shows 20 tables, KV + R2 exist, Resend domain verified. Report back with ONLY "WP-00 done" (no secrets in chat) and agents continue at WP-10.
+`/api/health` returns `{"ok":true}`, `/admin` challenges via Access, D1 shows 24 tables, KV + R2 exist, Resend domain verified. Report back with ONLY "WP-00 done" (no secrets in chat) and agents continue at WP-10.
