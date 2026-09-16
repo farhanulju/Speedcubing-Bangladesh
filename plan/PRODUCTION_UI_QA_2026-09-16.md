@@ -2,9 +2,9 @@
 
 ## Summary
 
-Visual and task-flow review of the live site in the requested signed-in Chrome profile, compared with the supplied Stitch export. Public pages render and the admin area is reachable. The most important problems are that the homepage presents past events as upcoming, the registration CTA leads to a dashboard dead end, the Worlds campaign and several information pages are still placeholders, multiple key pages overflow a 360px viewport, and CMS saves are rejected by the admin API.
+Visual and task-flow review of the live site in the requested signed-in Chrome profile, compared with the supplied Stitch export. Public pages render and the admin area is reachable. The most important problems are that the homepage presents past events as upcoming, the registration CTA leads to a dashboard dead end, the Worlds campaign and several information pages are still placeholders, and multiple key pages overflow a 360px viewport. The CMS save failure from the first pass was retested after the user's fix and now passes for an unpublished page draft.
 
-No registrations, payments, messages, subscriptions, uploads, accept/reject decisions, or deletes were submitted. One clearly labeled unpublished CMS draft save was attempted with user authorization, but the app returned `admin login required (Cloudflare Access)` and did not create a row. The live payment and inbox queues were empty, so positive admin decision flows could not be exercised safely.
+No registrations, payments, messages, subscriptions, uploads, accept/reject decisions, or deletes were submitted. With user authorization, one clearly labeled CMS test page was saved as a draft and reopened to verify persistence; it remains unpublished. The live payment and inbox queues were empty, so positive admin decision flows could not be exercised safely.
 
 ## Environment and coverage
 
@@ -15,9 +15,16 @@ No registrations, payments, messages, subscriptions, uploads, accept/reject deci
 - Public routes reviewed: home, About, competitions, a competition detail, records, Worlds 2027, FAQ, people, sponsors, news, contact, lost & found, and the signed-in dashboard.
 - Admin routes reviewed: overview, payment queue, lost & found inbox, contact inbox, pages list/new editor, FAQ, announcements, Worlds donation page, and competition overrides.
 - Filters exercised without changing data: city filter and records search (`333`).
+- CMS retest after fix: created `codex-qa-smoke-2026-09-16` as a draft, confirmed it appears in the Pages list, and reopened it to verify slug, title, body, and draft status persisted.
 - Console: no warnings or errors observed in the reviewed tab.
 
-Screenshots were captured inline in this task thread (desktop/mobile home and competition detail; mobile contact and lost & found; Worlds page; admin overview, editor, and rejected-save state). They were not copied into the repository. The Stitch reference files are in the supplied `stitch_speedcubing_bangladesh_web_portal (1)/stitch_speedcubing_bangladesh_web_portal` export.
+Screenshots were captured inline in this task thread (desktop/mobile home and competition detail; mobile contact and lost & found; Worlds page; admin overview; initial rejected-save state; and post-fix saved-draft list/editor). They were not copied into the repository. The Stitch reference files are in the supplied `stitch_speedcubing_bangladesh_web_portal (1)/stitch_speedcubing_bangladesh_web_portal` export.
+
+Follow-up screenshots were also captured inline: the homepage Turnstile before interaction, competition list/event codes, the Records table and filters, People/Sponsor/Donor/Competition Override create forms, the blank page-body editor, the Worlds donation-page admin empty state, and the live admin overview. They were not copied into the repository.
+
+## Follow-up retest — CMS fix
+
+The first pass showed `admin login required (Cloudflare Access)` on Save. After the user reported the fix, a separate test tab in the intended Chrome profile successfully saved the unique test page. The list displayed it with status `draft`; reopening loaded its title, body, slug, and `draft` status. No public/published content was created. The labeled QA draft is intentionally retained for the user to remove if desired.
 
 ## Findings
 
@@ -47,15 +54,9 @@ Suggested fix: complete the approved content-entry checklist before promoting th
 
 ### P1 — Worlds donation page cannot be initialized from its admin screen
 
-`/admin/donation_page` has zero rows and exposes no “New” or “Create first entry” action, unlike the other content collections. The public Worlds page is empty, and the A13 campaign's manual target/raised values therefore cannot be initialized through the admin UI as tested.
+Rechecked read-only on 2026-09-16: `/admin/donation_page` says “No rows yet” and exposes only a back-to-admin link—no “New” or “Create first entry” action, unlike the other content collections. The public Worlds page is empty, and the A13 campaign's manual target/raised values therefore cannot be initialized through the admin UI as tested.
 
 Suggested fix: provide a first-time setup/create path for the singleton donation row, or seed a safe draft/default row that admins can edit.
-
-### P1 — CMS save is rejected while the Access-gated admin UI is open
-
-In the signed-in Chrome session, `/admin/page/new` loaded and accepted the test slug, title, body, and default `draft` status. Clicking Save returned `admin login required (Cloudflare Access)`. Returning to `/admin/page` showed “No rows yet,” so no draft was persisted. This prevents content entry through the tested admin workflow even though its pages are accessible.
-
-Suggested fix: trace the production admin API's Access identity/JWT authorization path for writes, then verify a draft create/edit round trip without publishing.
 
 ### P2 — WCA venue markup is printed literally
 
@@ -87,9 +88,45 @@ The detail page places the full round/group schedule into a very long single-col
 
 Suggested fix: group/collapse schedule by day or event and add a clear horizontal-scroll cue to the event table. Keep all official schedule details available.
 
+### P2 — CMS editor starts as a large blank area and pushes Save below the fold
+
+On a new Page form, the body editor initially appears as a large blank rectangle (roughly 400px tall) with no visible placeholder, formatting guidance, rendered preview, or preview action. The editor is not represented by useful controls in the accessibility view either. An author cannot tell what the output will look like from this initial state; at shorter desktop heights, Save also falls below the fold.
+
+Suggested fix: show the available blocks and a first-block prompt, offer a rendered preview (ideally side-by-side or toggleable), and keep Save easy to reach.
+
+### P2 — Newsletter Turnstile runs before the visitor expresses intent
+
+On two homepage loads/reloads, the “Sign up for alerts” section and Cloudflare Turnstile challenge initialized automatically before any click or form interaction. The widget completed its check on its own. The signup module was not present on the About route, so this finding is specifically about homepage loads—not every route. No signup was submitted.
+
+Suggested fix: defer mounting the signup form and Turnstile until the visitor deliberately chooses to subscribe or open alerts signup; avoid running the challenge merely because the homepage rendered.
+
+### P2 — Competition and record pages expose WCA event codes without human labels
+
+Competition cards list codes such as `222`, `333oh`, `333bf`, `333mbf`, `clock`, and `sq1`. The National Records table also uses these codes as its event names. These are official identifiers but are cryptic to newer cubers and general visitors.
+
+Suggested fix: show familiar event names (for example, “2×2×2 Cube” and “3×3×3 Blindfolded”) and retain the WCA code secondarily where useful.
+
+### P2 — Discovery filters offer too little structure for browsing
+
+On `/competitions`, the only filter controls are city links/chips; there is no event, date, or registration-state filter or searchable selector. On `/records`, the only control is one text search for event or holder plus a “Filter” button; the event values in the table remain raw codes. No dropdown/combobox was exposed in either surface during this check.
+
+Suggested fix: provide clear, usable selectors for the larger option sets (such as city and event), with relevant date/status filters and a visible reset state. Preserve the simple city chips if they remain useful shortcuts.
+
+### P2 — Admin create forms expose implementation details instead of task-oriented inputs
+
+Read-only inspection of the People, Sponsor, Donor, and Competition Override “New” forms found required IDs entered as plain text; Photo/Logo R2 object keys entered as text; Role as free text; “Member since (YYYY-MM)” as text rather than a date control; Links as a raw JSON textarea; and Sort order as an unexplained number stepper. Sponsor tier is a dropdown, but its four options are fixed in the form and there is no UI to define/manage tiers. Competition Override requires manually typing a WCA competition ID and exposes fee tiers as raw JSON (`{"early":800,"regular":1000}`). No forms were submitted.
+
+Suggested fix: auto-generate IDs; offer an upload flow that stores media in R2; use a date picker, searchable WCA competition picker, repeatable link and fee-tier rows, and plain-language labels/help; provide admin-managed role and sponsor-tier values; and explain ordering or replace it with a more direct ordering control.
+
+### P2 — Anonymous donor entry still requires a name
+
+The Donor create form labels the required text input “Name (or Anonymous) *”. There is no separate anonymity choice, so an admin must type a literal placeholder such as “Anonymous” to represent an anonymous contribution.
+
+Suggested fix: provide an explicit anonymous toggle/display choice and make the name optional when anonymous is selected; keep public-display consent clear and independent.
+
 ### Design-reference differences — confirm scope before building
 
-The live homepage is much sparser than the Stitch home: no hero photography, trust/city strip, Hall of Fame treatment, organization-story section, Worlds progress banner, or sponsor/news teaser. The live admin is a lightweight CMS/queue shell rather than Stitch's fuller operations hub with competition-health panels and quick-inspection modal. The dashboard has the expected core sections but not the richer history presentation.
+The live homepage is much sparser than the Stitch home: no hero photography, trust/city strip, Hall of Fame treatment, organization-story section, Worlds progress banner, or sponsor/news teaser. The live admin overview is a lightweight CMS/queue shell: it shows three queue counters, recent activity, and links to operations/content collections. Stitch instead depicts quick actions, active-competition and Worlds campaign cards, national-record and platform-health panels, a recent-admin panel, and a quick-payment-inspection modal. The dashboard has the expected core sections but not the richer history presentation.
 
 Treat these as parity observations, not blanket build authorization. Some are documented M5 gaps or content-entry work; other Stitch-only controls (for example emergency banners or sync controls) are not in the approved MVP list and should not be added without a scope decision.
 
@@ -99,9 +136,9 @@ Treat these as parity observations, not blanket build authorization. Some are do
 - The competitions city filter and records search returned matching results.
 - The mobile public menu and admin menu opened; the admin overview and dashboard had no horizontal document overflow at 360px.
 - The lost-and-found form displayed its Cloudflare Turnstile widget in a successful state.
-- Empty payment, lost-and-found, and contact queues are clearly reported as clear; no production records were created to manufacture test data.
-- CMS form fields accepted input, but the authorized draft-save smoke test exposed a production authorization error and no row was created.
+- Empty payment, lost-and-found, and contact queues are clearly reported as clear; no payment or inbox records were created to manufacture test data.
+- After the reported fix, the authorized draft-save smoke test passed; reopening the row confirmed the content and unpublished status persisted.
 
 ## Not tested
 
-No public form was submitted and no registration/payment workflow was committed. File upload, email delivery, payment accept/reject, WCA acceptance tick, Access denial from an unauthenticated browser, and content publish/rollback remain unverified in this pass. The unpublished CMS draft create path was attempted but blocked by the error above; no production content row was created.
+No public form was submitted and no registration/payment workflow was committed. File upload, email delivery, payment accept/reject, WCA acceptance tick, Access denial from an unauthenticated browser, and content publish/rollback remain unverified in this pass. The CMS draft create and read-back path was verified; edit/update behavior and publishing were not exercised.

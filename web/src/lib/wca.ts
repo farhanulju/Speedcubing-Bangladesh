@@ -11,6 +11,24 @@
 
 export const WCA_CACHE_TTL_SECONDS = 24 * 60 * 60;
 
+// WCA venue strings arrive as Markdown (`[Name](url)`), bare URLs, or plain
+// text. Never render the source verbatim — split into a display name plus an
+// optional safe (http/https) link. Unknown shapes render as plain text.
+export function venueDisplay(raw: string): { name: string; url: string | null } {
+  const s = (raw ?? '').trim();
+  const md = /^\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)$/.exec(s);
+  if (md) return { name: md[1]!.trim() || s, url: md[2]! };
+  if (/^https?:\/\/[^ \s]+$/.test(s)) {
+    try {
+      const u = new URL(s);
+      return { name: u.hostname.replace(/^www\./, ''), url: s };
+    } catch {
+      return { name: s, url: null };
+    }
+  }
+  return { name: s, url: null };
+}
+
 export interface CompSummary {
   wca_id: string;
   name: string;

@@ -9,8 +9,9 @@ INSERT INTO page (slug, title, body_json, status, updated_by, updated_at) VALUES
 ('about', 'Sample story', '{"blocks":[{"type":"header","data":{"text":"Sample","level":2}}]}', 'published', 'seed', '2026-09-14'),
 ('contact-info', 'How to reach us', '{"blocks":[{"type":"paragraph","data":{"text":"Sample contact side copy."}}]}', 'published', 'seed', '2026-09-14'),
 ('sponsors-pitch', 'Why partner with us', '{"blocks":[{"type":"paragraph","data":{"text":"Sample pitch."}}]}', 'published', 'seed', '2026-09-14'),
-('worlds-story', 'Road to Worlds', '{"blocks":[{"type":"paragraph","data":{"text":"Sample story."}}]}', 'published', 'seed', '2026-09-14'),
-('worlds-criteria', 'Criteria and refunds', '{"blocks":[{"type":"paragraph","data":{"text":"Sample criteria."}}]}', 'published', 'seed', '2026-09-14');
+ ('worlds-story', 'Road to Worlds', '{"blocks":[{"type":"paragraph","data":{"text":"Sample story."}}]}', 'published', 'seed', '2026-09-14'),
+ ('worlds-criteria', 'Criteria and refunds', '{"blocks":[{"type":"paragraph","data":{"text":"Sample criteria."}}]}', 'published', 'seed', '2026-09-14'),
+ ('privacy', 'Privacy notice', '{"blocks":[{"type":"paragraph","data":{"text":"Sample privacy notice."}}]}', 'published', 'seed', '2026-09-14');
 
 INSERT INTO person (id, name, photo_r2, photo_consent, role, wca_id, focus_area, member_since, links_json, status, updated_by, updated_at) VALUES
 ('sample-delegate', 'Sample Delegate', NULL, 0, 'WCA Delegate', NULL, 'Dhaka', '2024-01', '{}', 'published', 'seed', '2026-09-14'),

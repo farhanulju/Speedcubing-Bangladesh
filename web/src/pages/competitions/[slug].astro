@@ -2,9 +2,10 @@
 import Base from '../../layouts/Base.astro';
 import ContentBody from '../../components/ContentBody.astro';
 import { countRegistrations, getCompOverride } from '../../lib/content';
-import { getCompRoster } from '../../lib/registrations';
+import { getCompRoster, getMyRegistrations } from '../../lib/registrations';
+import { optionalUser } from '../../lib/session';
 import { EDGE_CACHE_VALUE, tryLoad } from '../../lib/page';
-import { getCompetition } from '../../lib/wca';
+import { getCompetition, venueDisplay } from '../../lib/wca';
 
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
@@ -42,6 +43,17 @@ const wallets = {
   nagad: typeof feeTiers.nagad_wallet === 'string' ? feeTiers.nagad_wallet : null,
 };
 const fees = Object.entries(feeTiers).filter(([k]) => !['bkash_wallet', 'nagad_wallet'].includes(k));
+// Registration state: past comps are closed (honest dead-end removal); open
+// comps register inline when logged in, or bounce through WCA login with ?next=.
+const todayStamp = new Date().toISOString().slice(0, 10);
+const regOpen = comp.end_date >= todayStamp;
+const session = await optionalUser(Astro.request, Astro.locals).catch(() => null);
+let myReg: null | Awaited<ReturnType<typeof getMyRegistrations>>[number] = null;
+if (session) {
+  const mine = await tryLoad(Astro.locals, (env) => getMyRegistrations(env, session.cid), []);
+  myReg = mine.find((r) => r.comp_wca_id === comp.wca_id) ?? null;
+}
+const offeredEvents = comp.event_detail.length > 0 ? comp.event_detail.map((e) => e.event) : comp.events;
 function maskWallet(w: string): string {
   const s = w.trim();
   if (s.length <= 5) return '•••••';
@@ -56,17 +68,32 @@ function maskWallet(w: string): string {
       Official WCA competition
     </p>
     <h1 class="mt-2 text-4xl font-extrabold tracking-tight">{comp.name}</h1>
-    <p class="data-font mt-2 text-slate-600">
-      {comp.start_date} → {comp.end_date} • {comp.venue}, {comp.city}
+    <p class="data-font mt-2 break-words text-slate-600">
+      {comp.start_date} → {comp.end_date} •{' '}
+      {(() => {
+        const v = venueDisplay(comp.venue);
+        return v.url ? (
+          <a class="underline" href={v.url} target="_blank" rel="noopener">{v.name}</a>
+        ) : (
+          v.name
+        );
+      })()}
+      , {comp.city}
     </p>
     <p class="mt-1 text-sm text-slate-600">
       {comp.address} • Cap: {comp.competitor_limit ?? 'TBA'}
       {comp.competitor_limit ? ` (${siteRegs} registered on this site)` : ''}
     </p>
     <div class="mt-4 flex flex-wrap gap-3">
-      <a href="/dashboard" class="btn-pill border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
-        Register &amp; Submit Payment
-      </a>
+      {regOpen ? (
+        <a href="#register" class="btn-pill border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
+          Register &amp; Submit Payment
+        </a>
+      ) : (
+        <span class="btn-pill inline-block border-2 border-ink bg-white px-6 py-2 text-slate-500">
+          Registration closed — this event ended {comp.end_date}
+        </span>
+      )}
       <a href={comp.url} target="_blank" rel="noopener" class="btn-pill border-2 border-ink bg-white px-6 py-2 shadow-brutal">
         Official WCA Page
       </a>
@@ -117,9 +144,9 @@ function maskWallet(w: string): string {
         <h2 class="text-2xl font-extrabold">Schedule</h2>
         <p class="data-font mt-1 text-xs uppercase tracking-wider text-slate-500">Venue time (Asia/Dhaka)</p>
         <div class="mt-3 grid gap-4 md:grid-cols-2">
-          {(comp.schedule ?? []).map((day) => (
-            <div class="rounded-xl border-2 border-ink p-4">
-              <p class="font-extrabold">{day.label}</p>
+          {(comp.schedule ?? []).map((day, di) => (
+            <details class="rounded-xl border-2 border-ink p-4" open={di === 0}>
+              <summary class="cursor-pointer font-extrabold">{day.label}</summary>
               <ol class="mt-2 flex flex-col gap-1 text-sm">
                 {day.items.map((it) => (
                   <li class="flex gap-2">
@@ -133,7 +160,7 @@ function maskWallet(w: string): string {
                   </li>
                 ))}
               </ol>
-            </div>
+            </details>
           ))}
         </div>
       </div>
@@ -163,8 +190,8 @@ function maskWallet(w: string): string {
     )}
 
     {
-      (fees.length > 0 || wallets.bkash || wallets.nagad || override?.venue_note) && (
-        <div class="card-brutal mt-6 p-6">
+      (fees.length > 0 || wallets.bkash || wallets.nagad || override?.venue_note || regOpen) && (
+        <div class="card-brutal mt-6 p-6" id="register">
           <h2 class="text-2xl font-extrabold">Registration &amp; payment</h2>
           {fees.length > 0 && (
             <dl class="mt-3 flex flex-wrap gap-4">
@@ -199,9 +226,122 @@ function maskWallet(w: string): string {
               <ContentBody docJson={override.payment_steps_json} />
             </div>
           )}
+          {!regOpen ? (
+            <p class="mt-4 rounded-lg border-2 border-ink bg-paper p-4 text-sm">
+              Registration for this competition is closed — it ended {comp.end_date}. Results live on the{' '}
+              <a class="font-bold text-emerald-brand underline" href={comp.url} target="_blank" rel="noopener">Official WCA Page</a>.
+            </p>
+          ) : !session ? (
+            <p class="mt-4 rounded-lg border-2 border-ink bg-paper p-4 text-sm">
+              <a class="font-bold text-emerald-brand underline" href={`/api/auth/login?next=/competitions/${comp.wca_id}`}>
+                Log in with WCA
+              </a>{' '}
+              to register for this competition — you'll return here after login.
+            </p>
+          ) : !myReg ? (
+            <form data-register-form={comp.wca_id} class="mt-4 rounded-lg border-2 border-ink bg-paper p-4">
+              <p class="text-sm font-bold">Step 1 — choose your events</p>
+              <div class="mt-2 flex flex-wrap gap-2">
+                {offeredEvents.map((e) => (
+                  <label class="data-font flex items-center gap-1 rounded-lg border-2 border-ink bg-white px-3 py-1 text-sm font-bold">
+                    <input name="events" value={e} type="checkbox" class="h-4 w-4 accent-emerald-brand" /> {e}
+                  </label>
+                ))}
+              </div>
+              <p data-form-msg class="mt-2 hidden text-sm font-semibold"></p>
+              <button type="submit" class="btn-pill mt-3 border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
+                Register (pending)
+              </button>
+            </form>
+          ) : myReg.status === 'verified' ? (
+            <p class="data-font mt-4 rounded-lg border-2 border-ink bg-emerald-brand p-4 text-sm font-bold text-white">
+              ✅ Fee verified{myReg.wca_accepted === 1 ? ' • Accepted on WCA' : ' • WCA acceptance pending'} —{' '}
+              <a class="underline" href={`/dashboard/registrations/${myReg.id}/slip`}>print your slip</a>
+            </p>
+          ) : (
+            <form data-tx-form={myReg.id} class="mt-4 rounded-lg border-2 border-ink bg-paper p-4">
+              <p class="text-sm font-bold">
+                Step 2 — submit your payment {myReg.latest_tx ? `(latest: ${myReg.latest_tx.txn_id} • ${myReg.latest_tx.status})` : ''}
+              </p>
+              <p class="mt-1 text-xs text-slate-500">Send Money first, then submit the TxID. Whole taka only.</p>
+              <div class="mt-2 grid gap-2 sm:grid-cols-3">
+                <label class="flex flex-col gap-1 text-sm font-bold">
+                  Sender number
+                  <input name="sender_number" type="text" required maxlength="32" placeholder="+8801…" class="rounded-lg border-2 border-ink px-3 py-2 font-normal" />
+                </label>
+                <label class="flex flex-col gap-1 text-sm font-bold">
+                  TxID
+                  <input name="txn_id" type="text" required maxlength="20" placeholder="e.g. 9M88A72B4K" class="data-font rounded-lg border-2 border-ink px-3 py-2 font-normal" />
+                </label>
+                <label class="flex flex-col gap-1 text-sm font-bold">
+                  Amount (৳)
+                  <input name="amount_bdt" type="number" required min="1" step="1" placeholder="850" class="data-font rounded-lg border-2 border-ink px-3 py-2 font-normal" />
+                </label>
+              </div>
+              <p data-form-msg class="mt-2 hidden text-sm font-semibold"></p>
+              <button type="submit" class="btn-pill mt-3 border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
+                Submit TxID for review
+              </button>
+            </form>
+          )}
         </div>
       )
     }
+
+<script>
+  document.querySelectorAll('[data-register-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector('[data-form-msg]') as HTMLElement;
+      msg.classList.remove('hidden');
+      try {
+        const data = new FormData(form);
+        const events = data.getAll('events').map(String);
+        const res = await fetch('/api/registrations', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ comp_wca_id: form.dataset.registerForm, events }),
+        });
+        const body = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(body.error || 'registration failed');
+        window.location.reload();
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'registration failed';
+        msg.classList.add('text-red-700');
+      }
+    });
+  });
+  document.querySelectorAll('[data-tx-form]').forEach((formEl) => {
+    const form = formEl as HTMLFormElement;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector('[data-form-msg]') as HTMLElement;
+      msg.classList.remove('hidden');
+      try {
+        const data = new FormData(form);
+        const res = await fetch('/api/tx', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            registration_id: form.dataset.txForm,
+            sender_number: String(data.get('sender_number') ?? ''),
+            txn_id: String(data.get('txn_id') ?? ''),
+            amount_bdt: Number(data.get('amount_bdt')),
+          }),
+        });
+        const body = (await res.json()) as { error?: string };
+        if (!res.ok) throw new Error(body.error || 'submit failed');
+        msg.textContent = 'TxID received — track it in your dashboard.';
+        msg.classList.add('text-emerald-brand');
+        form.reset();
+      } catch (err) {
+        msg.textContent = err instanceof Error ? err.message : 'submit failed';
+        msg.classList.add('text-red-700');
+      }
+    });
+  });
+</script>
 
     <div class="card-brutal mt-6 p-6">
       <div class="flex flex-wrap items-baseline justify-between gap-2">
@@ -232,7 +372,9 @@ function maskWallet(w: string): string {
           {roster.length === 0 ? 'No site registrations yet — be the first.' : `No registrations match “${search}”.`}
         </p>
       ) : (
-        <div class="mt-3 overflow-x-auto">
+        <>
+        <p class="data-font mt-3 text-xs text-slate-400 sm:hidden">Swipe sideways for more columns →</p>
+        <div class="mt-1 overflow-x-auto">
           <table class="w-full min-w-150 text-left text-sm">
             <thead>
               <tr class="border-b-2 border-ink">
@@ -262,6 +404,7 @@ function maskWallet(w: string): string {
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
 

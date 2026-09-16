@@ -4,7 +4,7 @@ import NewsletterForm from '../components/NewsletterForm.astro';
 import { en } from '../i18n/en';
 import { getDonationPage, getNews, getPinnedAnnouncements, getSponsors } from '../lib/content';
 import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
-import { formatRecordValue, getCompetitions, getRecords } from '../lib/wca';
+import { formatRecordValue, getCompetitions, getRecords, venueDisplay } from '../lib/wca';
 
 // Server-rendered with edge caching (Cloudflare has no Next-style ISR:
 // s-maxage below is the equivalent). Never prerendered — data comes from
@@ -28,7 +28,10 @@ const recs = await tryLoad(Astro.locals, (env) => getRecords(env), {
 const sponsors = await tryLoad(Astro.locals, (env) => getSponsors(env), []);
 const news = await tryLoad(Astro.locals, (env) => getNews(env, 3), []);
 const donation = await tryLoad(Astro.locals, (env) => getDonationPage(env), null);
-const upcoming = (comps?.data?.items ?? []).slice(0, 3);
+const todayStamp = new Date().toISOString().slice(0, 10);
+const compItems = comps?.data?.items ?? [];
+const upcoming = compItems.filter((c) => c.end_date >= todayStamp).slice(0, 3);
+const pastHome = compItems.filter((c) => c.end_date < todayStamp).slice(0, 3);
 // Next upcoming comp for the hero countdown (N14: day-precision unless <48h out).
 // Renders nothing when the cache holds no future comp — never a fake number.
 const nextUp = (comps?.data?.items ?? [])
@@ -92,22 +95,55 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
     </div>
     {
       upcoming.length === 0 ? (
-        <p class="mt-4 text-slate-600">No upcoming competitions in the cache yet. Check the WCA calendar.</p>
+        <p class="mt-4 text-slate-600">
+          No upcoming competitions in the cache right now.{' '}
+          <a class="font-bold text-emerald-brand underline" href="/competitions">Browse the archive</a> or check the WCA calendar.
+        </p>
       ) : (
         <div class="mt-4 grid gap-4 md:grid-cols-3">
-            {upcoming.map((c) => (
-              <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
-                <p class="data-font text-xs font-bold uppercase tracking-wider text-speed-orange">{c.city}</p>
+          {upcoming.map((c) => (
+            <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block min-w-0 p-5 hover:-translate-y-0.5">
+              <p class="data-font text-xs font-bold uppercase tracking-wider text-speed-orange">{c.city}</p>
               <p class="mt-1 text-lg font-extrabold">{c.name}</p>
               <p class="data-font mt-1 text-sm text-slate-600">
                 {c.start_date} → {c.end_date}
               </p>
-              <p class="mt-1 text-sm text-slate-600">{c.venue}</p>
+              <p class="mt-1 break-words text-sm text-slate-600">
+                {(() => {
+                  const v = venueDisplay(c.venue);
+                  return v.url ? (
+                    <a class="underline" href={v.url} target="_blank" rel="noopener">{v.name}</a>
+                  ) : (
+                    v.name
+                  );
+                })()}
+              </p>
             </a>
           ))}
         </div>
       )
     }
+    {pastHome.length > 0 && (
+      <>
+        <h3 class="data-font mt-6 text-sm font-bold uppercase tracking-wider text-slate-500">
+          {upcoming.length > 0 ? 'Recently held' : 'Recent competitions'}
+        </h3>
+        <div class="mt-3 grid gap-4 md:grid-cols-3">
+          {pastHome.map((c) => (
+            <a href={`/competitions/${c.wca_id}`} class="card-brutal block min-w-0 p-5 hover:-translate-y-0.5">
+              <p class="data-font flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wider">
+                <span class="text-slate-500">{c.city}</span>
+                <span class="rounded-full border border-ink bg-white px-2 py-0.5">Past</span>
+              </p>
+              <p class="mt-1 text-lg font-extrabold">{c.name}</p>
+              <p class="data-font mt-1 text-sm text-slate-600">
+                {c.start_date} → {c.end_date}
+              </p>
+            </a>
+          ))}
+        </div>
+      </>
+    )}
   </section>
 
   <section class="container-x py-8">
@@ -121,14 +157,14 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
       ) : (
         <div class="mt-4 grid gap-4 md:grid-cols-3">
           {spotlight.map((r) => (
-            <div class="card-brutal p-5">
+            <a href={`/records?q=${r.event}`} class="card-brutal block p-5 hover:-translate-y-0.5">
               <p class="font-extrabold">{r.event_name}</p>
               {r.single && (
                 <p class="data-font mt-1 text-2xl font-bold">
                   {formatRecordValue(r.event, 'single', r.single.value_centis) ?? '—'} <span class="text-xs font-normal">single • {r.single.holder}</span>
                 </p>
               )}
-            </div>
+            </a>
           ))}
         </div>
       )

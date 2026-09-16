@@ -1,7 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
 import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
-import { getCompetitions } from '../lib/wca';
+import { getCompetitions, venueDisplay } from '../lib/wca';
 
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
@@ -57,7 +57,7 @@ const past = shown.filter((c) => c.end_date < todayStamp);
           ) : (
             <div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {upcoming.map((c) => (
-                <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
+                <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block min-w-0 p-5 hover:-translate-y-0.5">
                   <p class="data-font flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wider">
                     <span class="text-speed-orange">{c.city}</span>
                     <span class="rounded-full border border-ink bg-emerald-brand px-2 py-0.5 text-white">Upcoming</span>
@@ -66,7 +66,16 @@ const past = shown.filter((c) => c.end_date < todayStamp);
                   <p class="data-font mt-1 text-sm text-slate-600">
                     {c.start_date} → {c.end_date}
                   </p>
-                  <p class="mt-1 text-sm text-slate-600">{c.venue}</p>
+                  <p class="mt-1 break-words text-sm text-slate-600">
+                    {(() => {
+                      const v = venueDisplay(c.venue);
+                      return v.url ? (
+                        <a class="underline" href={v.url} target="_blank" rel="noopener">{v.name}</a>
+                      ) : (
+                        v.name
+                      );
+                    })()}
+                  </p>
                   <p class="mt-2 text-xs text-slate-500">{c.events.join(' • ')}</p>
                 </a>
               ))}
@@ -77,7 +86,7 @@ const past = shown.filter((c) => c.end_date < todayStamp);
               <h2 class="mt-10 text-2xl font-extrabold tracking-tight">Past</h2>
               <div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {past.map((c) => (
-                  <a href={`/competitions/${c.wca_id}`} class="card-brutal block p-5 hover:-translate-y-0.5">
+                  <a href={`/competitions/${c.wca_id}`} class="card-brutal block min-w-0 p-5 hover:-translate-y-0.5">
                     <p class="data-font flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wider">
                       <span class="text-slate-500">{c.city}</span>
                       <span class="rounded-full border border-ink bg-white px-2 py-0.5">Past</span>
@@ -86,7 +95,16 @@ const past = shown.filter((c) => c.end_date < todayStamp);
                     <p class="data-font mt-1 text-sm text-slate-600">
                       {c.start_date} → {c.end_date}
                     </p>
-                    <p class="mt-1 text-sm text-slate-600">{c.venue}</p>
+                    <p class="mt-1 break-words text-sm text-slate-600">
+                      {(() => {
+                        const v = venueDisplay(c.venue);
+                        return v.url ? (
+                          <a class="underline" href={v.url} target="_blank" rel="noopener">{v.name}</a>
+                        ) : (
+                          v.name
+                        );
+                      })()}
+                    </p>
                     <p class="mt-2 text-xs text-slate-500">{c.events.join(' • ')}</p>
                   </a>
                 ))}

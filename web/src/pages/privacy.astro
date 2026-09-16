@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+import ContentBody from '../components/ContentBody.astro';
+import { getPage } from '../lib/content';
+import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
+
+export const prerender = false;
+Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
+
+// Privacy notice lives in D1 (page/privacy) like all content — never in repo.
+// Until it is entered, show an honest pointer instead of a fabricated policy.
+const notice = await tryLoad(Astro.locals, (env) => getPage(env, 'privacy'), null);
+---
+
+<Base title="Privacy notice">
+  <section class="container-x max-w-3xl py-12">
+    <h1 class="text-4xl font-extrabold tracking-tight">Privacy notice</h1>
+    {notice ? (
+      <div class="card-brutal mt-6 p-6">
+        <div class="prose mt-3 max-w-none">
+          <ContentBody docJson={notice.body_json} />
+        </div>
+      </div>
+    ) : (
+      <div class="card-brutal mt-6 p-6">
+        <p class="text-sm text-slate-600">
+          Our full privacy notice is being published here. In short: we collect only what each form needs,
+          reporter contacts stay with delegates, photos publish only with consent, and we never sell or
+          share your details. Questions: use the <a class="font-bold text-emerald-brand underline" href="/contact">contact form</a>.
+        </p>
+      </div>
+    )}
+  </section>
+</Base>

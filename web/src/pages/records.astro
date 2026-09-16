@@ -61,7 +61,9 @@ for (const s of snaps) {
           {all.length === 0 ? 'Records sync daily — the table appears after the first sync.' : `No records match “${q}”.`}
         </p>
       ) : (
-        <div class="card-brutal mt-6 overflow-x-auto">
+        <>
+        <p class="data-font mt-3 text-xs text-slate-400 sm:hidden">Swipe sideways for more columns →</p>
+        <div class="card-brutal mt-2 overflow-x-auto">
           <table class="w-full min-w-180 text-left text-sm">
             <thead>
               <tr class="border-b-2 border-ink">
@@ -123,6 +125,7 @@ for (const s of snaps) {
             </tbody>
           </table>
         </div>
+        </>
       )
     }
   </section>

@@ -14,7 +14,7 @@ const info = await tryLoad(Astro.locals, (env) => getPage(env, 'contact-info'), 
 
 <Base title="Contact">
   <section class="container-x grid max-w-5xl gap-8 py-12 md:grid-cols-2">
-    <div>
+    <div class="min-w-0">
       <h1 class="text-4xl font-extrabold tracking-tight">Get in Touch</h1>
       {info && (
         <div class="prose mt-4 max-w-none">
@@ -29,24 +29,24 @@ const info = await tryLoad(Astro.locals, (env) => getPage(env, 'contact-info'), 
         </p>
       </div>
     </div>
-    <form data-contact-form class="card-brutal shadow-brutal flex flex-col gap-4 p-6">
-      <label class="flex flex-col gap-1">
+    <form data-contact-form class="card-brutal shadow-brutal flex min-w-0 flex-col gap-4 p-6">
+      <label class="flex min-w-0 flex-col gap-1">
         <span class="text-sm font-bold">Full name *</span>
-        <input name="name" type="text" required maxlength="120" class="rounded-lg border-2 border-ink px-3 py-2" />
+        <input name="name" type="text" required maxlength="120" class="w-full rounded-lg border-2 border-ink px-3 py-2" />
       </label>
-      <div class="grid gap-4 sm:grid-cols-2">
-        <label class="flex flex-col gap-1">
+      <div class="grid min-w-0 gap-4 sm:grid-cols-2">
+        <label class="flex min-w-0 flex-col gap-1">
           <span class="text-sm font-bold">Email *</span>
-          <input name="email" type="email" required maxlength="160" class="rounded-lg border-2 border-ink px-3 py-2" />
+          <input name="email" type="email" required maxlength="160" class="w-full rounded-lg border-2 border-ink px-3 py-2" />
         </label>
-        <label class="flex flex-col gap-1">
+        <label class="flex min-w-0 flex-col gap-1">
           <span class="text-sm font-bold">WCA ID <span class="font-normal text-slate-500">(optional)</span></span>
-          <input name="wca_id" type="text" maxlength="20" placeholder="e.g. 2018RAHM04" class="rounded-lg border-2 border-ink px-3 py-2" />
+          <input name="wca_id" type="text" maxlength="20" placeholder="e.g. 2018RAHM04" class="w-full rounded-lg border-2 border-ink px-3 py-2" />
         </label>
       </div>
-      <label class="flex flex-col gap-1">
+      <label class="flex min-w-0 flex-col gap-1">
         <span class="text-sm font-bold">Subject *</span>
-        <select name="category" class="rounded-lg border-2 border-ink px-3 py-2">
+        <select name="category" class="w-full rounded-lg border-2 border-ink px-3 py-2">
           <option value="general">General question</option>
           <option value="competition">Competition</option>
           <option value="sponsorship">Sponsorship</option>
@@ -55,16 +55,16 @@ const info = await tryLoad(Astro.locals, (env) => getPage(env, 'contact-info'), 
           <option value="other">Other</option>
         </select>
       </label>
-      <label class="flex flex-col gap-1">
+      <label class="flex min-w-0 flex-col gap-1">
         <span class="text-sm font-bold">Message *</span>
-        <textarea name="message" required minlength="10" maxlength="5000" rows="5" class="rounded-lg border-2 border-ink px-3 py-2"></textarea>
+        <textarea name="message" required minlength="10" maxlength="5000" rows="5" class="w-full rounded-lg border-2 border-ink px-3 py-2"></textarea>
       </label>
       <TurnstileWidget siteKey={siteKey} />
       <p data-form-msg class="hidden text-sm font-semibold"></p>
       <button type="submit" class="btn-pill border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
         Send Message
       </button>
-      <p class="text-xs text-slate-500">Typical response time: under 24 hours from delegates.</p>
+      <p class="text-xs text-slate-500">Typical response time: under 24 hours from delegates. Your details are used only to reply — see our <a class="font-bold underline" href="/privacy">privacy notice</a>.</p>
     </form>
   </section>
 </Base>

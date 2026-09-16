@@ -52,8 +52,11 @@ stage('wca:records:BD', fix('wca-records.json'));
 stage('wca:ranks:BD:333:single', fix('wca-ranks-333-single.json'));
 stage('wca:ranks:BD:333:average', fix('wca-ranks-333-average.json'));
 
+// NOTE: --preview targets the preview_id namespace, which is what local dev
+// (platformProxy) reads when both id and preview_id are configured. Without
+// it wrangler errors out; without preview_id at all it defaulted to id.
 for (const [key, file] of puts) {
-  execSync(`npx wrangler kv key put "${key}" --binding WCA_CACHE --local --path "${file}"`, {
+  execSync(`npx wrangler kv key put "${key}" --binding WCA_CACHE --local --preview --path "${file}"`, {
     cwd: root,
     stdio: 'pipe',
   });

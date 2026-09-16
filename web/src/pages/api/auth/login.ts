@@ -4,8 +4,12 @@ export const prerender = false;
 
 type Env = { WCA_CLIENT_ID?: string; WCA_OAUTH_SCOPE?: string };
 
-// GET /api/auth/login — start WCA OAuth (authorization code + state).
-export async function GET({ request, locals }: { request: Request; locals: App.Locals }): Promise<Response> {
+const NEXT_COOKIE = 'speedbd_oauth_next';
+
+// GET /api/auth/login[?next=/competitions/<slug>] — start WCA OAuth
+// (authorization code + state). `next` must be a same-origin path so login
+// can return the user to the competition they came from.
+export async function GET({ request, locals, url }: { request: Request; locals: App.Locals; url: URL }): Promise<Response> {
   const env = (locals as unknown as { runtime?: { env?: Env } }).runtime?.env ?? {};
   if (!env.WCA_CLIENT_ID) {
     return Response.json({ error: 'WCA login not configured (WP-00: register OAuth app)' }, { status: 500 });
@@ -19,11 +23,16 @@ export async function GET({ request, locals }: { request: Request; locals: App.L
     scope: env.WCA_OAUTH_SCOPE ?? 'public email',
     state,
   });
-  return new Response(null, {
-    status: 302,
-    headers: {
-      location: `https://www.worldcubeassociation.org/oauth/authorize?${params.toString()}`,
-      'set-cookie': stateCookieHeader(state),
-    },
+  const headers = new Headers({
+    location: `https://www.worldcubeassociation.org/oauth/authorize?${params.toString()}`,
   });
+  headers.append('set-cookie', stateCookieHeader(state));
+  const next = url.searchParams.get('next') ?? '';
+  if (next.startsWith('/') && !next.startsWith('//')) {
+    headers.append(
+      'set-cookie',
+      `${NEXT_COOKIE}=${encodeURIComponent(next.slice(0, 120))}; Path=/api/auth/callback; HttpOnly; SameSite=Lax; Max-Age=600`,
+    );
+  }
+  return new Response(null, { status: 302, headers });
 }
