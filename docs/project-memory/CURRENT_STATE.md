@@ -1,8 +1,15 @@
 # CURRENT_STATE
 
-Updated: 2026-09-15 (M0–M4 + WP-16 + e2e verified locally, uncommitted; WP-00 deploy pending). Newest first. This is the file the next agent reads to avoid reconstructing context from chat.
+Updated: 2026-09-16 (LIVE: Pages deployed, sync running in prod, both logins tested). Newest first. This is the file the next agent reads to avoid reconstructing context from chat.
 
-## Implemented (M0–M4 code + full docs — WP-00 deploy pending)
+## Live in production (https://speedbd-web.pages.dev)
+
+- Pages project `speedbd-web` (Git-connected, root `web`) deployed green; D1 `speedbd` (24 tables), KV `wca-cache`, R2 `speedbd-media`, Turnstile widget, Access app `speedbd-admin` (path-scoped `/admin*`, 8-email Allow policy) all live. Secrets wired (5 encrypted + 2 plain vars). Full trail: `plan/OPS_HANDOFF.md`.
+- Sync worker `speedbd-sync` live with THREE crons: ranks+lists 02:00, details+champions 02:30 (split because free-plan workers get ~50 fetch subrequests/invocation — proven; detail loop sequential against WCA 429s), outbox flush every 5 min (skips cleanly, Resend skipped). First runs filled prod: 28 comps, 17 NR lines, 31 snapshots, 9 champions.
+- Both logins tested by human 2026-09-16: Access gate (incl. Gmail dot-variant lesson) + WCA OAuth (`public email` scope).
+- Deferred by human decision: Resend onboarding, secret rotation (WCA secret + API token seen in chat), custom domain, real content entry. API token expires 2026-09-23.
+
+## Implemented (M0–M4 code + full docs)
 
 - Repo is the org source of truth (`README.md`, `AGENTS.md`/`CLAUDE.md`, `docs/`, `plan/`, `web/`).
 - Scope: `docs/product/FEATURE_LIST.md` MVP = A1–A8, A11–A22 (A22 transactional email added post-review). Deferred: A9 volunteers UI, A10 gallery UI, search, school, membership, regional pages.
@@ -23,15 +30,15 @@ Updated: 2026-09-15 (M0–M4 + WP-16 + e2e verified locally, uncommitted; WP-00 
 
 ## Current focus
 
-- HUMAN: execute `plan/OPS_HANDOFF.md` (WP-00) and reply "WP-00 done" — remote deploy waits on it.
-- AGENTS next: M5 content + launch — WP-50 punchlist sweep, WP-51 seeding runbook, WP-52 QA matrix, WP-53 cutover. Needs WP-00 (remote) + human content entry; code-complete after this line except OAuth live-test.
+- HUMAN: real content entry per `plan/SEEDING_RUNBOOK.md` (placeholder purge, photo-consent gate, Worlds copy, real wallets, social handles beyond Facebook) + custom-domain cutover (WP-53) + Resend onboarding when wanted.
+- AGENTS next: remaining Stitch gaps (A1 tasks view, hero stats/photos, Hall of Fame, A15 sitemap/og:image/beacon post-domain, A21 archive view), prod QA pass on live data, WP-53 cutover checklist.
 
 ## Gaps / unknowns
 
 - Bank account (org name vs individual) pending verification with WCA/banks.
 - Payment number custody + TxID verifier roster undefined (blocks M3 staffing).
 - Photo-consent ops undefined (blocks WP-51 seeding; gate is specced, process owner missing).
-- Bulk newsletter provider undefined (transactional Resend decided; broadcast list still open).
+- Bulk newsletter provider undefined (transactional Resend decided but onboarding skipped; broadcast list still open).
 - Worlds 2027 candidate list undefined (page shape + refund policy approved, content pending).
-- WCA OAuth app credentials + redirect URLs undefined (blocks WP-30).
-- Cloudflare Access admin list undefined (blocks WP-16).
+- WCA OAuth + Access admin list: RESOLVED 2026-09-16 (app live, 8 Allow emails, logins tested).
+- Credential hygiene: WCA secret + API token seen in chat (rotation declined for now); API token expires 2026-09-23.

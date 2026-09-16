@@ -1,4 +1,4 @@
-# QA MATRIX — WP-52 (local results 2026-09-15; remote pending WP-00)
+# QA MATRIX — WP-52 (local results 2026-09-15; prod smoke pending on live data)
 
 How to re-run locally: `npm run db:reset` → `npm run kv:seed` →
 `npm run dev -- --port 4321` → harnesses below. Verified registrations are

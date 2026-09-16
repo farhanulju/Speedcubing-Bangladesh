@@ -105,8 +105,9 @@ globalThis.fetch = async (url) => {
 };
 const env = { DB: dbFake, WCA_CACHE: kvFake };
 
-// --- run the REAL scheduled sync ---
+// --- run the REAL scheduled sync (both stages, as the two crons would) ---
 await worker.scheduled({ cron: '0 20 * * *' }, env, {});
+await worker.scheduled({ cron: '30 20 * * *' }, env, {});
 
 // --- assertions on shaped output ---
 await check('records shaped from rank files', () => {

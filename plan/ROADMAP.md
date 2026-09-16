@@ -6,13 +6,13 @@ Phased plan. Scope gate: `docs/product/FEATURE_LIST.md` (review applied 2026-09-
 
 - [x] Board ticked MVP rows A1–A8, A11–A21 in `FEATURE_LIST.md`; deferred A9 volunteers UI, A10 gallery UI; promoted records (A16); added WCA auth + user dashboard (A17), admin dashboard (A18), payment dashboard (A19), news (A20), competition history (A21).
 - [x] Design review round 2 (`plan/DESIGN_REVIEW_ROUND2.md`): 13 new screens verified; Stitch punchlist feeds BUILD_PLAN M5.
-- [ ] Confirm remaining unknowns in `docs/project-memory/CURRENT_STATE.md`: payment-number owner, TxID verifier roster, photo-consent ops, newsletter provider, Worlds candidate list, WCA OAuth app credentials, Cloudflare Access seats.
+- [x] Resolved 2026-09-16: WCA OAuth app credentials, Cloudflare Access seats (8 Allow emails). Still open: payment-number owner, TxID verifier roster, photo-consent ops, newsletter provider, Worlds candidate list (see CURRENT_STATE gaps).
 
-Exit: owner per MVP row + Cloudflare account/D1/R2/KV provisioned.
+Exit: owner per MVP row + Cloudflare account/D1/R2/KV provisioned — MET 2026-09-16 (infra live, first deploy green).
 
 ## Phase 1 — MVP (execute `plan/BUILD_PLAN.md` M0→M5)
 
-Three surfaces, one stack (Pages + Workers + D1 + KV + R2 + Turnstile + Access + Resend). Daily WCA cron → KV (+ snapshots/champions → D1); 5-min outbox flush.
+Three surfaces, one stack (Pages + Workers + D1 + KV + R2 + Turnstile + Access; Resend deferred). WCA crons 02:00 (ranks) + 02:30 (details) → KV (+ snapshots/champions → D1); 5-min outbox flush (skips cleanly).
 
 1. M0 foundations: accounts/secrets, Astro scaffold, Stitch tokens, CI budgets (WP-00…WP-03).
 2. M1 data + admin: migrations 0001–0007, R2 uploader, Editor.js field, admin CRUD, payment queue, inboxes, Access gating (WP-10…WP-16). **No `src/content/` in repo.**

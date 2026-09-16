@@ -6,6 +6,13 @@ Single source of truth for the organization, its website, and all discussion.
 - What we are building and why: [`docs/`](docs/)
 - Execution plans and review checklists: [`plan/`](plan/)
 
+## Live (2026-09-16)
+
+- Public site: https://speedbd-web.pages.dev (WCA-cached comps/records, registration + manual payments, Worlds 2027)
+- Admin: `…/admin` (Cloudflare Access, 8 allow-listed emails) — content, payment queue, inboxes, audit feed
+- Data: daily WCA sync (02:00 ranks + 02:30 details crons), snapshots + champions in D1
+- Deferred by decision: Resend email onboarding, custom domain, real content entry (`plan/SEEDING_RUNBOOK.md`)
+
 ## How this repo is used
 
 1. **Discuss here, not in chat threads.** Decisions land in `docs/project-memory/DECISION_REGISTER.md`. Context that the next person needs lands in `docs/project-memory/CURRENT_STATE.md`.

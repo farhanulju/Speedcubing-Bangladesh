@@ -64,9 +64,9 @@ Local dev mirror: copy `web/.dev.vars.example` → `web/.dev.vars`, fill values 
 
 ## 10. Sync worker deploy
 
-- [ ] From `web/`: `npx wrangler deploy -c workers/sync/wrangler.jsonc` (after steps 2–3 IDs are in).
-- [ ] Workers → Triggers confirm two crons: daily `0 20 * * *` (02:00 Dhaka), every-5-min outbox flush.
-- [ ] Bodies are stubs until WP-40/WP-42 — deploy succeeds, crons throw "not implemented" until then (expected).
+- [x] Deployed via API token 2026-09-16: `speedbd-sync` (version `802f613e`), bindings KV + D1 confirmed.
+- [x] Triggers live: `0 20 * * *` ranks stage, `30 20 * * *` detail stage, `*/5 * * * *` outbox flush. Outbox flush skips cleanly without `RESEND_API_KEY` (by design until step 7 returns).
+- [x] First manual runs 2026-09-16 filled prod: 28 comps, 17 record lines, 31 snapshots, 9 champions, full WCIF details (temp gated trigger used, then removed + secret deleted + redeployed clean).
 
 ## Done when
 

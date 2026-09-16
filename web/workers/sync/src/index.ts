@@ -34,7 +34,6 @@ export interface SyncEnv {
 }
 
 const SYNC_CRON = '0 20 * * *'; // 02:00 Asia/Dhaka
-const CHAMPION_FETCH_CAP = 10;
 
 const asDb = (db: D1Database): SyncDb => ({
   prepare: (q: string): DbStmt => {
@@ -78,7 +77,12 @@ interface UnofficialCompList {
   items?: Record<string, unknown>[];
 }
 
-async function runSync(env: SyncEnv): Promise<void> {
+// Free-plan workers get ~50 fetch subrequests per invocation (proven: the first
+// production run landed exactly events + 34 rank files + persons + lists, then
+// every per-comp detail/WCIF/results fetch failed). So the sync is TWO stages
+// on TWO crons: ranks+lists at 02:00, details+champions at 02:30. KV/D1 reads
+// do NOT count toward the fetch budget.
+async function runRankStage(env: SyncEnv): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);
   const fetchFn: typeof fetch = fetch;
 
@@ -165,50 +169,8 @@ async function runSync(env: SyncEnv): Promise<void> {
   summaries.sort((a, b) => (a.start_date < b.start_date ? 1 : -1));
   await kvPut(env, 'wca:competitions:BD', { asOfExportDate: today, items: summaries });
 
-  // --- per-comp detail (unofficial + WCIF schedule shapes), champions ---
-  const db = asDb(env.DB);
-  const existingChamps = new Set(
-    (
-      (await db.prepare('SELECT comp_wca_id FROM comp_champion').all<{ comp_wca_id: string }>()).results ?? []
-    ).map((r) => r.comp_wca_id),
-  );
-  let championFetches = 0;
-  await Promise.all(
-    summaries.map(async (s) => {
-      // Unofficial detail is fetched to confirm the comp still exists upstream;
-      // venue richness already lives in the list row. WCIF gives rounds/limits.
-      await fetchJson(fetchFn, `${UNOFFICIAL_BASE}/competitions/${s.wca_id}.json`);
-      const wcif = await fetchJson(fetchFn, `${WCA_V0}/competitions/${s.wca_id}/wcif/public`);
-      const full: CompDetail = {
-        ...s,
-        schedule_note: null, // legacy; schedule[] below supersedes (detail page links WCA when empty)
-        event_detail: shapeEventDetail(wcif),
-        schedule: shapeSchedule(wcif),
-        delegates: shapeDelegates(wcif),
-      };
-      await kvPut(env, `wca:competition:${s.wca_id}`, { ...full, asOfExportDate: today });
-
-      // Champion derivation: ended comps, not yet recorded, capped per run.
-      if (s.end_date && s.end_date < today && !existingChamps.has(s.wca_id) && championFetches < CHAMPION_FETCH_CAP) {
-        championFetches++;
-        const results = (await fetchJson(fetchFn, `${UNOFFICIAL_BASE}/results/${s.wca_id}/333.json`)) as null | {
-          items?: Parameters<typeof deriveChampion>[0];
-        };
-        if (results && Array.isArray(results.items)) {
-          const champ = deriveChampion(results.items);
-          if (champ) {
-            await db
-              .prepare('INSERT INTO comp_champion (comp_wca_id, winner_wca_id, winning_value_centis, derived_at) VALUES (?, ?, ?, ?)')
-              .bind(s.wca_id, champ.winner_wca_id, champ.winning_value_centis, today)
-              .run();
-            existingChamps.add(s.wca_id);
-          }
-        }
-      }
-    }),
-  );
-
   // --- snapshots: append on change ---
+  const db = asDb(env.DB);
   const latest = (await db
     .prepare(
       `SELECT event, kind, value_centis, holder_wca_id, holder_name FROM record_snapshot WHERE export_date = (SELECT MAX(export_date) FROM record_snapshot)`,
@@ -232,7 +194,84 @@ async function runSync(env: SyncEnv): Promise<void> {
       ),
     );
   }
-  console.log(`sync done: ${summaries.length} comps, ${records.length} record lines, ${toAppend.length} snapshots appended`);
+  console.log(`rank stage done: ${summaries.length} comps, ${records.length} record lines, ${toAppend.length} snapshots appended`);
+}
+
+const DETAIL_CRON = '30 20 * * *'; // 02:30 Asia/Dhaka — own invocation, own budget
+const DETAIL_PER_RUN = 20; // ×2 fetches (detail + WCIF)
+const CHAMP_PER_RUN = 5; // ×1 fetch (results)
+
+function isoDaysAgo(today: string, days: number): string {
+  const d = new Date(`${today}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+// Detail + champion enrichment. Reads the comp list from KV (free) and only
+// spends fetches where they can change something: missing/empty detail,
+// recent or upcoming comps (WCIF evolves until the event), or detail older
+// than 30 days. Ended comps with good detail are never refetched.
+async function runDetailStage(env: SyncEnv): Promise<void> {
+  const today = new Date().toISOString().slice(0, 10);
+  const fetchFn: typeof fetch = fetch;
+  const list = (await env.WCA_CACHE.get('wca:competitions:BD', 'json')) as null | { items?: CompSummary[] };
+  const summaries = Array.isArray(list?.items) ? list.items : [];
+  const db = asDb(env.DB);
+  const existingChamps = new Set(
+    (
+      (await db.prepare('SELECT comp_wca_id FROM comp_champion').all<{ comp_wca_id: string }>()).results ?? []
+    ).map((r) => r.comp_wca_id),
+  );
+  let details = 0;
+  let champs = 0;
+  const oldCutoff = isoDaysAgo(today, 30);
+  const recentCutoff = isoDaysAgo(today, 7);
+  // Sequential, NOT Promise.all: a 28-wide burst gets 429s from the WCA API
+  // (proven 2026-09-16: parallel WCIF fetches all failed while sequential v0
+  // pages succeeded). Wall-clock is cheap here; subrequest budget is not.
+  for (const s of summaries) {
+    const cached = (await env.WCA_CACHE.get(`wca:competition:${s.wca_id}`, 'json')) as null | {
+      event_detail?: unknown[];
+      asOfExportDate?: string;
+    };
+    const hasDetail = Array.isArray(cached?.event_detail) && (cached as { event_detail: unknown[] }).event_detail.length > 0;
+    const old = !!s.end_date && s.end_date < oldCutoff;
+    const recent = !s.end_date || s.end_date >= recentCutoff;
+    const stale = !cached?.asOfExportDate || cached.asOfExportDate < oldCutoff;
+    if ((!hasDetail || !old || stale) && details < DETAIL_PER_RUN) {
+      details++;
+      // Unofficial detail confirms the comp still exists upstream; WCIF gives rounds/limits.
+      await fetchJson(fetchFn, `${UNOFFICIAL_BASE}/competitions/${s.wca_id}.json`);
+      const wcif = await fetchJson(fetchFn, `${WCA_V0}/competitions/${s.wca_id}/wcif/public`);
+      const full: CompDetail = {
+        ...s,
+        schedule_note: null, // legacy; schedule[] below supersedes (detail page links WCA when empty)
+        event_detail: shapeEventDetail(wcif),
+        schedule: shapeSchedule(wcif),
+        delegates: shapeDelegates(wcif),
+      };
+      await kvPut(env, `wca:competition:${s.wca_id}`, { ...full, asOfExportDate: today });
+    }
+
+    // Champion derivation: ended comps, not yet recorded, capped per run.
+    if (s.end_date && s.end_date < today && !existingChamps.has(s.wca_id) && champs < CHAMP_PER_RUN) {
+      champs++;
+      const results = (await fetchJson(fetchFn, `${UNOFFICIAL_BASE}/results/${s.wca_id}/333.json`)) as null | {
+        items?: Parameters<typeof deriveChampion>[0];
+      };
+      if (results && Array.isArray(results.items)) {
+        const champ = deriveChampion(results.items);
+        if (champ) {
+          await db
+            .prepare('INSERT INTO comp_champion (comp_wca_id, winner_wca_id, winning_value_centis, derived_at) VALUES (?, ?, ?, ?)')
+            .bind(s.wca_id, champ.winner_wca_id, champ.winning_value_centis, today)
+            .run();
+          existingChamps.add(s.wca_id);
+        }
+      }
+    }
+  }
+  console.log(`detail stage done: ${details} details, ${champs} champion attempts over ${summaries.length} comps`);
 }
 
 async function runOutbox(env: SyncEnv): Promise<void> {
@@ -249,7 +288,9 @@ async function runOutbox(env: SyncEnv): Promise<void> {
 export default {
   async scheduled(event: ScheduledEvent, env: SyncEnv, _ctx: ExecutionContext): Promise<void> {
     if (event.cron === SYNC_CRON) {
-      await runSync(env);
+      await runRankStage(env);
+    } else if (event.cron === DETAIL_CRON) {
+      await runDetailStage(env);
     } else {
       await runOutbox(env);
     }

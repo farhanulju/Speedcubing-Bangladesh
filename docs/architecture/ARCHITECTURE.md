@@ -1,6 +1,6 @@
 # ARCHITECTURE — Cloudflare-only, WCA-cached, dashboard-operated
 
-Status: board-reviewed 2026-09-14, amended for design review round 2 + build plan. Stack is fixed (Cloudflare free tier + two recorded exceptions: Resend for transactional email, Discourse only if a forum is ever approved); scope is gated by `docs/product/FEATURE_LIST.md`. Execution order lives in `plan/BUILD_PLAN.md`.
+Status: board-reviewed 2026-09-14, amended for design review round 2 + build plan. Stack is fixed (Cloudflare free tier + two recorded exceptions: Resend for transactional email, Discourse only if a forum is ever approved); scope is gated by `docs/product/FEATURE_LIST.md`. Execution order lives in `plan/BUILD_PLAN.md`. Live since 2026-09-16 with two operational amendments: sync runs as TWO stages (ranks+lists 02:00, details+champions 02:30 — free-plan workers get ~50 fetch subrequests/invocation, detail loop sequential against WCA 429s); Resend onboarding deferred by decision (flush skips cleanly, dashboard stays canonical).
 
 ## 1. Principles
 

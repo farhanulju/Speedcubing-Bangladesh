@@ -79,7 +79,7 @@ Migrations (apply in order; every table gets `updated_by/at` where human-edited)
 
 ### Cron table
 
-`sync-wca` daily 02:00 Asia/Dhaka (KV + snapshots + champions); `outbox-flush` every 5 min.
+`sync-ranks` daily 02:00 Asia/Dhaka (events, ranks, persons, records, snapshots, comp list); `sync-details` daily 02:30 (per-comp detail/WCIF/schedule/delegates + champions, cache-first with per-run caps); `outbox-flush` every 5 min. Two stages exist because free-plan workers get ~50 fetch subrequests per invocation (proven 2026-09-16: one big run landed ranks then starved details). Detail loop is sequential — parallel WCIF bursts get 429s from the WCA API.
 
 ### Secrets inventory
 
