@@ -157,8 +157,11 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
       ) : (
         <div class="mt-4 grid gap-4 md:grid-cols-3">
           {spotlight.map((r) => (
-            <a href={`/records?q=${r.event}`} class="card-brutal block p-5 hover:-translate-y-0.5">
-              <p class="font-extrabold">{r.event_name}</p>
+            <a href={`/records?event=${encodeURIComponent(r.event)}`} class="card-brutal block p-5 hover:-translate-y-0.5">
+              <p class="flex flex-wrap items-center gap-2 font-extrabold">
+                {r.event_name}
+                <span class="data-font rounded border border-ink bg-cube-yellow px-1.5 py-0.5 text-[10px] font-bold">{r.event}</span>
+              </p>
               {r.single && (
                 <p class="data-font mt-1 text-2xl font-bold">
                   {formatRecordValue(r.event, 'single', r.single.value_centis) ?? '—'} <span class="text-xs font-normal">single • {r.single.holder}</span>

@@ -6,6 +6,7 @@ import { getEnv } from '../../lib/bindings';
 export const prerender = false;
 
 const tables = Object.values(ADMIN_TABLES);
+const tableByLabel = new Map(tables.map((table) => [table.label, table.table]));
 let overview = null as null | Awaited<ReturnType<typeof getAdminOverview>>;
 let dbError: string | null = null;
 try {
@@ -26,6 +27,21 @@ try {
     ) : (
       overview && (
         <>
+          <section class="card-brutal mt-6 p-5" aria-labelledby="quick-actions-heading">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <h2 id="quick-actions-heading" class="text-xl font-extrabold">Quick actions</h2>
+                <p class="mt-1 text-sm text-slate-600">Start a common task or go straight to a waiting queue.</p>
+              </div>
+              <a href="/" class="text-sm font-bold text-emerald-brand underline">View public site ↗</a>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-2">
+              <a href="/admin/announcement/new" class="btn-pill border-2 border-ink bg-speed-orange px-4 py-2 text-sm font-bold text-white">+ Announcement</a>
+              <a href="/admin/news/new" class="btn-pill border-2 border-ink bg-white px-4 py-2 text-sm font-bold">+ News story</a>
+              <a href="/admin/faq/new" class="btn-pill border-2 border-ink bg-white px-4 py-2 text-sm font-bold">+ FAQ answer</a>
+              <a href="/admin/donation_page" class="btn-pill border-2 border-ink bg-white px-4 py-2 text-sm font-bold">Worlds campaign</a>
+            </div>
+          </section>
           <div class="mt-6 grid gap-4 sm:grid-cols-3">
             <a href="/admin/payments" class="card-brutal shadow-brutal block p-5 hover:-translate-y-0.5">
               <p class="data-font text-xs uppercase tracking-wider text-slate-500">Pending payments</p>
@@ -55,6 +71,16 @@ try {
               </ol>
             )}
           </div>
+          <section class="mt-8" aria-labelledby="content-status-heading">
+            <h2 id="content-status-heading" class="text-xl font-extrabold">Published content</h2>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {overview.publishedCounts.map((item) => (
+                <a href={`/admin/${tableByLabel.get(item.label) ?? ''}`} class="card-brutal flex items-center justify-between gap-3 p-4 hover:-translate-y-0.5">
+                  <span class="font-bold">{item.label}</span><span class="data-font text-2xl font-bold">{item.n}</span>
+                </a>
+              ))}
+            </div>
+          </section>
         </>
       )
     )}

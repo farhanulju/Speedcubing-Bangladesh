@@ -123,8 +123,8 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
       )
     }
 
-    <h2 class="mt-8 text-2xl font-extrabold">Competition history</h2>
-    <p class="mt-1 text-sm text-slate-600">Your registrations on this site. Archived results live on your WCA profile.</p>
+    <h2 class="mt-8 text-2xl font-extrabold">Registration history on this site</h2>
+    <p class="mt-1 text-sm text-slate-600">This list covers registrations submitted here. Your official WCA competition results and podium history are in your WCA profile.</p>
     {regs.length > 0 && (
       <>
       <p class="data-font mt-3 text-xs text-slate-400 sm:hidden">Swipe sideways for more columns →</p>
@@ -153,7 +153,7 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
     <p class="mt-2">
       {me.wca_id ? (
         <a class="btn-pill inline-block border-2 border-ink bg-white px-5 py-2 text-sm shadow-brutal" href={`https://www.worldcubeassociation.org/persons/${me.wca_id}`} target="_blank" rel="noopener">
-          Full WCA profile &amp; rank history
+          Open official WCA competition history ↗
         </a>
       ) : (
         <span class="text-sm text-slate-600">Your history appears here after your first competition.</span>

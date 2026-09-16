@@ -10,7 +10,13 @@ export type FieldKind =
   | 'select'
   | 'number'
   | 'checkbox'
-  | 'readonly';
+  | 'readonly'
+  | 'generated'
+  | 'date'
+  | 'month'
+  | 'upload'
+  | 'pairs'
+  | 'wca-competition';
 
 export interface FieldDef {
   name: string;
@@ -18,6 +24,11 @@ export interface FieldDef {
   kind: FieldKind;
   required?: boolean;
   options?: string[];
+  optionsFrom?: string;
+  autoFrom?: string;
+  pairValueKind?: 'text' | 'number' | 'url';
+  pairKeyLabel?: string;
+  pairValueLabel?: string;
   hint?: string;
 }
 
@@ -47,10 +58,10 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
     pk: 'slug',
     listColumns: ['slug', 'title', 'pinned', 'status'],
     fields: [
-      { name: 'slug', label: 'Slug', kind: 'text', required: true, hint: 'URL-safe, e.g. dso26-reg-open' },
+      { name: 'slug', label: 'Page link', kind: 'text', required: true, autoFrom: 'title', hint: 'Suggested from the title; you can edit it.' },
       { name: 'title', label: 'Title', kind: 'text', required: true },
-      { name: 'date', label: 'Date (YYYY-MM-DD)', kind: 'text', required: true },
-      { name: 'comp_wca_id', label: 'Competition WCA ID (optional)' , kind: 'text' },
+      { name: 'date', label: 'Date', kind: 'date', required: true },
+      { name: 'comp_wca_id', label: 'Competition (optional)' , kind: 'wca-competition' },
       { name: 'body_json', label: 'Body', kind: 'editor', required: true },
       { name: 'pinned', label: 'Pinned', kind: 'checkbox' },
       statusField(),
@@ -62,7 +73,7 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
     pk: 'slug',
     listColumns: ['slug', 'title', 'status'],
     fields: [
-      { name: 'slug', label: 'Slug', kind: 'text', required: true },
+      { name: 'slug', label: 'Page link', kind: 'text', required: true, autoFrom: 'title', hint: 'Suggested from the title; you can edit it.' },
       { name: 'title', label: 'Title', kind: 'text', required: true },
       { name: 'body_json', label: 'Body', kind: 'editor', required: true },
       statusField(),
@@ -74,15 +85,15 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
     pk: 'id',
     listColumns: ['id', 'name', 'role', 'status'],
     fields: [
-      { name: 'id', label: 'ID', kind: 'text', required: true },
+      { name: 'id', label: 'ID', kind: 'generated', autoFrom: 'name' },
       { name: 'name', label: 'Name', kind: 'text', required: true },
-      { name: 'photo_r2', label: 'Photo R2 key', kind: 'text', hint: 'Requires photo_consent=1 for minors' },
+      { name: 'photo_r2', label: 'Photo', kind: 'upload', hint: 'JPG, PNG, WebP or AVIF; max 8 MB. A minor’s photo only displays when consent is recorded.' },
       { name: 'photo_consent', label: 'Photo consent on file', kind: 'checkbox' },
-      { name: 'role', label: 'Role', kind: 'text', required: true },
+      { name: 'role', label: 'Role', kind: 'select', required: true, optionsFrom: 'person_role', hint: 'Manage choices in Roles.' },
       { name: 'wca_id', label: 'WCA ID', kind: 'text' },
       { name: 'focus_area', label: 'Focus area', kind: 'text' },
-      { name: 'member_since', label: 'Member since (YYYY-MM)', kind: 'text' },
-      { name: 'links_json', label: 'Links (JSON)', kind: 'textarea' },
+      { name: 'member_since', label: 'Member since', kind: 'month' },
+      { name: 'links_json', label: 'Public links', kind: 'pairs', pairValueKind: 'url', pairKeyLabel: 'Link name', pairValueLabel: 'URL' },
       statusField(),
     ],
   },
@@ -92,12 +103,12 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
     pk: 'id',
     listColumns: ['id', 'name', 'tier', 'status'],
     fields: [
-      { name: 'id', label: 'ID', kind: 'text', required: true },
+      { name: 'id', label: 'ID', kind: 'generated', autoFrom: 'name' },
       { name: 'name', label: 'Name', kind: 'text', required: true },
-      { name: 'logo_r2', label: 'Logo R2 key', kind: 'text' },
-      { name: 'tier', label: 'Tier', kind: 'select', options: ['gold', 'silver', 'bronze', 'community'] },
-      { name: 'url', label: 'URL', kind: 'text' },
-      { name: 'sort_order', label: 'Sort order', kind: 'number' },
+      { name: 'logo_r2', label: 'Logo', kind: 'upload', hint: 'JPG, PNG, WebP or AVIF; max 8 MB.' },
+      { name: 'tier', label: 'Sponsor tier', kind: 'select', optionsFrom: 'sponsor_tier', hint: 'Manage choices in Sponsor tiers.' },
+      { name: 'url', label: 'Website', kind: 'text', hint: 'Include https://.' },
+      { name: 'sort_order', label: 'Display position', kind: 'number', hint: 'Lower numbers appear first. Leave blank to use the default.' },
       statusField(),
     ],
   },
@@ -107,10 +118,10 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
     pk: 'id',
     listColumns: ['id', 'q', 'status'],
     fields: [
-      { name: 'id', label: 'ID', kind: 'text', required: true },
+      { name: 'id', label: 'ID', kind: 'generated', autoFrom: 'q' },
       { name: 'q', label: 'Question', kind: 'text', required: true },
       { name: 'a_json', label: 'Answer', kind: 'editor', required: true },
-      { name: 'sort_order', label: 'Sort order', kind: 'number' },
+      { name: 'sort_order', label: 'Display position', kind: 'number', hint: 'Lower numbers appear first. Leave blank to use the default.' },
       statusField(),
     ],
   },
@@ -120,11 +131,11 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
     pk: 'slug',
     listColumns: ['slug', 'title', 'published_at', 'status'],
     fields: [
-      { name: 'slug', label: 'Slug', kind: 'text', required: true },
+      { name: 'slug', label: 'Page link', kind: 'text', required: true, autoFrom: 'title', hint: 'Suggested from the title; you can edit it.' },
       { name: 'title', label: 'Title', kind: 'text', required: true },
-      { name: 'published_at', label: 'Published at (YYYY-MM-DD)', kind: 'text' },
+      { name: 'published_at', label: 'Publish date', kind: 'date' },
       { name: 'body_json', label: 'Body', kind: 'editor', required: true },
-      { name: 'cover_r2', label: 'Cover R2 key', kind: 'text' },
+      { name: 'cover_r2', label: 'Cover image', kind: 'upload', hint: 'JPG, PNG, WebP or AVIF; max 8 MB. Confirm everyone pictured may be published.' },
       statusField(),
     ],
   },
@@ -134,10 +145,10 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
     pk: 'wca_id',
     listColumns: ['wca_id', 'updated_at'],
     fields: [
-      { name: 'wca_id', label: 'WCA competition ID', kind: 'text', required: true },
+      { name: 'wca_id', label: 'Competition', kind: 'wca-competition', required: true },
       { name: 'payment_steps_json', label: 'Payment steps', kind: 'editor' },
       { name: 'venue_note', label: 'Venue note', kind: 'textarea' },
-      { name: 'fee_tiers_json', label: 'Fee tiers (JSON)', kind: 'textarea', hint: '{"early":800,"regular":1000}' },
+      { name: 'fee_tiers_json', label: 'Registration fee options', kind: 'pairs', pairValueKind: 'number', pairKeyLabel: 'Fee option', pairValueLabel: 'Amount (BDT)', hint: 'Enter each fee as a whole-taka amount.' },
     ],
   },
   donation_page: {
@@ -162,11 +173,27 @@ export const ADMIN_TABLES: Record<string, TableDef> = {
     pk: 'id',
     listColumns: ['id', 'name', 'amount_bdt', 'consent'],
     fields: [
-      { name: 'id', label: 'ID', kind: 'text', required: true },
-      { name: 'name', label: 'Name (or Anonymous)', kind: 'text', required: true },
+      { name: 'id', label: 'ID', kind: 'generated', autoFrom: 'name' },
+      { name: 'name', label: 'Name', kind: 'text', hint: 'Optional when the anonymous option is selected.' },
+      { name: 'is_anonymous', label: 'Show as Anonymous', kind: 'checkbox' },
       { name: 'amount_bdt', label: 'Amount (BDT, empty = hidden)', kind: 'number' },
       { name: 'consent', label: 'Public display consent', kind: 'checkbox', required: true },
-      { name: 'sort_order', label: 'Sort order', kind: 'number' },
+      { name: 'sort_order', label: 'Display position', kind: 'number', hint: 'Lower numbers appear first. Leave blank to use the default.' },
+    ],
+  },
+  person_role: {
+    table: 'person_role', label: 'Roles', pk: 'id', listColumns: ['label'],
+    fields: [
+      { name: 'id', label: 'ID', kind: 'generated', autoFrom: 'label' },
+      { name: 'label', label: 'Role name', kind: 'text', required: true },
+    ],
+  },
+  sponsor_tier: {
+    table: 'sponsor_tier', label: 'Sponsor tiers', pk: 'id', listColumns: ['label', 'sort_order'],
+    fields: [
+      { name: 'id', label: 'ID', kind: 'generated', autoFrom: 'label' },
+      { name: 'label', label: 'Tier name', kind: 'text', required: true },
+      { name: 'sort_order', label: 'Display position', kind: 'number', hint: 'Lower numbers appear first.' },
     ],
   },
 };
@@ -248,6 +275,31 @@ function coerce(def: FieldDef, raw: unknown): string | number | null {
     }
     return JSON.stringify(doc);
   }
+  if (def.kind === 'pairs') {
+    if (raw === '' || raw === null || raw === undefined) return '{}';
+    let parsed: unknown;
+    try { parsed = typeof raw === 'string' ? JSON.parse(raw) : raw; }
+    catch { throw new HttpError(400, `${def.name} contains invalid entries`); }
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new HttpError(400, `${def.name} must contain key/value entries`);
+    const entries = Object.entries(parsed as Record<string, unknown>);
+    if (entries.length > 30) throw new HttpError(400, `${def.name} can contain at most 30 entries`);
+    const normalized: Record<string, string | number> = {};
+    for (const [rawKey, value] of entries) {
+      const key = rawKey.trim().slice(0, 80);
+      if (!key) continue;
+      if (def.pairValueKind === 'number') {
+        const n = Number(value);
+        if (!Number.isInteger(n) || n < 0) throw new HttpError(400, `${key} must be a whole non-negative amount`);
+        normalized[key] = n;
+      } else {
+        const text = String(value ?? '').trim().slice(0, 500);
+        if (!text) continue;
+        if (def.pairValueKind === 'url' && !/^https?:\/\//i.test(text)) throw new HttpError(400, `${key} must use an http:// or https:// link`);
+        normalized[key] = text;
+      }
+    }
+    return JSON.stringify(normalized);
+  }
   if (raw === null || raw === undefined) return null;
   return String(raw);
 }
@@ -255,7 +307,7 @@ function coerce(def: FieldDef, raw: unknown): string | number | null {
 export function pickFields(def: TableDef, input: Record<string, unknown>): Record<string, string | number | null> {
   const out: Record<string, string | number | null> = {};
   for (const f of def.fields) {
-    if (f.kind === 'readonly') continue;
+    if (f.kind === 'readonly' || f.kind === 'generated' && f.name !== def.pk) continue;
     const v = coerce(f, input[f.name]);
     if ((v === null || v === '') && f.required) throw new HttpError(400, `${f.name} is required`);
     // Empty numbers are omitted so NOT NULL DEFAULT columns (sort orders) fall
@@ -270,7 +322,8 @@ export function pickFields(def: TableDef, input: Record<string, unknown>): Recor
 }
 
 export async function listRows(env: SpeedbdEnv, def: TableDef): Promise<Record<string, unknown>[]> {
-  const res = await env.DB.prepare(`SELECT * FROM ${def.table} ORDER BY rowid DESC LIMIT 200`).all();
+  const ordering = def.table === 'sponsor_tier' ? 'sort_order ASC, label COLLATE NOCASE ASC' : 'rowid DESC';
+  const res = await env.DB.prepare(`SELECT * FROM ${def.table} ORDER BY ${ordering} LIMIT 200`).all();
   return (res.results ?? []) as Record<string, unknown>[];
 }
 
@@ -285,9 +338,39 @@ export async function upsertRow(
   actor: string,
   input: Record<string, unknown>,
 ): Promise<string> {
-  const id = def.singleton ? '1' : String(input[def.pk] ?? '');
+  const pkField = def.fields.find((field) => field.name === def.pk);
+  const rawId = String(input[def.pk] ?? '').trim();
+  const autoSource = pkField?.autoFrom ? String(input[pkField.autoFrom] ?? '').trim() : '';
+  const baseId = (rawId || autoSource)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 48);
+  const id = def.singleton ? '1' : rawId || (baseId ? `${baseId}-${crypto.randomUUID().slice(0, 6)}` : `${def.table}-${crypto.randomUUID().slice(0, 10)}`);
   if (!id) throw new HttpError(400, `${def.pk} is required`);
-  const fields = pickFields(def, { ...input, [def.pk]: id, _actor: actor });
+  const prepared = { ...input, [def.pk]: id, _actor: actor };
+  if (def.table === 'donor') {
+    const anonymous = prepared.is_anonymous === true || prepared.is_anonymous === '1' || prepared.is_anonymous === 1;
+    const donorName = String(prepared.name ?? '').trim();
+    if (!anonymous && !donorName) throw new HttpError(400, 'Enter a donor name or select “Show as Anonymous”.');
+    if (anonymous) prepared.name = 'Anonymous';
+  }
+  const fields = pickFields(def, prepared);
+  for (const field of def.fields) {
+    if (!field.optionsFrom) continue;
+    const value = fields[field.name];
+    if (value === null || value === '') continue;
+    const option = await env.DB.prepare(`SELECT label FROM ${field.optionsFrom} WHERE label = ?`).bind(String(value)).first();
+    if (!option) throw new HttpError(400, `Choose an available ${field.label.toLowerCase()}.`);
+  }
+  if (def.table === 'person_role' || def.table === 'sponsor_tier') {
+    const duplicate = await env.DB.prepare(
+      `SELECT id FROM ${def.table} WHERE lower(label)=lower(?) AND id<>? LIMIT 1`,
+    ).bind(String(fields.label ?? ''), id).first();
+    if (duplicate) throw new HttpError(409, 'That choice already exists. Use the existing entry or choose another name.');
+  }
   const cols = Object.keys(fields);
   const placeholders = cols.map(() => '?').join(',');
   const updates = cols

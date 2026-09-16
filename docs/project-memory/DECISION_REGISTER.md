@@ -2,6 +2,8 @@
 
 Durable decisions. Newest first. Format: `YYYY-MM-DD — Decision — rationale — owner`.
 
+- 2026-09-16 — Person roles and sponsor tiers are D1-managed choice lists, with an explicit anonymous flag for donor entries; the admin owns its content vocabulary and no longer needs developers for ordinary role/tier changes — user request.
+- 2026-09-16 — Newsletter signup and its Turnstile challenge remain unmounted until a visitor opens the signup form; email opt-in remains stored-only while bulk alert delivery is on hold — user request + Resend/broadcast hold.
 - 2026-09-15 — Admin gets exactly ONE distinct dark shell (`AdminShell`: sidebar + who-am-I badge on every `/admin` page) — mode-confusion safety (an admin must never mistake admin for public view) and identity visibility; supersedes the reviewer-written "unify to one shell" note, which was never a board vote and wrongly blocked a distinct admin chrome — user direction.
 - 2026-09-15 — Admin identity is display-only (`Cf-Access-Authenticated-User-Email` from the edge, dev bypass string locally); it never authorizes — APIs still verify the Access JWT per request, so identity display adds zero attack surface — user direction.
 

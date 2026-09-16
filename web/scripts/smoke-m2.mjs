@@ -98,7 +98,25 @@ await check('faq/contact/sponsors/worlds/about/lost-found render', async () => {
   const c = await get('/contact');
   assert(has(c.text, 'Get in Touch'), 'contact broken');
   const s = await get('/sponsors');
-  assert(has(s.text, 'Sample Sponsor Ltd') && has(s.text, 'partnership-deck.pdf'), 'sponsors broken');
+  assert(has(s.text, 'Sample Sponsor Ltd'), 'sponsors broken');
+  // Deck link renders only when the PDF exists in R2 (WP-51 places it via wrangler).
+  assert(notHas(s.text, 'partnership-deck.pdf'), 'deck link shown without deck file');
+  {
+    const { execSync } = await import('node:child_process');
+    const { mkdtempSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join, dirname } = await import('node:path');
+    const { fileURLToPath } = await import('node:url');
+    const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+    const pdf = join(mkdtempSync(join(tmpdir(), 'deck-')), 'deck.pdf');
+    writeFileSync(pdf, '%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n');
+    execSync(`npx wrangler r2 object put speedbd-media/org/partnership-deck.pdf --local --file "${pdf}"`, { cwd: root, stdio: 'pipe' });
+    const withDeck = await get('/sponsors');
+    assert(has(withDeck.text, 'partnership-deck.pdf'), 'deck link missing with deck file');
+    execSync('npx wrangler r2 object delete speedbd-media/org/partnership-deck.pdf --local', { cwd: root, stdio: 'pipe' });
+    const withoutDeck = await get('/sponsors');
+    assert(notHas(withoutDeck.text, 'partnership-deck.pdf'), 'deck link stuck after delete');
+  }
   const w = await get('/worlds-2027');
   assert(has(w.text, '+8801000000002') && has(w.text, 'Sample Family'), 'worlds broken');
   const a = await get('/about');

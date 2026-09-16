@@ -11,6 +11,32 @@
 
 export const WCA_CACHE_TTL_SECONDS = 24 * 60 * 60;
 
+// Canonical WCA event IDs paired with the names visitors recognize. Keep the
+// identifier visible secondarily so search terms and WCA links still match.
+export const WCA_EVENT_NAMES: Record<string, string> = {
+  '222': '2×2×2 Cube',
+  '333': '3×3×3 Cube',
+  '444': '4×4×4 Cube',
+  '555': '5×5×5 Cube',
+  '666': '6×6×6 Cube',
+  '777': '7×7×7 Cube',
+  '333bf': '3×3×3 Blindfolded',
+  '333fm': '3×3×3 Fewest Moves',
+  '333oh': '3×3×3 One-Handed',
+  clock: 'Clock',
+  minx: 'Megaminx',
+  pyram: 'Pyraminx',
+  skewb: 'Skewb',
+  sq1: 'Square-1',
+  '444bf': '4×4×4 Blindfolded',
+  '555bf': '5×5×5 Blindfolded',
+  '333mbf': '3×3×3 Multi-Blind',
+};
+
+export function eventName(eventId: string): string {
+  return WCA_EVENT_NAMES[eventId] ?? eventId;
+}
+
 // WCA venue strings arrive as Markdown (`[Name](url)`), bare URLs, or plain
 // text. Never render the source verbatim — split into a display name plus an
 // optional safe (http/https) link. Unknown shapes render as plain text.
@@ -105,6 +131,15 @@ export function getCompetition(env: { WCA_CACHE: KVNamespace }, wcaId: string) {
 
 export function getRecords(env: { WCA_CACHE: KVNamespace }) {
   return readKey<{ asOfExportDate: string; records: EventRecord[] }>(env, 'wca:records:BD');
+}
+
+export async function getCachedPersonName(env: { WCA_CACHE: KVNamespace }, wcaId: string): Promise<string | null> {
+  try {
+    const person = await env.WCA_CACHE.get(`wca:person:${wcaId}`, 'json') as null | { name?: unknown };
+    return typeof person?.name === 'string' && person.name.trim() ? person.name : null;
+  } catch {
+    return null;
+  }
 }
 
 // Raw upstream rank rows are stored verbatim under `items` (personId, best,

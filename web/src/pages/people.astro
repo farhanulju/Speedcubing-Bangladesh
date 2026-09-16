@@ -18,7 +18,7 @@ const people = await tryLoad(Astro.locals, (env) => getPeople(env), []);
     </p>
     {
       people.length === 0 ? (
-        <p class="mt-6 text-slate-600">Roster publishes here once the team enters it in /admin.</p>
+        <p class="mt-6 text-slate-600">No team profiles are published yet. Please check back for updates.</p>
       ) : (
         <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {people.map((p) => (

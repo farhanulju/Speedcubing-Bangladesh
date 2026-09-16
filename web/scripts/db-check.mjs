@@ -37,7 +37,7 @@ db.exec(readFileSync(join(root, 'scripts', 'seed.sql'), 'utf8'));
 
 const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all().map((r) => r.name);
 check('all tables exist', () => {
-  const expected = ['announcement','page','person','volunteer_internal','sponsor','faq','news','comp_override','donation_page','donor','competitor','registration','tx_submission','lost_found','opt_in','contact_message','guardian_consent','audit_log','email_outbox','record_snapshot','comp_champion','gallery_album','gallery_photo'];
+  const expected = ['announcement','page','person','person_role','volunteer_internal','sponsor','sponsor_tier','faq','news','comp_override','donation_page','donor','competitor','registration','tx_submission','lost_found','opt_in','contact_message','guardian_consent','audit_log','email_outbox','record_snapshot','comp_champion','gallery_album','gallery_photo'];
   assert(tables.length === expected.length, `expected ${expected.length} tables, got ${tables.length}: ${tables.join(',')}`);
   for (const t of expected) assert(tables.includes(t), `missing table ${t}`);
 });
@@ -65,6 +65,14 @@ check('wca_accepted defaults to 0', () => {
 check('donation_page singleton + Sweden default', () => {
   const r = db.prepare('SELECT target_bdt, worlds_host_city FROM donation_page WHERE id=1').get();
   assert(r.target_bdt === 500000 && r.worlds_host_city === 'Sweden', 'unexpected donation_page row');
+});
+
+check('admin form choices and donor anonymity are migrated', () => {
+  const roles = db.prepare('SELECT COUNT(*) AS n FROM person_role').get().n;
+  const tiers = db.prepare('SELECT COUNT(*) AS n FROM sponsor_tier').get().n;
+  const cols = db.prepare('PRAGMA table_info(donor)').all().map((r) => r.name);
+  assert(roles >= 1 && tiers >= 1, 'role/tier options were not seeded');
+  assert(cols.includes('is_anonymous'), 'donor anonymity column missing');
 });
 
 check('unique constraints hold', () => {

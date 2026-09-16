@@ -16,8 +16,13 @@ const { holderId, uploadEndpoint, initialData = '{"blocks":[]}' } = Astro.props;
   data-editor-field={holderId}
   data-upload-endpoint={uploadEndpoint}
   data-initial={initialData}
-  class="card-brutal min-h-48 p-4"
+  class="card-brutal min-w-0 p-4"
 >
+  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-xs text-slate-600">Click below and start typing. Use the + control for another content block.</p>
+    <button type="button" data-editor-preview-toggle class="btn-pill border-2 border-ink bg-white px-4 py-1.5 text-sm font-bold">Preview page</button>
+  </div>
+  <div data-editor-preview class="prose hidden mb-3 max-w-none rounded-lg border-2 border-dashed border-ink bg-white p-4" aria-live="polite"></div>
   <div id={holderId}></div>
 </div>
 
@@ -29,6 +34,7 @@ const { holderId, uploadEndpoint, initialData = '{"blocks":[]}' } = Astro.props;
   import ImageTool from '@editorjs/image';
   import Delimiter from '@editorjs/delimiter';
   import type { BlockToolConstructable } from '@editorjs/editorjs';
+  import { renderDocument, type EditorDocument } from '../lib/editor';
 
   declare global {
     interface Window {
@@ -75,6 +81,32 @@ const { holderId, uploadEndpoint, initialData = '{"blocks":[]}' } = Astro.props;
   }
 
   document.querySelectorAll('[data-editor-field]').forEach(initField);
+
+  document.querySelectorAll<HTMLElement>('[data-editor-field]').forEach((field) => {
+    const holderId = field.dataset.editorField;
+    const button = field.querySelector<HTMLButtonElement>('[data-editor-preview-toggle]');
+    const preview = field.querySelector<HTMLElement>('[data-editor-preview]');
+    if (!holderId || !button || !preview) return;
+    button.addEventListener('click', async () => {
+      const editor = editors.get(holderId);
+      if (!editor) return;
+      if (!preview.classList.contains('hidden')) {
+        preview.classList.add('hidden');
+        button.textContent = 'Preview page';
+        return;
+      }
+      const saved = await editor.save() as EditorDocument;
+      const { html } = renderDocument(saved);
+      if (!html.trim()) {
+        preview.textContent = 'Your page preview will appear here after you add a content block.';
+      } else {
+        // renderDocument returns only allowlisted, escaped/sanitized markup.
+        preview.innerHTML = html;
+      }
+      preview.classList.remove('hidden');
+      button.textContent = 'Back to editing';
+    });
+  });
 
   window.__speedbdSaveEditor = async (holderId: string) => {
     const editor = editors.get(holderId);

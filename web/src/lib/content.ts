@@ -172,3 +172,19 @@ export async function getRecordSnapshots(env: SpeedbdEnv): Promise<RecordSnapsho
   ).all();
   return (res.results ?? []) as unknown as RecordSnapshot[];
 }
+
+export interface CompetitionChampion {
+  comp_wca_id: string;
+  winner_wca_id: string | null;
+  winning_value_centis: number | null;
+  derived_at: string;
+}
+
+export async function getCompetitionChampions(env: SpeedbdEnv): Promise<CompetitionChampion[]> {
+  const res = await env.DB.prepare(
+    `SELECT comp_wca_id, COALESCE(override_winner_wca_id, winner_wca_id) AS winner_wca_id,
+      CASE WHEN override_winner_wca_id IS NOT NULL THEN NULL ELSE winning_value_centis END AS winning_value_centis,
+      derived_at FROM comp_champion`,
+  ).all();
+  return (res.results ?? []) as unknown as CompetitionChampion[];
+}

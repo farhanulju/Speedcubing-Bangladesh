@@ -1,35 +1,32 @@
 import { getEnv } from '../../lib/bindings';
-import { buildUploadKey, extForMime, MAX_UPLOAD_BYTES } from '../../lib/uploads';
+import { HttpError, requireAdmin, toError } from '../../lib/admin';
+import { putImage } from '../../lib/uploads';
 
 export const prerender = false;
 
-// Editor.js byFile contract: multipart field `image` → { success: 1, file: { url } }.
-// Auth: FAILS CLOSED until WP-16 wires Access (admin) — never an open uploader.
-export async function POST(): Promise<Response> {
-  return failClosed();
-}
-
-function failClosed(): Response {
-  // WP-16 replaces this with: Access JWT (admin) or WCA session (lost-found flow).
-  return Response.json({ success: 0, message: 'uploader disabled until WP-16 auth lands' }, { status: 503 });
-}
-
-export async function putImage(
-  env: ReturnType<typeof getEnv>,
-  file: File,
-  year: string,
-  compSlug: string,
-): Promise<string> {
-  const ext = extForMime(file.type);
-  if (!ext) throw new Error(`rejected mime: ${file.type}`);
-  // Buffered (not streamed): identical bytes on Node, workerd, and miniflare R2.
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  if (bytes.byteLength <= 0 || bytes.byteLength > MAX_UPLOAD_BYTES) throw new Error('rejected size');
-  const key = buildUploadKey(year, compSlug, ext);
-  await env.MEDIA.put(key, bytes, {
-    httpMetadata: { contentType: file.type, cacheControl: 'public, max-age=31536000, immutable' },
-  });
-  return `/api/media/${key}`;
+// Editor.js byFile contract plus a key for regular admin image fields. Every
+// upload is Access-gated and restricted to validated still-image types/sizes.
+export async function POST({ request, locals }: { request: Request; locals: App.Locals }): Promise<Response> {
+  try {
+    const env = getEnv(locals);
+    await requireAdmin(request, env as Parameters<typeof requireAdmin>[1]);
+    const form = await request.formData();
+    const file = form.get('file') ?? form.get('image');
+    if (!(file instanceof File) || file.size === 0) throw new HttpError(400, 'Choose an image to upload.');
+    const table = String(form.get('table') ?? 'content').toLowerCase();
+    if (!['person', 'sponsor', 'news', 'page', 'announcement', 'content'].includes(table)) {
+      throw new HttpError(400, 'Unknown image destination.');
+    }
+    const context = String(form.get('context') ?? '').trim().slice(0, 80) || table;
+    const year = new Date().getFullYear().toString();
+    const url = await putImage(env, file, year, `${table}-${context}`);
+    const key = url.replace(/^\/api\/media\//, '');
+    return Response.json({ success: 1, key, file: { url }, url });
+  } catch (err) {
+    if (err instanceof Error && err.message.startsWith('rejected')) return Response.json({ success: 0, message: err.message }, { status: 400 });
+    const response = toError(err);
+    return Response.json({ success: 0, message: (await response.json().catch(() => ({})) as { error?: string }).error ?? 'Upload failed.' }, { status: response.status });
+  }
 }
 
 export { getEnv };

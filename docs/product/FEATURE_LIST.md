@@ -17,7 +17,7 @@ entry (`plan/SEEDING_RUNBOOK.md`). **Gap** = scoped but not yet built.
 | A1 | Built, 1 gap | `web/src/pages/index.astro` — badge hero, next-3 comps, NR spotlight, sponsors, Worlds banner, news, opt-in, N14 countdown (renders only with a future comp). Gap: tasks view |
 | A2 | Built + Content | `web/src/pages/about.astro` — copy via `page/about` |
 | A3 | Built + Content | `web/src/pages/people.astro` — photo renders only when `photo_consent=1` (`content.ts`) |
-| A4 | Built | `web/src/pages/competitions.astro` — auto-list + city filter + cache stamp + Upcoming/Past archive split |
+| A4 | Built | `web/src/pages/competitions.astro` — auto-list + city/event/year/status filters + cache stamp + Upcoming/Past archive split and cached 3×3 champion links |
 | A5 | Built | `web/src/pages/competitions/[slug].astro` — fees, masked Reveal wallets, WCIF events, Live Results, dual-status notice, site roster (names + fee/WCA states + site-reg # + search), WCIF schedule + delegate cards |
 | A6 | Live | `api/registrations`, `api/tx`, `/dashboard`, print slip — WCA OAuth app live, login tested 2026-09-16 |
 | A7 | Built + Content | Pinned bar on Home; header-bar slot still TODO (`Base.astro`) |
@@ -25,14 +25,14 @@ entry (`plan/SEEDING_RUNBOOK.md`). **Gap** = scoped but not yet built.
 | A11 | Built | Form + public log (contacts private, `Claimed ✓` only) + inbox |
 | A12 | Built + Content | Logo wall + deck button; PDF upload pending WP-51 |
 | A13 | Built + Content | Manual totals, masked Reveal wallets, opt-in donor wall; candidates/criteria/refund copy pending |
-| A14 | Built | Contact + email-only opt-in, Turnstile-gated; WhatsApp stays link-text per copy |
+| A14 | Built | Contact + email-only opt-in; alert form and Turnstile mount only after explicit signup intent; opt-in is stored-only while bulk delivery remains on hold; WhatsApp stays link-text per copy |
 | A15 | Partial | Per-page title/meta + skip link + Facebook link in footer. Missing: `og:image`, sitemap, analytics beacon, link-in-bio page (post-domain) |
-| A16 | Built, 1 gap | NR table + daily stamp + CSV export + inline snapshot history; `record_snapshot` collected by cron. Gap: dedicated Progression view |
+| A16 | Built, 1 gap | NR table + daily stamp + event/holder filters + CSV export + inline snapshot history; `record_snapshot` collected by cron. Gap: dedicated Progression view |
 | A17 | Live | Dashboard (PBs + BD ranks, tracker, D1 history table, consent card); live login tested 2026-09-16 |
-| A18 | Live | Registry CRUD + Editor.js + audit + ops hub + distinct shell; Access app live (8 emails), gate tested 2026-09-16 |
+| A18 | Live | Registry CRUD + guided Editor.js preview + Access-gated R2 image uploads + managed person roles/sponsor tiers + audit + quick-action/published-count ops hub + distinct shell; Access app live (8 emails), gate tested 2026-09-16 |
 | A19 | Built | Queue, atomic accept/reject, 409 guard, manual WCA tick — local-verified |
 | A20 | Built + Content | `web/src/pages/news.astro` + `[slug]` via admin |
-| A21 | Partial | Dashboard history = WCA link-out; past/champion archive view missing (data collected) |
+| A21 | Partial | General past-competition archive includes cached 3×3 champion and WCA results/podium links; dashboard distinguishes site registrations from the official WCA profile. Per-user historical competition results are not yet cached locally. |
 | A22 | Built, on hold | Outbox + 3 templates + flush worker live (skips cleanly); Resend onboarding deferred by decision, dashboard is canonical |
 
 Open gaps feeding M5: A1 countdown, A4 past split, A5 roster, A15 plumbing,

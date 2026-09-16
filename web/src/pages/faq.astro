@@ -14,17 +14,11 @@ const faqs = await tryLoad(Astro.locals, (env) => getFaqs(env), []);
   <section class="container-x max-w-3xl py-12">
     <h1 class="text-4xl font-extrabold tracking-tight">Frequently Asked Questions</h1>
     <p class="mt-2 text-slate-600">First-timer guide, registration and payments, rules, and Worlds 2027.</p>
-    <input
-      data-faq-filter
-      type="search"
-      placeholder="Filter questions…"
-      class="mt-6 w-full rounded-lg border-2 border-ink px-3 py-2"
-      aria-label="Filter questions"
-    />
+    {faqs.length > 0 && <input data-faq-filter type="search" placeholder="Filter questions…" class="mt-6 w-full rounded-lg border-2 border-ink px-3 py-2" aria-label="Filter questions" />}
     <div class="mt-4 flex flex-col gap-3">
       {
         faqs.length === 0 ? (
-          <p class="text-slate-600">Answers publish here once entered in /admin.</p>
+          <p class="text-slate-600">No questions have been published yet. Need help now? <a class="font-bold text-emerald-brand underline" href="/contact">Contact the team</a>.</p>
         ) : (
           faqs.map((f) => (
             <details data-faq-item class="card-brutal p-5" data-q={f.q.toLowerCase()}>

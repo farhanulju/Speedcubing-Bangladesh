@@ -1,17 +1,16 @@
 ---
 import EditorField from './EditorField.astro';
-import type { TableDef } from '../lib/admin';
+import type { FieldDef, TableDef } from '../lib/admin';
 
-// Generic admin form driven by the TableDef registry (WP-13).
-// Editor.js bodies are collected client-side and POSTed as JSON.
 interface Props {
   def: TableDef;
   row: Record<string, unknown> | null;
   apiUrl: string;
   listUrl: string;
+  optionsByField?: Record<string, { value: string; label: string }[]>;
 }
 
-const { def, row, apiUrl, listUrl } = Astro.props;
+const { def, row, apiUrl, listUrl, optionsByField = {} } = Astro.props;
 const isNew = row === null;
 const val = (name: string): string => {
   const v = row?.[name];
@@ -23,52 +22,135 @@ const editorJson = (name: string): string => {
   if (!v) return '{"blocks":[]}';
   return typeof v === 'string' ? v : JSON.stringify(v);
 };
+const pairEntries = (name: string): [string, string][] => {
+  try {
+    const parsed = JSON.parse(val(name) || '{}') as Record<string, unknown>;
+    return Object.entries(parsed).map(([key, value]) => [key, String(value)]);
+  } catch {
+    return [];
+  }
+};
+const fieldId = (field: FieldDef) => `field-${def.table}-${field.name}`;
 ---
 
 <form data-admin-form={def.table} data-api-url={apiUrl} data-list-url={listUrl} class="flex flex-col gap-5">
   {
-    def.fields.map((f) => (
-      <label class="flex flex-col gap-1">
-        <span class="text-sm font-bold">
-          {f.label} {f.required && <span class="text-speed-orange">*</span>}
-        </span>
-        {f.hint && <span class="text-xs text-slate-500">{f.hint}</span>}
-        {f.kind === 'text' &&
-          (f.name === def.pk && !isNew ? (
-            <span class="data-font rounded-lg border-2 border-ink bg-paper px-3 py-2">{val(f.name)}</span>
-          ) : (
-            <input name={f.name} type="text" value={isNew ? '' : val(f.name)} class="rounded-lg border-2 border-ink px-3 py-2" />
-          ))}
-        {f.kind === 'textarea' && <textarea name={f.name} rows="4" class="rounded-lg border-2 border-ink px-3 py-2">{isNew ? '' : val(f.name)}</textarea>}
-        {f.kind === 'number' && (
-          <input name={f.name} type="number" min="0" step="1" value={isNew ? '' : val(f.name)} class="rounded-lg border-2 border-ink px-3 py-2" />
-        )}
-        {f.kind === 'checkbox' && (
-          <input name={f.name} type="checkbox" checked={checked(f.name)} class="h-5 w-5 accent-emerald-brand" />
-        )}
-        {f.kind === 'select' && (
-          <select name={f.name} class="rounded-lg border-2 border-ink px-3 py-2">
-            {(f.options ?? []).map((o) => (
-              <option value={o} selected={!isNew && val(f.name) === o}>
-                {o}
-              </option>
-            ))}
-          </select>
-        )}
-        {f.kind === 'readonly' && (
-          <span class="data-font rounded-lg border-2 border-ink bg-paper px-3 py-2">{isNew ? '(assigned on save)' : val(f.name)}</span>
-        )}
-        {f.kind === 'editor' && (
-          <EditorField holderId={`ed-${def.table}-${f.name}`} uploadEndpoint="/api/uploads" initialData={editorJson(f.name)} />
-        )}
-      </label>
-    ))
+    def.fields.map((f) => {
+      const id = fieldId(f);
+      return (
+        <div class="flex min-w-0 flex-col gap-1">
+          <label id={`${id}-label`} for={f.kind === 'upload' ? `${id}-file` : f.kind === 'editor' ? `ed-${def.table}-${f.name}` : f.kind === 'wca-competition' ? `${id}-search` : f.kind === 'pairs' || (f.kind === 'generated' && isNew) ? undefined : id} class="text-sm font-bold">
+            {f.label} {f.required && <span class="text-speed-orange">*</span>}
+          </label>
+          {f.hint && <p class="text-xs text-slate-500">{f.hint}</p>}
+          {f.kind === 'text' && (
+            f.name === def.pk && !isNew ? (
+              <>
+                <span class="data-font rounded-lg border-2 border-ink bg-paper px-3 py-2">{val(f.name)}</span>
+                <input type="hidden" name={f.name} value={val(f.name)} />
+              </>
+            ) : (
+              <input id={id} name={f.name} type="text" required={f.required} value={isNew ? '' : val(f.name)} data-auto-from={isNew ? f.autoFrom : undefined} class="w-full min-w-0 rounded-lg border-2 border-ink px-3 py-2" />
+            )
+          )}
+          {f.kind === 'generated' && (
+            isNew ? (
+              <>
+                <input id={id} name={f.name} type="hidden" value="" />
+                <p class="data-font rounded-lg border-2 border-dashed border-slate-300 bg-paper px-3 py-2 text-sm text-slate-500" data-generated-preview={f.name} data-source={f.autoFrom} aria-labelledby={`${id}-label`}>
+                  Created automatically when saved.
+                </p>
+              </>
+            ) : (
+              <>
+                <span class="data-font rounded-lg border-2 border-ink bg-paper px-3 py-2">{val(f.name)}</span>
+                <input type="hidden" name={f.name} value={val(f.name)} />
+              </>
+            )
+          )}
+          {f.kind === 'date' && <input id={id} name={f.name} type="date" required={f.required} value={isNew ? '' : val(f.name)} class="w-full rounded-lg border-2 border-ink px-3 py-2" />}
+          {f.kind === 'month' && <input id={id} name={f.name} type="month" required={f.required} value={isNew ? '' : val(f.name)} class="w-full rounded-lg border-2 border-ink px-3 py-2" />}
+          {f.kind === 'textarea' && <textarea id={id} name={f.name} required={f.required} rows="4" class="w-full min-w-0 rounded-lg border-2 border-ink px-3 py-2">{isNew ? '' : val(f.name)}</textarea>}
+          {f.kind === 'number' && (
+            <input id={id} name={f.name} type="number" required={f.required} min="0" step="1" value={isNew ? '' : val(f.name)} class="w-full rounded-lg border-2 border-ink px-3 py-2" />
+          )}
+          {f.kind === 'checkbox' && (
+            <label class="flex items-center gap-2 text-sm">
+              <input id={id} name={f.name} type="checkbox" checked={checked(f.name)} class="h-5 w-5 accent-emerald-brand" />
+              <span>{f.name === 'is_anonymous' ? 'List this contribution without a donor name' : f.label}</span>
+            </label>
+          )}
+          {f.kind === 'select' && (
+            <select id={id} name={f.name} required={f.required} data-managed-options={f.optionsFrom} class="w-full rounded-lg border-2 border-ink bg-white px-3 py-2">
+              {!f.required && <option value="">— Choose later —</option>}
+              {(optionsByField[f.name] ?? (f.options ?? []).map((o) => ({ value: o, label: o }))).map((o) => (
+                <option value={o.value} selected={!isNew && val(f.name) === o.value}>{o.label}</option>
+              ))}
+            </select>
+          )}
+          {f.kind === 'wca-competition' && (
+            <>
+              <input id={`${id}-search`} type="search" list={`${id}-choices`} required={f.required} autocomplete="off"
+                value={(optionsByField[f.name] ?? []).find((o) => o.value === val(f.name))?.label ?? (isNew ? '' : val(f.name))}
+                data-wca-search={f.name} placeholder="Type a competition name, date, city, or WCA ID…"
+                class="w-full min-w-0 rounded-lg border-2 border-ink px-3 py-2" />
+              <input id={id} type="hidden" name={f.name} value={isNew ? '' : val(f.name)} />
+              <datalist id={`${id}-choices`}>
+                {(optionsByField[f.name] ?? []).map((o) => <option value={o.label} data-wca-id={o.value} />)}
+              </datalist>
+              <p data-wca-search-message={f.name} class="text-xs text-slate-500" aria-live="polite">Choose a match from the suggestions.</p>
+            </>
+          )}
+          {f.kind === 'upload' && (
+            <div class="flex min-w-0 flex-col gap-2">
+              <input id={id} type="hidden" name={f.name} value={isNew ? '' : val(f.name)} />
+              {val(f.name) && <p class="data-font truncate text-xs text-slate-500" data-upload-key>{val(f.name)}</p>}
+              <input id={`${id}-file`} type="file" accept="image/jpeg,image/png,image/webp,image/avif" data-upload-for={f.name} data-upload-table={def.table} class="w-full min-w-0 text-sm" />
+              <p class="hidden text-xs font-semibold" data-upload-message={f.name} aria-live="polite"></p>
+            </div>
+          )}
+          {f.kind === 'pairs' && (
+            <div data-pairs={f.name} data-value-kind={f.pairValueKind ?? 'text'} class="flex flex-col gap-2">
+              <input type="hidden" id={id} name={f.name} value={isNew ? '{}' : val(f.name)} />
+              <div class="flex flex-col gap-2" data-pair-rows>
+                {(pairEntries(f.name).length ? pairEntries(f.name) : [['', '']]).map(([key, value]) => (
+                  <div class="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]" data-pair-row>
+                    <label class="flex min-w-0 flex-col gap-1 text-xs font-semibold">
+                      {f.pairKeyLabel ?? 'Name'}
+                      <input type="text" value={key} maxlength="80" data-pair-key class="min-w-0 rounded-lg border-2 border-ink px-3 py-2 text-sm" />
+                    </label>
+                    <label class="flex min-w-0 flex-col gap-1 text-xs font-semibold">
+                      {f.pairValueLabel ?? 'Value'}
+                      <input type={f.pairValueKind === 'number' ? 'number' : f.pairValueKind === 'url' ? 'url' : 'text'} min={f.pairValueKind === 'number' ? '0' : undefined} step={f.pairValueKind === 'number' ? '1' : undefined} value={value} data-pair-value class="min-w-0 rounded-lg border-2 border-ink px-3 py-2 text-sm" />
+                    </label>
+                    <button type="button" data-remove-pair class="self-end rounded-lg border-2 border-ink px-3 py-2 text-sm font-bold" aria-label="Remove row">Remove</button>
+                  </div>
+                ))}
+              </div>
+              <button type="button" data-add-pair class="btn-pill w-fit border-2 border-ink bg-white px-4 py-1.5 text-sm">+ Add another</button>
+            </div>
+          )}
+          {f.kind === 'readonly' && (
+            <span class="data-font rounded-lg border-2 border-ink bg-paper px-3 py-2">{isNew ? '(assigned automatically)' : val(f.name)}</span>
+          )}
+          {f.kind === 'editor' && (
+            <>
+              <p class="text-xs text-slate-500">Write a paragraph or use the + menu to add a heading, list, quote, image or divider. Preview shows the sanitized public layout.</p>
+              <EditorField holderId={`ed-${def.table}-${f.name}`} uploadEndpoint="/api/uploads" initialData={editorJson(f.name)} />
+            </>
+          )}
+          {f.optionsFrom && (
+            <a href={`/admin/${f.optionsFrom}`} target="_blank" rel="noopener" class="w-fit text-xs font-bold text-emerald-brand underline">
+              Manage {f.optionsFrom === 'person_role' ? 'roles' : 'sponsor tiers'} in a separate tab; choices refresh when you return
+            </a>
+          )}
+        </div>
+      );
+    })
   }
-  <p data-form-error class="hidden rounded-lg border-2 border-red-700 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800"></p>
-  <div class="flex gap-3">
-    <button type="submit" class="btn-pill border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
-      Save
-    </button>
+  <p data-form-error class="hidden rounded-lg border-2 border-red-700 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800" role="alert"></p>
+  <div class="flex flex-wrap gap-3">
+    <button type="submit" class="btn-pill border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">Save</button>
     <a href={listUrl} class="btn-pill border-2 border-ink bg-white px-6 py-2">Cancel</a>
   </div>
 </form>
@@ -80,45 +162,203 @@ const editorJson = (name: string): string => {
     }
   }
 
-  document.querySelectorAll('[data-admin-form]').forEach((formEl) => {
-    const form = formEl as HTMLFormElement;
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const errEl = form.querySelector('[data-form-error]') as HTMLElement;
-      errEl.classList.add('hidden');
+  const slug = (value: string) => value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48);
+
+  const refreshManagedChoices = async () => {
+    const selects = document.querySelectorAll('[data-managed-options]') as unknown as HTMLSelectElement[];
+    for (const select of selects) {
+      const table = select.dataset.managedOptions;
+      if (!table) continue;
+      try {
+        const response = await fetch(`/api/admin/${table}`);
+        if (!response.ok) continue;
+        const body = await response.json() as { rows?: Record<string, unknown>[] };
+        const selected = select.value;
+        const next = document.createDocumentFragment();
+        if (!select.required) {
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = '— Choose later —';
+          next.appendChild(placeholder);
+        }
+        for (const row of body.rows ?? []) {
+          const option = document.createElement('option');
+          option.value = String(row.label ?? '');
+          option.textContent = String(row.label ?? '');
+          next.appendChild(option);
+        }
+        select.replaceChildren(next);
+        select.value = selected;
+      } catch {
+        // Keep the server-rendered options usable if the refresh fails.
+      }
+    }
+  };
+  window.addEventListener('focus', () => { void refreshManagedChoices(); });
+
+  document.querySelectorAll<HTMLFormElement>('[data-admin-form]').forEach((form) => {
+    for (const target of form.querySelectorAll<HTMLInputElement>('[data-auto-from]')) {
+      const sourceName = target.dataset.autoFrom;
+      const source = sourceName ? form.elements.namedItem(sourceName) : null;
+      if (!(source instanceof HTMLInputElement || source instanceof HTMLTextAreaElement)) continue;
+      const update = () => {
+        if (target.dataset.userEdited === '1') return;
+        target.value = slug(source.value);
+      };
+      source.addEventListener('input', update);
+      target.addEventListener('input', () => { target.dataset.userEdited = '1'; });
+      update();
+    }
+
+    for (const preview of form.querySelectorAll<HTMLElement>('[data-generated-preview]')) {
+      const sourceName = preview.dataset.source;
+      const source = sourceName ? form.elements.namedItem(sourceName) : null;
+      if (!(source instanceof HTMLInputElement || source instanceof HTMLTextAreaElement)) continue;
+      const update = () => {
+        const value = slug(source.value);
+        preview.textContent = value ? `Generated automatically: ${value} (unique ID added on save)` : 'Created automatically when saved.';
+      };
+      source.addEventListener('input', update);
+      update();
+    }
+
+    for (const search of form.querySelectorAll<HTMLInputElement>('[data-wca-search]')) {
+      const fieldName = search.dataset.wcaSearch;
+      const hidden = fieldName ? form.elements.namedItem(fieldName) : null;
+      const message = fieldName ? form.querySelector<HTMLElement>(`[data-wca-search-message="${fieldName}"]`) : null;
+      if (!(hidden instanceof HTMLInputElement) || !message) continue;
+      const datalist = search.list;
+      const choices = datalist ? Array.from(datalist.options).map((option) => ({ label: option.value, value: option.dataset.wcaId ?? '' })) : [];
+      const update = () => {
+        const selected = choices.find((choice) => choice.label === search.value);
+        hidden.value = selected?.value ?? '';
+        message.textContent = selected ? `Selected WCA ID: ${selected.value}` : 'Select one of the cached WCA competitions from the suggestions.';
+        message.className = selected ? 'text-xs font-semibold text-emerald-brand' : 'text-xs text-slate-500';
+      };
+      search.addEventListener('input', update);
+      if (search.value && choices.some((choice) => choice.label === search.value)) update();
+    }
+
+    for (const widget of form.querySelectorAll<HTMLElement>('[data-pairs]')) {
+      const fieldName = widget.dataset.pairs;
+      const hidden = fieldName ? form.elements.namedItem(fieldName) : null;
+      const rows = widget.querySelector<HTMLElement>('[data-pair-rows]');
+      const template = rows?.querySelector<HTMLElement>('[data-pair-row]');
+      if (!(hidden instanceof HTMLInputElement) || !rows || !template) continue;
+      const add = widget.querySelector<HTMLButtonElement>('[data-add-pair]');
+      const sync = () => {
+        const result: Record<string, string | number> = {};
+        for (const row of rows.querySelectorAll<HTMLElement>('[data-pair-row]')) {
+          const key = row.querySelector<HTMLInputElement>('[data-pair-key]')?.value.trim();
+          const value = row.querySelector<HTMLInputElement>('[data-pair-value]')?.value.trim();
+          if (!key || !value) continue;
+          result[key] = widget.dataset.valueKind === 'number' ? Number(value) : value;
+        }
+        hidden.value = JSON.stringify(result);
+      };
+      add?.addEventListener('click', () => {
+        const clone = template.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll<HTMLInputElement>('input').forEach((input) => { input.value = ''; });
+        rows.appendChild(clone);
+      });
+      widget.addEventListener('input', sync);
+      widget.addEventListener('click', (event) => {
+        const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-remove-pair]');
+        if (!button) return;
+        const all = rows.querySelectorAll<HTMLElement>('[data-pair-row]');
+        if (all.length === 1) {
+          all[0]?.querySelectorAll<HTMLInputElement>('input').forEach((input) => { input.value = ''; });
+        } else button.closest('[data-pair-row]')?.remove();
+        sync();
+      });
+      sync();
+    }
+
+    const anonymous = form.querySelector<HTMLInputElement>('input[name="is_anonymous"]');
+    const donorName = form.querySelector<HTMLInputElement>('input[name="name"]');
+    if (anonymous && donorName) {
+      const updateName = () => {
+        donorName.required = !anonymous.checked;
+        donorName.disabled = anonymous.checked;
+        if (anonymous.checked) donorName.value = '';
+      };
+      anonymous.addEventListener('change', updateName);
+      updateName();
+    }
+
+    for (const picker of form.querySelectorAll<HTMLInputElement>('[data-upload-for]')) {
+      picker.addEventListener('change', async () => {
+        const file = picker.files?.[0];
+        if (!file) return;
+        const keyName = picker.dataset.uploadFor;
+        const keyInput = keyName ? form.elements.namedItem(keyName) : null;
+        const message = keyName ? form.querySelector<HTMLElement>(`[data-upload-message="${keyName}"]`) : null;
+        if (!(keyInput instanceof HTMLInputElement) || !message) return;
+        message.textContent = 'Uploading…';
+        message.className = 'text-xs font-semibold text-slate-600';
+        const body = new FormData();
+        body.set('file', file);
+        body.set('table', picker.dataset.uploadTable ?? 'media');
+        const name = form.elements.namedItem('name');
+        if (name instanceof HTMLInputElement) body.set('context', name.value);
+        try {
+          const response = await fetch('/api/uploads', { method: 'POST', body });
+          const result = await response.json() as { key?: string; message?: string };
+          if (!response.ok || !result.key) throw new Error(result.message || 'Upload failed.');
+          keyInput.value = result.key;
+          message.textContent = `Uploaded: ${result.key}`;
+          message.className = 'text-xs font-semibold text-emerald-brand';
+        } catch (error) {
+          message.textContent = error instanceof Error ? error.message : 'Upload failed.';
+          message.className = 'text-xs font-semibold text-red-700';
+          picker.value = '';
+        }
+      });
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const errorElement = form.querySelector<HTMLElement>('[data-form-error]');
+      if (!errorElement) return;
+      errorElement.classList.add('hidden');
       try {
         const payload: Record<string, unknown> = {};
         const data = new FormData(form);
-        // Collect Editor.js documents first (one per editor field).
-        const editors = form.querySelectorAll('[data-editor-field]');
-        for (const node of editors) {
-          const holderId = (node as HTMLElement).dataset.editorField;
+        for (const widget of form.querySelectorAll<HTMLElement>('[data-pairs]')) {
+          const fieldName = widget.dataset.pairs;
+          if (!fieldName) continue;
+          const entries: Record<string, string | number> = {};
+          for (const row of widget.querySelectorAll<HTMLElement>('[data-pair-row]')) {
+            const key = row.querySelector<HTMLInputElement>('[data-pair-key]')?.value.trim();
+            const value = row.querySelector<HTMLInputElement>('[data-pair-value]')?.value.trim();
+            if (!key || !value) continue;
+            entries[key] = widget.dataset.valueKind === 'number' ? Number(value) : value;
+          }
+          payload[fieldName] = entries;
+        }
+        for (const node of form.querySelectorAll<HTMLElement>('[data-editor-field]')) {
+          const holderId = node.dataset.editorField;
           if (!holderId) continue;
           const fieldName = holderId.replace(/^ed-[^-]+-/, '');
           payload[fieldName] = await window.__speedbdSaveEditor(holderId);
         }
-        data.forEach((v, k) => {
-          if (k in payload) return; // editor value wins
-          payload[k] = v;
+        data.forEach((value, key) => {
+          if (!(key in payload) && !key.endsWith('__file')) payload[key] = value;
         });
-        // Normalize checkboxes (unchecked boxes are absent from FormData).
-        form.querySelectorAll('input[type="checkbox"]').forEach((box) => {
-          const input = box as HTMLInputElement;
+        form.querySelectorAll<HTMLInputElement>('input[type="checkbox"]').forEach((input) => {
           if (input.name) payload[input.name] = input.checked;
         });
-        const apiUrl = form.dataset.apiUrl;
-        if (!apiUrl) throw new Error('missing api url');
-        const res = await fetch(apiUrl, {
+        const response = await fetch(form.dataset.apiUrl ?? '', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        const body = (await res.json()) as { error?: string };
-        if (!res.ok) throw new Error(body.error || 'save failed');
+        const result = await response.json() as { error?: string };
+        if (!response.ok) throw new Error(result.error || 'Save failed.');
         window.location.href = form.dataset.listUrl ?? '/admin';
-      } catch (err) {
-        errEl.textContent = err instanceof Error ? err.message : 'save failed';
-        errEl.classList.remove('hidden');
+      } catch (error) {
+        errorElement.textContent = error instanceof Error ? error.message : 'Save failed.';
+        errorElement.classList.remove('hidden');
       }
     });
   });
