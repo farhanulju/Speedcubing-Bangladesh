@@ -33,7 +33,7 @@ Agents cannot click Cloudflare/WCA/Resend dashboards. A human does this list onc
 
 ## 6. Access (admin gate)
 
-- [x] Zero Trust enabled by human; app `speedbd-admin` created via API 2026-09-16 (destinations `speedbd-web.pages.dev/admin` + `/admin/*`; team `falling-scene-e081.cloudflareaccess.com`, renameable in Zero Trust settings).
+- [x] Zero Trust enabled by human; app `speedbd-admin` created via API 2026-09-16 (team renamed `falling-scene-e081` → `scbd.cloudflareaccess.com` by human; verifier + secrets updated to match). Destinations MUST cover pages AND APIs: `/admin`, `/admin/*`, `/api/admin`, `/api/admin/*` (API pair added after the first real save 401d — page loads prove login, but `fetch()` calls bypassed Access without them).
 - [x] `ACCESS_TEAM_DOMAIN` + `ACCESS_AUD` saved to gitignored root `.env`.
 - [x] Policy `org-admins` (Allow) created via API 2026-09-16, now 8 rules (6 originals + dotted Gmail variant + munemshahriar007@gmail.com). Lesson: Access matches email strings EXACTLY — Gmail ignores dots but Access does not. No Cloudflare account invites needed: email-OTP policies admit any listed Gmail; the 50 free seats count monthly active users automatically.
 - [ ] Add the two `ACCESS_*` values to Pages env (step 8) + redeploy.

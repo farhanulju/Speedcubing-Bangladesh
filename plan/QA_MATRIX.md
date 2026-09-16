@@ -41,5 +41,5 @@ print-CSS checks — all green. Visual review of the captures is pending.
 - Real-secret Turnstile accept/reject, live Resend delivery, live WCA OAuth
   login, live Access gate, daily cron + outbox flush on schedule.
 - DNS cutover, secrets rotation, KV warm, rollback rehearsal (<15 min).
-- Screenshot visual review across 360/768/1280px per route.
+- Full screenshot review across 360/768/1280px per route. A targeted production visual pass at 360px and desktop, including an authorized unpublished CMS draft-save attempt, was completed 2026-09-16; the save was rejected with `admin login required (Cloudflare Access)`. Findings are in `plan/PRODUCTION_UI_QA_2026-09-16.md`.
 - D1-write-fail at the driver level (covered by validation gates locally).

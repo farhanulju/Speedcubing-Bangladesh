@@ -2,6 +2,8 @@
 
 Newest first. One line per meaningful change.
 
+- 2026-09-16 — Team rename fix: human renamed Zero Trust team to `scbd.cloudflareaccess.com`, which changed the JWT issuer and broke API verification (403 `admin token rejected`). Verified new-domain JWKS serves proper JWK keys; updated `ACCESS_TEAM_DOMAIN` in root `.env` + Pages secret. Needs a redeploy to take effect, then Save retry (re-login if still rejected).
+- 2026-09-16 — Production UI QA in signed-in Chrome (desktop + 360px): documented past events shown as upcoming, registration dead-end, mobile overflow, unseeded public pages, Worlds singleton setup gap, and Stitch parity context in `plan/PRODUCTION_UI_QA_2026-09-16.md`; authorized unpublished CMS draft-save smoke test was rejected with `admin login required (Cloudflare Access)`, no row created; screenshots captured inline in the task.
 - 2026-09-15 — WP-50 slice: masked wallet Reveal on Worlds + comp-detail (closes P4); punchlist code-sweep clean (no fabricated citations/Axx tags, lockup canonical, footer links, claimed-log private); public JS 0KB, admin Editor.js 311KB raw/87.5KB gzip (WP-03 public budget holds, admin-only).
 - 2026-09-15 — WP-03 budget guard shipped: `scripts/check-budget.mjs` (`npm run check:budget`) pins @editorjs/* exact, confines Editor.js to EditorField, bans `client:` hydration in public pages, budgets chunks at 200KB gzip; green on current build.
 - 2026-09-15 — WP-51 runbook drafted: `plan/SEEDING_RUNBOOK.md` (owner matrix, placeholder inventory, purge-audit SQL, photo-consent gate, donor/Worlds checklist, sign-off); fixed stale wallet hint in `admin.ts`; `check`+`check:budget` green. Human entry waits on WP-00.

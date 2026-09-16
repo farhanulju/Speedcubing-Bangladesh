@@ -7,6 +7,7 @@ Updated: 2026-09-16 (LIVE: Pages deployed, sync running in prod, both logins tes
 - Pages project `speedbd-web` (Git-connected, root `web`) deployed green; D1 `speedbd` (24 tables), KV `wca-cache`, R2 `speedbd-media`, Turnstile widget, Access app `speedbd-admin` (path-scoped `/admin*`, 8-email Allow policy) all live. Secrets wired (5 encrypted + 2 plain vars). Full trail: `plan/OPS_HANDOFF.md`.
 - Sync worker `speedbd-sync` live with THREE crons: ranks+lists 02:00, details+champions 02:30 (split because free-plan workers get ~50 fetch subrequests/invocation — proven; detail loop sequential against WCA 429s), outbox flush every 5 min (skips cleanly, Resend skipped). First runs filled prod: 28 comps, 17 NR lines, 31 snapshots, 9 champions.
 - Both logins tested by human 2026-09-16: Access gate (incl. Gmail dot-variant lesson) + WCA OAuth (`public email` scope).
+- Production UI review completed 2026-09-16 in the signed-in Chrome profile; an authorized unpublished CMS draft-save attempt failed with `admin login required (Cloudflare Access)`, and no live row was created. Findings and screenshot index: `plan/PRODUCTION_UI_QA_2026-09-16.md` (home date-state/registration dead-end, mobile overflow, unseeded public copy, donation singleton setup gap, admin write authorization failure).
 - Deferred by human decision: Resend onboarding, secret rotation (WCA secret + API token seen in chat), custom domain, real content entry. API token expires 2026-09-23.
 
 ## Implemented (M0–M4 code + full docs)
@@ -31,7 +32,7 @@ Updated: 2026-09-16 (LIVE: Pages deployed, sync running in prod, both logins tes
 ## Current focus
 
 - HUMAN: real content entry per `plan/SEEDING_RUNBOOK.md` (placeholder purge, photo-consent gate, Worlds copy, real wallets, social handles beyond Facebook) + custom-domain cutover (WP-53) + Resend onboarding when wanted.
-- AGENTS next: remaining Stitch gaps (A1 tasks view, hero stats/photos, Hall of Fame, A15 sitemap/og:image/beacon post-domain, A21 archive view), prod QA pass on live data, WP-53 cutover checklist.
+- AGENTS next: remediate the P1/P2 findings in `plan/PRODUCTION_UI_QA_2026-09-16.md`; remaining Stitch gaps (A1 tasks view, hero stats/photos, Hall of Fame, A15 sitemap/og:image/beacon post-domain, A21 archive view); WP-53 cutover checklist.
 
 ## Gaps / unknowns
 
