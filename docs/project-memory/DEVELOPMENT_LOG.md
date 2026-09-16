@@ -2,6 +2,8 @@
 
 Newest first. One line per meaningful change.
 
+- 2026-09-16 — Fixed live `/records` 500: worker-shaped records lacked `event_name` (fixtures had it, hiding the drift) and the new sort called `.localeCompare` on undefined. Backfilled prod KV (17 names), worker now sets `event_name` (+ test-sync assert), pages fall back to `eventName()` so no shape gap can 500 again. Worker redeployed. Also fenced `/api/uploads` into the Access app (same 401 class as saves). `/records` verified 200 live.
+
 - 2026-09-16 — Review pass on QA-followup branch + full green run: fixed newsletter toggle (`{once:true}` killed re-clicks), fixed smoke-m2 deck assert for conditional R2 rendering (now round-trips a real local deck file), applied migration 0010 to prod D1 (roles 6+1 legacy, tiers 4). e2e 11/11 incl. 360px overflow asserts. Found prod `person/testid` published test row (owner-created) — flagged, not deleted.
 
 - 2026-09-16 — Implemented local fixes for reported production UI findings: human event names and city/event/year/status filters; cached champion archive/results links; task-based admin IDs, date controls, dynamic roles/tiers, Access-gated R2 image uploads, repeatable links/fees, anonymous donors, previewable Editor.js; quick actions/status counts; newsletter Turnstile on explicit reveal; visitor-friendly empty states. Added migration 0010. `npm run check`, `npm run build`, `db-check`, `test:sync`, `test:auth`, and `test:access` pass. Not deployed or production-retested; real content/privacy review, per-user archived results, and full Stitch/mobile verification remain.

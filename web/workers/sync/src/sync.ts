@@ -19,6 +19,30 @@ export const CANONICAL_EVENTS = [
   'clock', 'minx', 'pyram', 'skewb', 'sq1',
 ];
 
+// Display names for shaped records. Mirrors web/src/lib/wca.ts WCA_EVENT_NAMES
+// (duplicated across the deploy boundary — the worker cannot import web code).
+// Records MUST carry event_name: pages sort on it, and a missing name 500d
+// /records in prod on 2026-09-16 while fixtures (which had it) stayed green.
+export const WCA_EVENT_NAMES: Record<string, string> = {
+  '222': '2×2×2 Cube',
+  '333': '3×3×3 Cube',
+  '444': '4×4×4 Cube',
+  '555': '5×5×5 Cube',
+  '666': '6×6×6 Cube',
+  '777': '7×7×7 Cube',
+  '333bf': '3×3×3 Blindfolded',
+  '333fm': '3×3×3 Fewest Moves',
+  '333oh': '3×3×3 One-Handed',
+  clock: 'Clock',
+  minx: 'Megaminx',
+  pyram: 'Pyraminx',
+  skewb: 'Skewb',
+  sq1: 'Square-1',
+  '444bf': '4×4×4 Blindfolded',
+  '555bf': '5×5×5 Blindfolded',
+  '333mbf': '3×3×3 Multi-Blind',
+};
+
 export const WCIF_FORMATS: Record<string, string> = {
   '1': 'Best of 1',
   '2': 'Best of 2',
@@ -283,6 +307,7 @@ export interface NrEntry {
 
 export interface EventRecord {
   event: string;
+  event_name: string;
   single: NrEntry | null;
   average: NrEntry | null;
 }

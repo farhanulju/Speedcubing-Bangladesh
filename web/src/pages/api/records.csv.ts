@@ -1,6 +1,6 @@
 import { getEnv } from '../../lib/bindings';
 import { toError } from '../../lib/admin';
-import { formatRecordValue, getRecords } from '../../lib/wca';
+import { eventName, formatRecordValue, getRecords } from '../../lib/wca';
 
 export const prerender = false;
 
@@ -20,7 +20,7 @@ export async function GET({ locals }: { locals: App.Locals }): Promise<Response>
       lines.push(
         [
           cell(r.event),
-          cell(r.event_name),
+          cell(r.event_name || eventName(r.event)),
           cell(r.single ? (formatRecordValue(r.event, 'single', r.single.value_centis) ?? '') : null),
           cell(r.average ? (formatRecordValue(r.event, 'average', r.average.value_centis) ?? '') : null),
           cell(r.single?.holder ?? null),
