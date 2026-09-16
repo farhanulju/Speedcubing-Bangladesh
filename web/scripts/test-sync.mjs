@@ -112,6 +112,7 @@ await worker.scheduled({ cron: '30 20 * * *' }, env, {});
 // --- assertions on shaped output ---
 await check('records shaped from rank files', () => {
   const rec = JSON.parse(kvStore.get('wca:records:BD'));
+  assert(rec.records.length > 0 && rec.records.every((r) => typeof r.event_name === 'string' && r.event_name), 'records missing event_name (pages sort on it — see 2026-09-16 /records 500)');
   const r333 = rec.records.find((r) => r.event === '333');
   assert(r333.single.value_centis === 582 && r333.single.wca_id === '2026FIXT01', 'bad single');
   assert(r333.average.value_centis === 694, 'bad average');

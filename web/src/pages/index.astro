@@ -4,7 +4,7 @@ import NewsletterForm from '../components/NewsletterForm.astro';
 import { en } from '../i18n/en';
 import { getDonationPage, getNews, getPinnedAnnouncements, getSponsors } from '../lib/content';
 import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
-import { formatRecordValue, getCompetitions, getRecords, venueDisplay } from '../lib/wca';
+import { eventName, formatRecordValue, getCompetitions, getRecords, venueDisplay } from '../lib/wca';
 
 // Server-rendered with edge caching (Cloudflare has no Next-style ISR:
 // s-maxage below is the equivalent). Never prerendered — data comes from
@@ -159,7 +159,7 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
           {spotlight.map((r) => (
             <a href={`/records?event=${encodeURIComponent(r.event)}`} class="card-brutal block p-5 hover:-translate-y-0.5">
               <p class="flex flex-wrap items-center gap-2 font-extrabold">
-                {r.event_name}
+                {r.event_name || eventName(r.event)}
                 <span class="data-font rounded border border-ink bg-cube-yellow px-1.5 py-0.5 text-[10px] font-bold">{r.event}</span>
               </p>
               {r.single && (

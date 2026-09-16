@@ -16,6 +16,7 @@ import {
   shapeEventDetail,
   shapeSchedule,
   snapshotDiff,
+  WCA_EVENT_NAMES,
   type CompDetail,
   type CompSummary,
   type DbStmt,
@@ -141,6 +142,7 @@ async function runRankStage(env: SyncEnv): Promise<void> {
 
   const records: EventRecord[] = events.map((event) => ({
     event,
+    event_name: WCA_EVENT_NAMES[event] ?? event,
     single: nrHolder(rankFiles.get(`single:${event}`) ?? [], persons),
     average: nrHolder(rankFiles.get(`average:${event}`) ?? [], persons),
   }));
