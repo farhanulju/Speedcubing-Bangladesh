@@ -14,6 +14,8 @@ const all = recs.data?.records ?? [];
 // Server-side filter (no client JS): ?q= matches event code, name, or holder.
 const q = (Astro.url.searchParams.get('q') ?? '').trim().toLowerCase();
 const eventFilter = Astro.url.searchParams.get('event') ?? '';
+// Fallback: worker-shaped records always carry event_name now, but a stale
+// cache row without one must degrade to the code — never throw (2026-09-16).
 const displayName = (r: (typeof all)[number]): string => r.event_name || eventName(r.event);
 const events = [...all].sort((a, b) => displayName(a).localeCompare(displayName(b)));
 const records = all.filter((r) => {
