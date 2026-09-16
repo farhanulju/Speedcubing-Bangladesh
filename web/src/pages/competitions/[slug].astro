@@ -5,7 +5,7 @@ import { countRegistrations, getCompOverride } from '../../lib/content';
 import { getCompRoster, getMyRegistrations } from '../../lib/registrations';
 import { optionalUser } from '../../lib/session';
 import { EDGE_CACHE_VALUE, tryLoad } from '../../lib/page';
-import { getCompetition, venueDisplay } from '../../lib/wca';
+import { eventName, getCompetition, venueDisplay } from '../../lib/wca';
 
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
@@ -108,7 +108,7 @@ function maskWallet(w: string): string {
 
     <div class="card-brutal mt-8 p-6">
       <h2 class="text-2xl font-extrabold">Sanctioned events</h2>
-      <p class="mt-2 text-sm">{comp.events.join(' • ') || 'See the WCA page for the event list.'}</p>
+      <p class="mt-2 text-sm">{comp.events.map((event) => `${eventName(event)} (${event})`).join(' • ') || 'See the WCA page for the event list.'}</p>
       {
         comp.event_detail.length > 0 && (
           <div class="mt-3 overflow-x-auto">
@@ -125,7 +125,7 @@ function maskWallet(w: string): string {
               <tbody>
                 {comp.event_detail.map((e) => (
                   <tr class="border-b border-slate-200 last:border-0">
-                    <td class="px-3 py-2 font-bold">{e.event}</td>
+                    <td class="px-3 py-2 font-bold">{eventName(e.event)} <span class="data-font text-xs font-normal text-slate-500">({e.event})</span></td>
                     <td class="data-font px-3 py-2">{e.rounds}</td>
                     <td class="px-3 py-2">{e.format}</td>
                     <td class="data-font px-3 py-2">{e.time_limit_centis !== null ? `${(e.time_limit_centis / 100).toFixed(2)}s` : '—'}</td>
@@ -244,7 +244,7 @@ function maskWallet(w: string): string {
               <div class="mt-2 flex flex-wrap gap-2">
                 {offeredEvents.map((e) => (
                   <label class="data-font flex items-center gap-1 rounded-lg border-2 border-ink bg-white px-3 py-1 text-sm font-bold">
-                    <input name="events" value={e} type="checkbox" class="h-4 w-4 accent-emerald-brand" /> {e}
+                    <input name="events" value={e} type="checkbox" class="h-4 w-4 accent-emerald-brand" /> {eventName(e)} <span class="data-font text-xs font-normal text-slate-500">({e})</span>
                   </label>
                 ))}
               </div>

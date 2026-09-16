@@ -26,8 +26,8 @@ Build only the ticked MVP rows in `docs/product/FEATURE_LIST.md` (build status p
                         records.csv, admin CRUD + queue + inbox endpoints, auth
   workers/sync/       — scheduled worker: ranks stage 02:00 + details stage 02:30
                         (subrequest budget split) + 5-min outbox flush
-  migrations/         — 0001 content … 0009 worlds-wallets (BDT integers, consent
-                        flags, updated_by/at, audit log)
+  migrations/         — 0001 content … 0010 admin choices/anonymity (BDT
+                        integers, consent flags, updated_by/at, audit log)
   scripts/            — db-check/reset/seed, kv-seed (real shapers), test-sync/auth/access,
                         smoke-m2/m3, drills-wp52, e2e, check-budget, shots-review
 ```

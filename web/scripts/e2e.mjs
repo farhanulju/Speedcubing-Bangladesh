@@ -41,7 +41,6 @@ await check('editor mounts with toolbar', async () => {
 await check('admin creates FAQ via editor', async () => {
   await admin.goto(`${base}/admin/faq/new`);
   await admin.waitForSelector('.codex-editor', { timeout: 15000 });
-  await admin.fill('input[name="id"]', 'e2e-faq-1');
   await admin.fill('input[name="q"]', 'E2E: can I compete slowly?');
   await admin.click('.codex-editor__redactor .ce-paragraph');
   await admin.keyboard.type('Yes — absolutely. This answer was typed into Editor.js.');
@@ -51,6 +50,24 @@ await check('admin creates FAQ via editor', async () => {
   assert(list.includes('E2E: can I compete slowly?'), 'created row not listed');
   const pub = await (await fetch(`${base}/faq`)).text();
   assert(!pub.includes('E2E: can I compete slowly?'), 'draft leaked to public');
+});
+
+await check('admin fields use managed roles, file uploads, and anonymous donor option', async () => {
+  await admin.goto(`${base}/admin/person/new`);
+  assert(await admin.locator('select[name="role"] option').count() > 1, 'role options missing');
+  assert(await admin.locator('input[data-upload-for="photo_r2"]').count() === 1, 'photo picker missing');
+  await admin.goto(`${base}/admin/donor/new`);
+  const anonymous = admin.locator('input[name="is_anonymous"]');
+  await anonymous.check();
+  assert(await admin.locator('input[name="name"]').isDisabled(), 'name should be optional while anonymous is selected');
+});
+
+await check('newsletter Turnstile stays unmounted until signup intent', async () => {
+  await admin.goto(`${base}/`);
+  assert(await admin.locator('[data-optin-form]').isHidden(), 'newsletter form should start hidden');
+  assert(await admin.locator('script[src*="challenges.cloudflare.com/turnstile"]').count() === 0, 'Turnstile script should not load on initial render');
+  await admin.click('[data-optin-reveal]');
+  assert(await admin.locator('[data-optin-form]').isVisible(), 'signup form did not open');
 });
 
 // --- 3. Payment inspection click-through (fresh pending tx) ---
@@ -112,7 +129,7 @@ await check('print slip hides chrome', async () => {
 });
 
 // --- 6. Mobile screenshots (390px) ---
-const mobile = await browser.newContext({ viewport: { width: 390, height: 844 } });
+const mobile = await browser.newContext({ viewport: { width: 360, height: 800 } });
 const m = await mobile.newPage();
 for (const [name, path] of [
   ['mobile-home', '/'],
@@ -121,11 +138,26 @@ for (const [name, path] of [
   ['mobile-records', '/records'],
   ['mobile-faq', '/faq'],
   ['mobile-contact', '/contact'],
+  ['mobile-lost-found', '/lost-found'],
 ]) {
   await m.goto(`${base}${path}`);
   await m.screenshot({ path: join(shots, `${name}.png`) });
+  const widths = await m.evaluate(() => ({ viewport: document.documentElement.clientWidth, page: document.documentElement.scrollWidth }));
+  assert(widths.page <= widths.viewport, `${path} overflows horizontally: ${widths.page}px > ${widths.viewport}px`);
   console.log(`SHOT ${name}`);
 }
+
+await check('dashboard fits the 360px viewport', async () => {
+  const mobileUserCtx = await browser.newContext({
+    viewport: { width: 360, height: 800 },
+    extraHTTPHeaders: { 'x-dev-user': 'sample-competitor' },
+  });
+  const mobileDashboard = await mobileUserCtx.newPage();
+  await mobileDashboard.goto(`${base}/dashboard`);
+  const widths = await mobileDashboard.evaluate(() => ({ viewport: document.documentElement.clientWidth, page: document.documentElement.scrollWidth }));
+  assert(widths.page <= widths.viewport, `dashboard overflows horizontally: ${widths.page}px > ${widths.viewport}px`);
+  await mobileUserCtx.close();
+});
 
 // --- 7. Dashboard via the same session seam ---
 const dash = await userCtx.newPage();

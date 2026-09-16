@@ -1,118 +1,155 @@
 ---
 import Base from '../layouts/Base.astro';
+import { getCompetitionChampions } from '../lib/content';
 import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
-import { getCompetitions, venueDisplay } from '../lib/wca';
+import { eventName, formatRecordValue, getCachedPersonName, getCompetitions, venueDisplay } from '../lib/wca';
 
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
 
 const city = Astro.url.searchParams.get('city') ?? '';
+const event = Astro.url.searchParams.get('event') ?? '';
+const year = Astro.url.searchParams.get('year') ?? '';
+const status = Astro.url.searchParams.get('status') ?? 'all';
 const comps = await tryLoad(Astro.locals, (env) => getCompetitions(env), { data: null, asOfExportDate: null, stale: true });
 const items = comps.data?.items ?? [];
-const cities = [...new Set(items.map((c) => c.city))].filter(Boolean).sort();
-const shown = city ? items.filter((c) => c.city === city) : items;
-// Date-derived archive split (same honesty rule as card pills).
+const cities = [...new Set(items.map((c) => c.city))].filter(Boolean).sort((a, b) => a.localeCompare(b));
+const events = [...new Set(items.flatMap((c) => c.events))].sort((a, b) => eventName(a).localeCompare(eventName(b)));
+const years = [...new Set(items.map((c) => c.start_date.slice(0, 4)).filter((y) => /^\d{4}$/.test(y)))].sort().reverse();
 const todayStamp = new Date().toISOString().slice(0, 10);
+const shown = items.filter((c) =>
+  (!city || c.city === city) &&
+  (!event || c.events.includes(event)) &&
+  (!year || c.start_date.startsWith(year)) &&
+  (status === 'all' || (status === 'upcoming' ? c.end_date >= todayStamp : c.end_date < todayStamp)),
+);
 const upcoming = shown.filter((c) => c.end_date >= todayStamp);
 const past = shown.filter((c) => c.end_date < todayStamp);
+const champions = await tryLoad(Astro.locals, (env) => getCompetitionChampions(env), []);
+const championIds = new Set(champions.map((champion) => champion.comp_wca_id));
+const championNames = new Map<string, string>();
+const personNames = await Promise.all(
+  past.filter((comp) => championIds.has(comp.wca_id)).map(async (comp) => {
+    const champion = champions.find((candidate) => candidate.comp_wca_id === comp.wca_id);
+    return champion?.winner_wca_id
+      ? [comp.wca_id, await tryLoad(Astro.locals, (env) => getCachedPersonName(env, champion.winner_wca_id!), null)] as const
+      : null;
+  }),
+);
+for (const item of personNames) if (item?.[1]) championNames.set(item[0], item[1]);
+const championByCompetition = new Map(champions.map((champion) => [champion.comp_wca_id, champion]));
 ---
 
 <Base title="Competitions">
-  <section class="container-x py-12">
+  <section class="container-x min-w-0 py-12">
     <h1 class="text-4xl font-extrabold tracking-tight">Competitions in Bangladesh</h1>
     <p class="mt-2 text-slate-600">
       Official WCA-sanctioned events. Results verify on the WCA database.
       {comps.asOfExportDate && <span class="data-font"> Cache: {comps.asOfExportDate}.</span>}
     </p>
-    {
-      cities.length > 0 && (
-        <div class="mt-6 flex flex-wrap gap-2">
-          <a href="/competitions" class={`btn-pill border-2 border-ink px-4 py-1 text-sm ${!city ? 'bg-ink text-white' : 'bg-white'}`}>
-            All Bangladesh
-          </a>
-          {cities.map((c) => (
-            <a
-              href={`/competitions?city=${encodeURIComponent(c)}`}
-              class={`btn-pill border-2 border-ink px-4 py-1 text-sm ${city === c ? 'bg-ink text-white' : 'bg-white'}`}
-            >
-              {c}
-            </a>
-          ))}
+    {items.length > 0 && (
+      <form method="get" action="/competitions" class="card-brutal mt-6 grid min-w-0 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <label class="flex min-w-0 flex-col gap-1 text-sm font-bold">
+          City
+          <select name="city" class="w-full min-w-0 rounded-lg border-2 border-ink bg-white px-3 py-2 font-normal">
+            <option value="">All Bangladesh</option>
+            {cities.map((value) => <option value={value} selected={city === value}>{value}</option>)}
+          </select>
+        </label>
+        <label class="flex min-w-0 flex-col gap-1 text-sm font-bold">
+          Event
+          <select name="event" class="w-full min-w-0 rounded-lg border-2 border-ink bg-white px-3 py-2 font-normal">
+            <option value="">All events</option>
+            {events.map((value) => <option value={value} selected={event === value}>{eventName(value)} ({value})</option>)}
+          </select>
+        </label>
+        <label class="flex min-w-0 flex-col gap-1 text-sm font-bold">
+          Year
+          <select name="year" class="w-full min-w-0 rounded-lg border-2 border-ink bg-white px-3 py-2 font-normal">
+            <option value="">Any year</option>
+            {years.map((value) => <option value={value} selected={year === value}>{value}</option>)}
+          </select>
+        </label>
+        <label class="flex min-w-0 flex-col gap-1 text-sm font-bold">
+          When
+          <select name="status" class="w-full min-w-0 rounded-lg border-2 border-ink bg-white px-3 py-2 font-normal">
+            <option value="all" selected={status === 'all'}>Upcoming and past</option>
+            <option value="upcoming" selected={status === 'upcoming'}>Upcoming</option>
+            <option value="past" selected={status === 'past'}>Past</option>
+          </select>
+        </label>
+        <div class="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-4">
+          <button type="submit" class="btn-pill border-2 border-ink bg-emerald-brand px-5 py-2 text-sm font-bold text-white shadow-brutal">Apply filters</button>
+          {(city || event || year || status !== 'all') && <a href="/competitions" class="text-sm font-bold text-emerald-brand underline">Clear filters</a>}
+          <span class="data-font text-xs text-slate-500">{shown.length} event{shown.length === 1 ? '' : 's'}</span>
         </div>
-      )
-    }
-    {
-      shown.length === 0 ? (
-        <p class="mt-6 text-slate-600">
-          No competitions in the cache yet.{' '}
-          <a class="font-bold text-emerald-brand underline" href="https://www.worldcubeassociation.org/competitions?region=Bangladesh" target="_blank" rel="noopener">
-            Full WCA calendar
-          </a>
-        </p>
-      ) : (
-        <>
-          <h2 class="mt-8 text-2xl font-extrabold tracking-tight">Upcoming</h2>
-          {upcoming.length === 0 ? (
-            <p class="mt-3 text-slate-600">Nothing upcoming in the cache right now — see past events below.</p>
-          ) : (
-            <div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {upcoming.map((c) => (
-                <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block min-w-0 p-5 hover:-translate-y-0.5">
-                  <p class="data-font flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wider">
-                    <span class="text-speed-orange">{c.city}</span>
-                    <span class="rounded-full border border-ink bg-emerald-brand px-2 py-0.5 text-white">Upcoming</span>
-                  </p>
-                  <p class="mt-1 text-lg font-extrabold">{c.name}</p>
-                  <p class="data-font mt-1 text-sm text-slate-600">
-                    {c.start_date} → {c.end_date}
-                  </p>
-                  <p class="mt-1 break-words text-sm text-slate-600">
-                    {(() => {
-                      const v = venueDisplay(c.venue);
-                      return v.url ? (
-                        <a class="underline" href={v.url} target="_blank" rel="noopener">{v.name}</a>
-                      ) : (
-                        v.name
-                      );
-                    })()}
-                  </p>
-                  <p class="mt-2 text-xs text-slate-500">{c.events.join(' • ')}</p>
-                </a>
-              ))}
-            </div>
-          )}
-          {past.length > 0 && (
-            <>
-              <h2 class="mt-10 text-2xl font-extrabold tracking-tight">Past</h2>
-              <div class="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {past.map((c) => (
-                  <a href={`/competitions/${c.wca_id}`} class="card-brutal block min-w-0 p-5 hover:-translate-y-0.5">
+      </form>
+    )}
+    {items.length === 0 ? (
+      <p class="mt-6 text-slate-600">
+        No competitions in the cache yet.{' '}
+        <a class="font-bold text-emerald-brand underline" href="https://www.worldcubeassociation.org/competitions?region=Bangladesh" target="_blank" rel="noopener">Full WCA calendar</a>
+      </p>
+    ) : shown.length === 0 ? (
+      <p class="card-brutal mt-6 p-5 text-slate-600">No competitions match these filters. <a class="font-bold text-emerald-brand underline" href="/competitions">Clear filters</a> or check the <a class="font-bold text-emerald-brand underline" href="https://www.worldcubeassociation.org/competitions?region=Bangladesh" target="_blank" rel="noopener">WCA calendar</a>.</p>
+    ) : (
+      <>
+        {(status === 'all' || status === 'upcoming') && (
+          <section aria-labelledby="upcoming-heading" class="mt-8">
+            <h2 id="upcoming-heading" class="text-2xl font-extrabold tracking-tight">Upcoming</h2>
+            {upcoming.length === 0 ? <p class="mt-3 text-slate-600">Nothing upcoming matches these filters.</p> : (
+              <div class="mt-4 grid min-w-0 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {upcoming.map((c) => (
+                  <article class="card-brutal shadow-brutal min-w-0 p-5 hover:-translate-y-0.5">
                     <p class="data-font flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wider">
-                      <span class="text-slate-500">{c.city}</span>
-                      <span class="rounded-full border border-ink bg-white px-2 py-0.5">Past</span>
+                      <span class="text-speed-orange">{c.city}</span><span class="rounded-full border border-ink bg-emerald-brand px-2 py-0.5 text-white">Upcoming</span>
                     </p>
-                    <p class="mt-1 text-lg font-extrabold">{c.name}</p>
-                    <p class="data-font mt-1 text-sm text-slate-600">
-                      {c.start_date} → {c.end_date}
-                    </p>
-                    <p class="mt-1 break-words text-sm text-slate-600">
-                      {(() => {
-                        const v = venueDisplay(c.venue);
-                        return v.url ? (
-                          <a class="underline" href={v.url} target="_blank" rel="noopener">{v.name}</a>
-                        ) : (
-                          v.name
-                        );
-                      })()}
-                    </p>
-                    <p class="mt-2 text-xs text-slate-500">{c.events.join(' • ')}</p>
-                  </a>
+                    <h3 class="mt-1 text-lg font-extrabold"><a class="underline decoration-transparent hover:decoration-current" href={`/competitions/${c.wca_id}`}>{c.name}</a></h3>
+                    <p class="data-font mt-1 text-sm text-slate-600">{c.start_date} → {c.end_date}</p>
+                    <p class="mt-1 break-words text-sm text-slate-600">{(() => { const v = venueDisplay(c.venue); return v.url ? <a class="underline" href={v.url} target="_blank" rel="noopener">{v.name}</a> : v.name; })()}</p>
+                    <p class="mt-2 text-xs text-slate-600">{c.events.map((e) => `${eventName(e)} (${e})`).join(' · ')}</p>
+                  </article>
                 ))}
               </div>
-            </>
-          )}
-        </>
-      )
-    }
+            )}
+          </section>
+        )}
+        {(status === 'all' || status === 'past') && (
+          <section aria-labelledby="past-heading" class="mt-10">
+            <h2 id="past-heading" class="text-2xl font-extrabold tracking-tight">Past competitions</h2>
+            {past.length === 0 ? <p class="mt-3 text-slate-600">No past competitions match these filters yet.</p> : (
+              <div class="mt-4 grid min-w-0 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {past.map((c) => {
+                  const champ = championByCompetition.get(c.wca_id);
+                  const championName = championNames.get(c.wca_id);
+                  return (
+                    <article class="card-brutal min-w-0 p-5 hover:-translate-y-0.5">
+                      <p class="data-font flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-wider">
+                        <span class="text-slate-500">{c.city}</span><span class="rounded-full border border-ink bg-white px-2 py-0.5">Past</span>
+                      </p>
+                      <h3 class="mt-1 text-lg font-extrabold"><a class="underline decoration-transparent hover:decoration-current" href={`/competitions/${c.wca_id}`}>{c.name}</a></h3>
+                      <p class="data-font mt-1 text-sm text-slate-600">{c.start_date} → {c.end_date}</p>
+                      <p class="mt-2 text-xs text-slate-600">{c.events.map((e) => `${eventName(e)} (${e})`).join(' · ')}</p>
+                      {champ && (
+                        <div class="mt-3 rounded-lg border border-ink bg-cube-yellow/30 p-3 text-sm">
+                          <p class="data-font text-xs font-bold uppercase tracking-wider">3×3 champion</p>
+                          {champ.winner_wca_id ? (
+                            <a class="mt-1 inline-block font-bold text-emerald-brand underline" href={`https://www.worldcubeassociation.org/persons/${champ.winner_wca_id}`} target="_blank" rel="noopener">
+                              {championName ?? champ.winner_wca_id}
+                            </a>
+                          ) : <p class="mt-1 text-slate-600">Champion unavailable in the current WCA cache.</p>}
+                          {champ.winning_value_centis !== null && <p class="data-font text-xs text-slate-600">3×3 single: {formatRecordValue('333', 'single', champ.winning_value_centis)}</p>}
+                        </div>
+                      )}
+                      <a class="mt-3 inline-block text-sm font-bold text-emerald-brand underline" href={c.url} target="_blank" rel="noopener">WCA results and podiums ↗</a>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+      </>
+    )}
   </section>
 </Base>

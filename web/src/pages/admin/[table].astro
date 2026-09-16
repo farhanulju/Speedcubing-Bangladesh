@@ -25,16 +25,15 @@ try {
         <a href="/admin" class="text-sm font-semibold text-emerald-brand underline">← Admin</a>
         <h1 class="mt-1 text-3xl font-extrabold tracking-tight">{def.label}</h1>
       </div>
-      {
-        !def.singleton && (
-          <a
-            href={`/admin/${def.table}/new`}
-            class="btn-pill border-2 border-ink bg-emerald-brand px-5 py-2 text-sm text-white shadow-brutal"
-          >
+      <div class="flex flex-wrap justify-end gap-2">
+        {def.table === 'person' && <a href="/admin/person_role" class="btn-pill border-2 border-ink bg-white px-4 py-2 text-sm">Manage roles</a>}
+        {def.table === 'sponsor' && <a href="/admin/sponsor_tier" class="btn-pill border-2 border-ink bg-white px-4 py-2 text-sm">Manage tiers</a>}
+        {!def.singleton && (
+          <a href={`/admin/${def.table}/new`} class="btn-pill border-2 border-ink bg-emerald-brand px-5 py-2 text-sm text-white shadow-brutal">
             + New
           </a>
-        )
-      }
+        )}
+      </div>
     </div>
 
     {

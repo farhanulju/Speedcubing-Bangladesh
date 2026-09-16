@@ -1,8 +1,9 @@
 ---
 import AdminShell from '../../../layouts/AdminShell.astro';
 import AdminForm from '../../../components/AdminForm.astro';
-import { getTable, getRow } from '../../../lib/admin';
+import { getTable, getRow, listRows } from '../../../lib/admin';
 import { getEnv } from '../../../lib/bindings';
+import { getCompetitions } from '../../../lib/wca';
 
 export const prerender = false;
 
@@ -12,12 +13,31 @@ if (!def || !id) return Astro.redirect('/admin');
 
 let row: Record<string, unknown> | null = null;
 let dbError: string | null = null;
+const optionsByField: Record<string, { value: string; label: string }[]> = {};
 try {
+  const env = getEnv(Astro.locals);
   if (def.singleton) {
-    row = (await getRow(getEnv(Astro.locals), def, '1')) ?? null;
+    row = (await getRow(env, def, '1')) ?? null;
     if (!row) row = { id: '1', target_bdt: '', raised_manual_bdt: '', worlds_host_city: 'Sweden' };
   } else if (id !== 'new') {
-    row = await getRow(getEnv(Astro.locals), def, id);
+    row = await getRow(env, def, id);
+  }
+  for (const field of def.fields) {
+    if (field.optionsFrom) {
+      const choices = await listRows(env, getTable(field.optionsFrom)!);
+      optionsByField[field.name] = choices
+        .map((choice) => ({ value: String(choice.label ?? ''), label: String(choice.label ?? '') }))
+        .filter((choice) => choice.value);
+    }
+    if (field.kind === 'wca-competition') {
+      const cached = await getCompetitions(env);
+      optionsByField[field.name] = (cached.data?.items ?? [])
+        .map((comp) => ({
+          value: comp.wca_id,
+          label: `${comp.name} — ${comp.start_date}${comp.city ? ` · ${comp.city}` : ''} (${comp.wca_id})`,
+        }))
+        .sort((a, b) => a.label.localeCompare(b.label));
+    }
   }
 } catch (err) {
   dbError = err instanceof Error ? err.message : 'database unavailable';
@@ -42,7 +62,7 @@ try {
         </div>
       ) : (
         <div class="card-brutal mt-6 p-6">
-          <AdminForm def={def} row={row} apiUrl={`/api/admin/${def.table}`} listUrl={`/admin/${def.table}`} />
+          <AdminForm def={def} row={row} apiUrl={`/api/admin/${def.table}`} listUrl={`/admin/${def.table}`} optionsByField={optionsByField} />
         </div>
       )
     }

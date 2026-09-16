@@ -1,6 +1,7 @@
 // Upload validation (WP-11). R2 keys: {year}/{comp-slug}/{uuid}.{ext} (AGENTS.md).
 // Stills only; no video, no executables. Lost-found PDFs ride a separate
 // public endpoint in M2 with its own allowlist (png/jpg/pdf).
+import type { SpeedbdEnv } from './bindings';
 
 export const IMAGE_MIME_ALLOWLIST: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -32,4 +33,17 @@ export function buildUploadKey(year: string, compSlug: string, ext: string): str
 
 export function isSafeMediaKey(key: string): boolean {
   return /^[a-z0-9][\w\-./]{1,180}$/.test(key) && !key.includes('..');
+}
+
+export async function putImage(env: SpeedbdEnv, file: File, year: string, folder: string): Promise<string> {
+  const ext = extForMime(file.type);
+  if (!ext) throw new Error(`rejected mime: ${file.type}`);
+  if (file.size <= 0 || file.size > MAX_UPLOAD_BYTES) throw new Error('rejected size');
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  if (bytes.byteLength <= 0 || bytes.byteLength > MAX_UPLOAD_BYTES) throw new Error('rejected size');
+  const key = buildUploadKey(year, folder, ext);
+  await env.MEDIA.put(key, bytes, {
+    httpMetadata: { contentType: file.type, cacheControl: 'public, max-age=31536000, immutable' },
+  });
+  return `/api/media/${key}`;
 }

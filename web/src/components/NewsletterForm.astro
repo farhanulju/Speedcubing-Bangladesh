@@ -1,8 +1,6 @@
 ---
-import TurnstileWidget from './TurnstileWidget.astro';
-
-// Email-only newsletter opt-in (WP-21). Phone collection needs an explicit-consent
-// flow and is deferred — the endpoint rejects non-email channels.
+// Email-only newsletter opt-in (WP-21). Turnstile and its script mount only
+// after a visitor explicitly opens the signup form.
 interface Props {
   siteKey: string;
   compact?: boolean;
@@ -11,43 +9,114 @@ interface Props {
 const { siteKey, compact } = Astro.props;
 ---
 
-<form data-optin-form class={`${compact ? '' : 'card-brutal shadow-brutal p-6'} flex flex-col gap-3`}>
-  <label class="flex flex-col gap-1">
-    <span class="text-sm font-bold">Get competition alerts</span>
-    <input name="handle" type="email" required maxlength="160" placeholder="you@example.org" class="rounded-lg border-2 border-ink px-3 py-2" />
-  </label>
-  <TurnstileWidget siteKey={siteKey} />
-  <p data-form-msg class="hidden text-sm font-semibold"></p>
-  <button type="submit" class="btn-pill border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
-    Subscribe
+<div data-optin-module data-sitekey={siteKey} class={`${compact ? '' : 'card-brutal shadow-brutal p-6'} flex flex-col gap-3`}>
+  <button type="button" data-optin-reveal class="btn-pill w-fit border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">
+    Get competition alerts
   </button>
-  <p class="text-xs text-slate-500">Email only. Explicit opt-in, unsubscribe anytime. No scraped numbers, ever.</p>
-</form>
+  <form data-optin-form hidden class="flex flex-col gap-3">
+    <label class="flex flex-col gap-1">
+      <span class="text-sm font-bold">Email address</span>
+      <input name="handle" type="email" required maxlength="160" autocomplete="email" placeholder="you@example.org" class="w-full rounded-lg border-2 border-ink px-3 py-2" />
+    </label>
+    <div data-optin-turnstile></div>
+    <p data-form-msg class="hidden text-sm font-semibold" role="status"></p>
+    <button type="submit" class="btn-pill w-fit border-2 border-ink bg-speed-orange px-6 py-2 text-white shadow-brutal">Subscribe</button>
+    <p class="text-xs text-slate-500">Email only, with your explicit opt-in. Alert delivery is not active yet; we’ll say so before updates start. <a class="font-bold underline" href="/privacy">Privacy notice</a>.</p>
+  </form>
+</div>
 
 <script>
-  document.querySelectorAll('[data-optin-form]').forEach((formEl) => {
-    const form = formEl as HTMLFormElement;
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = form.querySelector('[data-form-msg]') as HTMLElement;
-      msg.classList.remove('hidden');
+  interface TurnstileApi {
+    render: (target: HTMLElement, options: { sitekey: string; theme: 'light' }) => string;
+    reset: (widgetId?: string) => void;
+    remove: (widgetId: string) => void;
+  }
+  declare global { interface Window { turnstile?: TurnstileApi } }
+
+  let turnstileScript: Promise<void> | null = null;
+  function loadTurnstile(): Promise<void> {
+    if (window.turnstile) return Promise.resolve();
+    if (turnstileScript) return turnstileScript;
+    turnstileScript = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        if (window.turnstile) resolve();
+        else {
+          turnstileScript = null;
+          reject(new Error('Verification could not be loaded. Refresh and try again.'));
+        }
+      };
+      script.onerror = () => {
+        turnstileScript = null;
+        reject(new Error('Verification could not be loaded. Check your connection and try again.'));
+      };
+      document.head.appendChild(script);
+    });
+    return turnstileScript;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-optin-module]').forEach((module) => {
+    const button = module.querySelector<HTMLButtonElement>('[data-optin-reveal]');
+    const form = module.querySelector<HTMLFormElement>('[data-optin-form]');
+    const target = module.querySelector<HTMLElement>('[data-optin-turnstile]');
+    if (!button || !form || !target) return;
+
+    button.addEventListener('click', async () => {
+      if (!form.hidden) {
+        form.hidden = true;
+        button.textContent = 'Get competition alerts';
+        const widgetId = target.dataset.widgetId;
+        if (widgetId) window.turnstile?.remove(widgetId);
+        delete target.dataset.widgetId;
+        target.replaceChildren();
+        return;
+      }
+      form.hidden = false;
+      button.textContent = 'Hide signup form';
+      form.querySelector<HTMLInputElement>('input[name="handle"]')?.focus();
+      const msg = form.querySelector<HTMLElement>('[data-form-msg]');
+      try {
+        const sitekey = module.dataset.sitekey ?? '';
+        if (!sitekey) throw new Error('Signup verification is not configured yet.');
+        await loadTurnstile();
+        if (!target.dataset.widgetId && window.turnstile) {
+          target.dataset.widgetId = window.turnstile.render(target, { sitekey, theme: 'light' });
+        }
+      } catch (error) {
+        if (msg) {
+          msg.textContent = error instanceof Error ? error.message : 'Verification could not be loaded.';
+          msg.className = 'text-sm font-semibold text-red-700';
+        }
+      }
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const msg = form.querySelector<HTMLElement>('[data-form-msg]');
+      if (!msg) return;
+      msg.textContent = 'Submitting…';
+      msg.className = 'text-sm font-semibold text-slate-600';
       try {
         const data = new FormData(form);
-        const tokenEl = form.querySelector('[name="cf-turnstile-response"]') as HTMLInputElement | null;
-        const token = tokenEl?.value ?? '';
-        const res = await fetch('/api/opt-in', {
+        const tokenEl = form.querySelector<HTMLInputElement>('[name="cf-turnstile-response"]');
+        const response = await fetch('/api/opt-in', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ channel: 'email', handle: String(data.get('handle') ?? ''), turnstile_token: token }),
+          body: JSON.stringify({ channel: 'email', handle: String(data.get('handle') ?? ''), turnstile_token: tokenEl?.value ?? '' }),
         });
-        const body = (await res.json()) as { error?: string; duplicate?: boolean };
-        if (!res.ok) throw new Error(body.error || 'subscribe failed');
-        msg.textContent = body.duplicate ? 'Already subscribed — you are on the list.' : 'Subscribed. Watch your inbox.';
-        msg.classList.add('text-emerald-brand');
+        const result = await response.json() as { error?: string; duplicate?: boolean };
+        if (!response.ok) throw new Error(result.error || 'Subscription failed.');
+        msg.textContent = result.duplicate ? 'This email is already on the updates list.' : 'Your opt-in is recorded. Email alerts are not active yet.';
+        msg.className = 'text-sm font-semibold text-emerald-brand';
         form.reset();
-      } catch (err) {
-        msg.textContent = err instanceof Error ? err.message : 'subscribe failed';
-        msg.classList.add('text-red-700');
+        const widgetId = target.dataset.widgetId;
+        if (widgetId) window.turnstile?.reset(widgetId);
+      } catch (error) {
+        msg.textContent = error instanceof Error ? error.message : 'Subscription failed.';
+        msg.className = 'text-sm font-semibold text-red-700';
       }
     });
   });

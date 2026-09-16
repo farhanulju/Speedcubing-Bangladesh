@@ -15,7 +15,7 @@ const news = await tryLoad(Astro.locals, (env) => getNews(env, 20), []);
     <p class="mt-2 text-slate-600">Competition recaps, record breakthroughs, and the road to Worlds 2027.</p>
     {
       news.length === 0 ? (
-        <p class="mt-6 text-slate-600">Stories publish here once the media team enters them in /admin.</p>
+        <p class="mt-6 text-slate-600">No stories have been published yet. Browse <a class="font-bold text-emerald-brand underline" href="/competitions">competitions</a> and <a class="font-bold text-emerald-brand underline" href="/records">national records</a> in the meantime.</p>
       ) : (
         <div class="mt-6 grid gap-4 md:grid-cols-3">
           {news.map((n) => (

@@ -13,14 +13,14 @@ const snaps = await tryLoad(Astro.locals, (env) => getRecordSnapshots(env), []);
 const all = recs.data?.records ?? [];
 // Server-side filter (no client JS): ?q= matches event code, name, or holder.
 const q = (Astro.url.searchParams.get('q') ?? '').trim().toLowerCase();
-const records = q
-  ? all.filter((r) =>
-      [r.event, r.event_name, r.single?.holder ?? '', r.single?.wca_id ?? '', r.average?.holder ?? '', r.average?.wca_id ?? '']
-        .join(' ')
-        .toLowerCase()
-        .includes(q),
-    )
-  : all;
+const eventFilter = Astro.url.searchParams.get('event') ?? '';
+const events = [...all].sort((a, b) => a.event_name.localeCompare(b.event_name));
+const records = all.filter((r) => {
+  const matchesEvent = !eventFilter || r.event === eventFilter;
+  const matchesHolder = !q || [r.single?.holder ?? '', r.single?.wca_id ?? '', r.average?.holder ?? '', r.average?.wca_id ?? '']
+    .join(' ').toLowerCase().includes(q);
+  return matchesEvent && matchesHolder;
+});
 
 const byEvent: Record<string, RecordSnapshot[]> = {};
 for (const s of snaps) {
@@ -37,28 +37,25 @@ for (const s of snaps) {
       . <a class="font-bold text-emerald-brand underline" href="https://www.worldcubeassociation.org/results/records" target="_blank" rel="noopener">Verify on WCA</a>
       {' '}<a class="btn-pill ml-2 inline-block border-2 border-ink bg-white px-4 py-1 text-sm shadow-brutal" href="/api/records.csv" download>CSV Export</a>
     </p>
-    <form method="get" action="/records" class="mt-6 flex max-w-xl gap-2">
-      <input
-        name="q"
-        type="search"
-        value={Astro.url.searchParams.get('q') ?? ''}
-        placeholder="Filter by event or holder…"
-        maxlength="60"
-        class="min-w-0 flex-1 rounded-lg border-2 border-ink px-3 py-2"
-      />
-      <button type="submit" class="btn-pill shrink-0 border-2 border-ink bg-white px-5 py-2 text-sm shadow-brutal">
-        Filter
-      </button>
-      {q && (
-        <a href="/records" class="shrink-0 self-center text-sm font-bold text-emerald-brand underline">
-          Clear
-        </a>
-      )}
+    <form method="get" action="/records" class="card-brutal mt-6 grid max-w-3xl gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+      <label class="flex min-w-0 flex-col gap-1 text-sm font-bold">
+        Event
+        <select name="event" class="w-full min-w-0 rounded-lg border-2 border-ink bg-white px-3 py-2 font-normal">
+          <option value="">All events</option>
+          {events.map((record) => <option value={record.event} selected={eventFilter === record.event}>{record.event_name} ({record.event})</option>)}
+        </select>
+      </label>
+      <label class="flex min-w-0 flex-col gap-1 text-sm font-bold">
+        Holder
+        <input name="q" type="search" value={Astro.url.searchParams.get('q') ?? ''} placeholder="Name or WCA ID" maxlength="60" class="w-full min-w-0 rounded-lg border-2 border-ink px-3 py-2 font-normal" />
+      </label>
+      <button type="submit" class="btn-pill border-2 border-ink bg-white px-5 py-2 text-sm shadow-brutal">Apply filters</button>
+      {(q || eventFilter) && <a href="/records" class="text-sm font-bold text-emerald-brand underline sm:col-span-3">Clear filters</a>}
     </form>
     {
       records.length === 0 ? (
         <p class="mt-6 text-slate-600">
-          {all.length === 0 ? 'Records sync daily — the table appears after the first sync.' : `No records match “${q}”.`}
+          {all.length === 0 ? 'Records sync daily — the table appears after the first sync.' : `No records match the selected filters${q ? ` for “${q}”` : ''}.`}
         </p>
       ) : (
         <>
