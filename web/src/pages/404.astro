@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro';
 export const prerender = true;
 ---
 
-<Base title="Page not found">
+<Base title="Page not found" robots="noindex, nofollow" sessionAware={false}>
   <section class="container-x py-16">
     <div class="card-brutal shadow-brutal max-w-xl p-8">
       <h1 class="text-3xl font-extrabold tracking-tight">404 — Lost cube?</h1>

@@ -31,6 +31,10 @@ export const WCA_EVENT_NAMES: Record<string, string> = {
   '444bf': '4×4×4 Blindfolded',
   '555bf': '5×5×5 Blindfolded',
   '333mbf': '3×3×3 Multi-Blind',
+  '333ft': '3×3×3 With Feet (retired)',
+  '333mbo': '3×3×3 Multi-Blind Old Style (retired)',
+  magic: "Rubik's Magic (retired)",
+  mmagic: 'Master Magic (retired)',
 };
 
 export function eventName(eventId: string): string {

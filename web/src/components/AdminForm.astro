@@ -82,7 +82,7 @@ const fieldId = (field: FieldDef) => `field-${def.table}-${field.name}`;
           )}
           {f.kind === 'select' && (
             <select id={id} name={f.name} required={f.required} data-managed-options={f.optionsFrom} class="w-full rounded-lg border-2 border-ink bg-white px-3 py-2">
-              {!f.required && <option value="">— Choose later —</option>}
+              <option value="" disabled={f.required} selected={isNew || !val(f.name)}>{f.required ? '— Choose —' : '— Choose later —'}</option>
               {(optionsByField[f.name] ?? (f.options ?? []).map((o) => ({ value: o, label: o }))).map((o) => (
                 <option value={o.value} selected={!isNew && val(f.name) === o.value}>{o.label}</option>
               ))}
@@ -175,12 +175,11 @@ const fieldId = (field: FieldDef) => `field-${def.table}-${field.name}`;
         const body = await response.json() as { rows?: Record<string, unknown>[] };
         const selected = select.value;
         const next = document.createDocumentFragment();
-        if (!select.required) {
-          const placeholder = document.createElement('option');
-          placeholder.value = '';
-          placeholder.textContent = '— Choose later —';
-          next.appendChild(placeholder);
-        }
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.disabled = select.required;
+        placeholder.textContent = select.required ? '— Choose —' : '— Choose later —';
+        next.appendChild(placeholder);
         for (const row of body.rows ?? []) {
           const option = document.createElement('option');
           option.value = String(row.label ?? '');

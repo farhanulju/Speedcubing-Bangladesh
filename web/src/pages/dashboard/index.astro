@@ -40,10 +40,10 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
 });
 ---
 
-<Base title="Dashboard">
+<Base title="Dashboard" description="Your Speedcubing Bangladesh registrations, payment status, WCA profile summary, and consent records." robots="noindex, nofollow">
   <section class="container-x py-10">
     <div class="card-brutal shadow-brutal p-6">
-      <p class="text-2xl font-extrabold">{me.name}</p>
+      <h1 class="text-2xl font-extrabold">{me.name}</h1>
       <p class="data-font mt-1 text-sm text-slate-600">
         {me.wca_id ? (
           <a class="underline" href={`https://www.worldcubeassociation.org/persons/${me.wca_id}`} target="_blank" rel="noopener">
@@ -160,7 +160,7 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
       )}
     </p>
 
-    <h2 class="mt-8 text-2xl font-extrabold">Guardian consent</h2>
+    <h2 class="mt-8 text-2xl font-extrabold">Guardian consent <span class="text-base font-semibold text-slate-500">(under-18 competitors only)</span></h2>
     {
       consent ? (
         <div class="card-brutal mt-3 p-5">
@@ -170,24 +170,29 @@ const stepOf = (r: (typeof regs)[number], hasWcaId: boolean) => ({
           </p>
         </div>
       ) : (
-        <form data-consent-form class="card-brutal mt-3 flex max-w-xl flex-col gap-3 p-5">
-          <p class="text-sm text-slate-600">Under-18 competitors need a guardian on record.</p>
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-bold">Guardian name *</span>
-            <input name="guardian_name" type="text" required maxlength="120" class="rounded-lg border-2 border-ink px-3 py-2" />
-          </label>
-          <label class="flex flex-col gap-1">
-            <span class="text-sm font-bold">Relation *</span>
-            <input name="relation" type="text" required maxlength="40" placeholder="parent" class="rounded-lg border-2 border-ink px-3 py-2" />
-          </label>
-          <label class="flex items-center gap-2 text-sm font-bold">
-            <input name="agree" type="checkbox" class="h-5 w-5 accent-emerald-brand" /> I am the guardian and I consent
-          </label>
-          <p data-form-msg class="hidden text-sm font-semibold"></p>
-          <button type="submit" class="btn-pill w-fit border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
-            Record consent
-          </button>
-        </form>
+        <details class="card-brutal mt-3 max-w-xl p-5">
+          <summary class="cursor-pointer list-none font-extrabold text-emerald-brand underline [&::-webkit-details-marker]:hidden">
+            Record consent for an under-18 competitor
+          </summary>
+          <p class="mt-2 text-sm text-slate-600">If you are 18 or older, no action is needed. Otherwise, ask your parent or legal guardian to complete this section.</p>
+          <form data-consent-form class="mt-4 flex flex-col gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-sm font-bold">Guardian name *</span>
+              <input name="guardian_name" type="text" required maxlength="120" autocomplete="name" class="rounded-lg border-2 border-ink px-3 py-2" />
+            </label>
+            <label class="flex flex-col gap-1">
+              <span class="text-sm font-bold">Relationship *</span>
+              <input name="relation" type="text" required maxlength="40" placeholder="Parent or legal guardian" class="rounded-lg border-2 border-ink px-3 py-2" />
+            </label>
+            <label class="flex items-start gap-2 text-sm font-bold">
+              <input name="agree" type="checkbox" required class="mt-0.5 h-5 w-5 shrink-0 accent-emerald-brand" /> I am this competitor's parent or legal guardian and I consent to their participation record being held for competition administration.
+            </label>
+            <p data-form-msg class="hidden text-sm font-semibold"></p>
+            <button type="submit" class="btn-pill w-fit border-2 border-ink bg-emerald-brand px-6 py-2 text-white shadow-brutal">
+              Record guardian consent
+            </button>
+          </form>
+        </details>
       )
     }
   </section>

@@ -7,8 +7,8 @@ import { EDGE_CACHE_VALUE, tryLoad } from '../lib/page';
 export const prerender = false;
 Astro.response.headers.set('Cache-Control', EDGE_CACHE_VALUE);
 
-// Privacy notice lives in D1 (page/privacy) like all content — never in repo.
-// Until it is entered, show an honest pointer instead of a fabricated policy.
+// A board-approved notice may replace this operational summary through D1.
+// The fallback documents only behavior already enforced by the application.
 const notice = await tryLoad(Astro.locals, (env) => getPage(env, 'privacy'), null);
 ---
 
@@ -23,11 +23,25 @@ const notice = await tryLoad(Astro.locals, (env) => getPage(env, 'privacy'), nul
       </div>
     ) : (
       <div class="card-brutal mt-6 p-6">
-        <p class="text-sm text-slate-600">
-          A complete privacy notice—including how submitted information is used, who can access it, and how long it is kept—is not published yet.
-          Until it is finalized, provide only the information a form asks for and avoid sending passwords or other sensitive details.
-          Questions or a privacy request? Use the <a class="font-bold text-emerald-brand underline" href="/contact">contact form</a>.
-        </p>
+        <p class="text-sm text-slate-600">This summary explains the website's current data handling. It was last updated on 17 September 2026.</p>
+
+        <h2 class="mt-5 text-xl font-extrabold">Information we collect</h2>
+        <ul class="mt-2 list-disc space-y-2 pl-5 text-sm text-slate-600">
+          <li>WCA sign-in provides your WCA account identifier, public profile name, and WCA ID when one exists. The site uses a secure session cookie to keep you signed in.</li>
+          <li>Competition registration and payment review can include selected events, sender number, transaction ID, whole-taka amount, status, and organizer review notes.</li>
+          <li>Contact and lost-and-found forms collect the details you enter, plus an optional lost-item image.</li>
+          <li>Email alerts store the email address and consent time only after an explicit opt-in. Bulk alert delivery is not active yet.</li>
+          <li>Guardian consent stores the guardian name, relationship, consent time, and any organizer verification.</li>
+        </ul>
+
+        <h2 class="mt-5 text-xl font-extrabold">How information is used and accessed</h2>
+        <p class="mt-2 text-sm text-slate-600">Information is used to operate registrations, verify manual payments, answer messages, return lost items, record consent, and maintain an audit trail. Authorized organizers can access the relevant admin records. Public pages never expose payment sender numbers, transaction IDs, contact details, or guardian details. Registration contact information is not reused for marketing.</p>
+
+        <h2 class="mt-5 text-xl font-extrabold">Services and retention</h2>
+        <p class="mt-2 text-sm text-slate-600">Cloudflare hosts and protects the site, including spam checks through Turnstile. WCA provides authentication and public competition data. Transactional email may be delivered through Resend when enabled. Operational and audit records are kept only while needed for competition administration, safety, accounting, dispute handling, or organizational recordkeeping.</p>
+
+        <h2 class="mt-5 text-xl font-extrabold">Your choices</h2>
+        <p class="mt-2 text-sm text-slate-600">You can avoid optional fields and marketing opt-ins. To ask what information is held about you, request a correction, or request deletion where the organization is able to do so, use the <a class="font-bold text-emerald-brand underline" href="/contact">contact form</a>. Never submit passwords, one-time codes, or full financial account credentials through this site.</p>
       </div>
     )}
   </section>

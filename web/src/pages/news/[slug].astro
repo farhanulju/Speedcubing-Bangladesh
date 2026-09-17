@@ -17,7 +17,7 @@ try {
 if (!item) return new Response('Not found', { status: 404 });
 ---
 
-<Base title={item.title}>
+<Base title={item.title} description={`${item.title} — a community update from Speedcubing Bangladesh.`}>
   <article class="container-x max-w-3xl py-12">
     <a href="/news" class="text-sm font-semibold text-emerald-brand underline">← News</a>
     <h1 class="mt-1 text-4xl font-extrabold tracking-tight">{item.title}</h1>

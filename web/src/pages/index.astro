@@ -102,9 +102,9 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
       ) : (
         <div class="mt-4 grid gap-4 md:grid-cols-3">
           {upcoming.map((c) => (
-            <a href={`/competitions/${c.wca_id}`} class="card-brutal shadow-brutal block min-w-0 p-5 hover:-translate-y-0.5">
+            <article class="card-brutal shadow-brutal min-w-0 p-5 hover:-translate-y-0.5">
               <p class="data-font text-xs font-bold uppercase tracking-wider text-speed-orange">{c.city}</p>
-              <p class="mt-1 text-lg font-extrabold">{c.name}</p>
+              <h3 class="mt-1 text-lg font-extrabold"><a class="underline decoration-transparent hover:decoration-current" href={`/competitions/${c.wca_id}`}>{c.name}</a></h3>
               <p class="data-font mt-1 text-sm text-slate-600">
                 {c.start_date} → {c.end_date}
               </p>
@@ -118,7 +118,7 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
                   );
                 })()}
               </p>
-            </a>
+            </article>
           ))}
         </div>
       )
@@ -188,7 +188,7 @@ const pct = donation && donation.target_bdt > 0 ? Math.min(100, Math.round((dona
           <a href="/worlds-2027" class="btn-pill mt-4 inline-block border-2 border-ink bg-speed-orange px-6 py-2 text-white">
             Support Team Bangladesh
           </a>
-          <a href="/sponsors" class="btn-pill mt-4 inline-block border-2 border-ink bg-white px-6 py-2">
+          <a href="/sponsors" class="btn-pill mt-4 inline-block border-2 border-ink bg-white px-6 py-2 text-ink">
             Sponsorship Details
           </a>
         </div>

@@ -2,6 +2,11 @@
 // status='published' enforced here, private columns never selected.
 // Editor.js bodies are rendered via renderDocument() from lib/editor.
 import type { SpeedbdEnv } from './bindings';
+import { isSafeMediaKey } from './uploads';
+
+function safeMediaKey(value: string | null): string | null {
+  return value && isSafeMediaKey(value) ? value : null;
+}
 
 export interface Announcement {
   slug: string;
@@ -43,7 +48,10 @@ export async function getPeople(env: SpeedbdEnv): Promise<Person[]> {
       role, wca_id, focus_area, member_since
      FROM person WHERE status='published' ORDER BY rowid LIMIT 100`,
   ).all();
-  return (res.results ?? []) as unknown as Person[];
+  return ((res.results ?? []) as unknown as Person[]).map((person) => ({
+    ...person,
+    photo_r2: safeMediaKey(person.photo_r2),
+  }));
 }
 
 export interface Faq {
@@ -71,14 +79,17 @@ export async function getNews(env: SpeedbdEnv, limit = 20): Promise<NewsItem[]> 
   )
     .bind(limit)
     .all();
-  return (res.results ?? []) as unknown as NewsItem[];
+  return ((res.results ?? []) as unknown as NewsItem[]).map((item) => ({
+    ...item,
+    cover_r2: safeMediaKey(item.cover_r2),
+  }));
 }
 
 export async function getNewsItem(env: SpeedbdEnv, slug: string): Promise<NewsItem | null> {
   const row = (await env.DB.prepare("SELECT slug, title, published_at, body_json, cover_r2 FROM news WHERE slug=? AND status='published'")
     .bind(slug)
     .first()) as null | NewsItem;
-  return row;
+  return row ? { ...row, cover_r2: safeMediaKey(row.cover_r2) } : null;
 }
 
 export interface Sponsor {
@@ -93,7 +104,10 @@ export async function getSponsors(env: SpeedbdEnv): Promise<Sponsor[]> {
   const res = await env.DB.prepare(
     "SELECT id, name, logo_r2, tier, url FROM sponsor WHERE status='published' ORDER BY sort_order, rowid LIMIT 100",
   ).all();
-  return (res.results ?? []) as unknown as Sponsor[];
+  return ((res.results ?? []) as unknown as Sponsor[]).map((sponsor) => ({
+    ...sponsor,
+    logo_r2: safeMediaKey(sponsor.logo_r2),
+  }));
 }
 
 export interface DonationPage {

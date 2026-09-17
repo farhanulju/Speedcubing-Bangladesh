@@ -46,6 +46,23 @@ export const en = {
     verifyOnWca: 'Verify on worldcubeassociation.org',
     cachedNotice: 'Showing cached data — see WCA Live for the latest.',
   },
+  seo: {
+    defaultDescription: 'Official WCA competition information, Bangladesh national records, community updates, and competitor services from Speedcubing Bangladesh.',
+    descriptions: {
+      '/': 'Discover official WCA competitions, national records, and speedcubing community updates across Bangladesh.',
+      '/about': 'Learn about Speedcubing Bangladesh, its prospective WCA Regional Organization work, and the community it serves.',
+      '/people': 'Meet the delegates, organizers, executives, and volunteers supporting speedcubing across Bangladesh.',
+      '/competitions': 'Browse upcoming and past official WCA competitions in Bangladesh by city, event, year, and status.',
+      '/records': 'Explore Bangladesh national speedcubing records, holders, and record progression from the daily WCA export.',
+      '/faq': 'Answers for first-time competitors about WCA competitions, registration, payments, and speedcubing in Bangladesh.',
+      '/news': 'Competition recaps, record breakthroughs, and community stories from Speedcubing Bangladesh.',
+      '/sponsors': 'Partners and sponsorship opportunities supporting competitions and community programs in Bangladesh.',
+      '/worlds-2027': 'Verified campaign information for Bangladesh participation in the WCA World Championship 2027.',
+      '/contact': 'Contact Speedcubing Bangladesh about competitions, sponsorship, volunteering, media, or general questions.',
+      '/lost-found': 'Report a missing item or check the public lost-and-found inventory from speedcubing competitions in Bangladesh.',
+      '/privacy': 'How Speedcubing Bangladesh handles information submitted through the website.',
+    },
+  },
   home: {
     badge: 'Prospective WCA Regional Organization',
     headline: 'Fueling the Passion for Speedcubing in Bangladesh.',

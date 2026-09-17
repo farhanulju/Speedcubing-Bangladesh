@@ -52,6 +52,15 @@ await check('home renders data sections', async () => {
   for (const s of ['Sample: registration opens', 'Dhaka Spring Open 2026', '5.82', 'Sample Sponsor Ltd', 'Sample competition recap', '185000', 'Subscribe']) {
     assert(has(page.text, s), `missing ${s}`);
   }
+  for (const s of ['rel="canonical"', 'property="og:image"', '/social-card.jpg']) assert(has(page.text, s), `missing metadata ${s}`);
+});
+
+await check('robots and sitemap expose only public discovery routes', async () => {
+  const robots = await get('/robots.txt');
+  assert(robots.status === 200 && has(robots.text, 'Disallow: /admin') && has(robots.text, 'Sitemap:'), 'robots rules missing');
+  const sitemap = await get('/sitemap.xml');
+  assert(sitemap.status === 200 && has(sitemap.text, '/competitions/DhakaSpringOpen2026') && has(sitemap.text, '/news/sample-recap'), 'dynamic sitemap entries missing');
+  assert(notHas(sitemap.text, '/admin') && notHas(sitemap.text, '/dashboard'), 'private route leaked into sitemap');
 });
 
 await check('competitions list + city filter', async () => {
