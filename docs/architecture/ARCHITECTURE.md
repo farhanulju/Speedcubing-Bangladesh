@@ -90,7 +90,9 @@ Public: `/`, `/about`, `/people`, `/competitions`, `/competitions/[slug]`, `/rec
 ## 7. Non-functional budgets
 
 - Performance: LCP < 2.5s on mid-range Android / 4G for public pages; AVIF/WebP via R2 resizing; dashboards hydrate per route, public pages stay ISR.
+- Discovery: route-specific canonical/description/social metadata; one 1200×630 still-image preview; dynamic `robots.txt` and public-only `sitemap.xml`. Private routes and APIs are excluded and marked `noindex`.
 - Auth: Access policy for `/admin/*` + API `admin:*`; R2 uploads are Access-gated and image-type/size validated; WCA OAuth (authorization code, `state`+PKCE) for `/dashboard`; sessions httpOnly + SameSite=Lax; never store WCA passwords; validate `wca_id` against cache at link time.
+- Browser security: middleware applies a deny-by-default frame policy (`frame-ancestors 'none'`/`X-Frame-Options: DENY`), `nosniff`, strict referrer and permissions policies, HTTPS HSTS, and a baseline CSP. `/admin`, `/dashboard`, and `/api` force `no-store` plus `noindex`.
 - Privacy: no public DOB/phone/address; photo consent flag required for minors; explicit opt-in for broadcasts; Turnstile + rate limits on all forms; never log bodies/tokens.
 - Money: integers (BDT) end to end; TxID free-text + human decision in v1 with `decided_by/at` audit; gateway IPN must re-query before marking paid in Phase 2.
 - Email: Resend free tier (≤100/day); outbox flush every 5 min with backoff; failures retry 3× then stay `failed` (dashboard remains canonical — never block a verification on email). No bulk/newsletter sends through this path.

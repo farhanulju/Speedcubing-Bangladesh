@@ -1,14 +1,14 @@
-# QA MATRIX — WP-52 (local results 2026-09-15; prod smoke pending on live data)
+# QA MATRIX — WP-52 (local results refreshed 2026-09-17; production-readiness patch not deployed)
 
 How to re-run locally: `npm run db:reset` → `npm run kv:seed` →
 `npm run dev -- --port 4321` → harnesses below. Verified registrations are
 immutable, so re-runs need a fresh `db:reset` first.
 
-## Harnesses (all green 2026-09-15, fresh seed)
+## Harnesses (all green 2026-09-17, fresh seed)
 
 | Harness | Command | Result |
 |---|---|---|
-| Public pages + forms | `node scripts/smoke-m2.mjs` | 10/10 |
+| Public pages + forms | `node scripts/smoke-m2.mjs` | 11/11, including SEO metadata + public-only robots/sitemap |
 | Accounts + money | `node scripts/smoke-m3.mjs` | 5/5 |
 | Failure drills | `node scripts/drills-wp52.mjs` | 9/9 |
 | Empty-KV (WCA-down) | manual wrangler deletes + marker fetch | 3/3 honest-empty, zero 500s |
@@ -31,15 +31,17 @@ immutable, so re-runs need a fresh `db:reset` first.
 
 ## Routes × viewports
 
-Playwright `e2e.mjs` captures 8 screenshots (390px mobile: home,
-competitions, comp-detail, records, faq, contact; 1280px: dashboard, payment
-inspection) plus editor-mount, FAQ-create, payment-accept+409, Turnstile, and
-print-CSS checks — all green. Visual review of the captures is pending.
+Playwright `e2e.mjs` captures mobile home, competitions, comp-detail, records,
+FAQ, contact and lost-found plus desktop dashboard/payment views. It also checks
+editor mount, FAQ create, managed admin inputs, payment accept+409, intent-only
+newsletter Turnstile, contact Turnstile, print CSS, the 360px public menu, and
+the 360px dashboard/guardian state — all green. The repaired mobile menu and
+generated social card were also visually checked in the requested Chrome profile.
 
 ## Pending (needs WP-00 remote or human)
 
 - Real-secret Turnstile accept/reject, live Resend delivery, live WCA OAuth
   login, live Access gate, daily cron + outbox flush on schedule.
 - DNS cutover, secrets rotation, KV warm, rollback rehearsal (<15 min).
-- Full screenshot review across 360/768/1280px per route remains pending. Production fixes confirmed in the last live read-only pass include the home date split, ended-event registration closure, sampled venue link, and donation-page first-create path. A local, not-yet-deployed remediation now addresses event labels/filters, admin form UX, donor anonymity, editor preview, newsletter intent, and a general champion archive. Build/check, migration and unit harnesses pass; the updated 360px browser e2e checks and production visual retest remain pending. Owner content/privacy review and local per-user WCA archive data remain open. See `plan/PRODUCTION_UI_QA_2026-09-16.md` for evidence, status, and the inline screenshot index.
+- Full screenshot review across 768/1280px per route remains pending. Production fixes confirmed in the last live read-only pass include the home date split, ended-event registration closure, sampled venue link, and donation-page first-create path. The local, not-yet-deployed patch adds the remaining UX fixes plus mobile-menu, metadata, sitemap/robots, media safety, dashboard semantics, and security headers. Owner content/privacy review, analytics/custom-domain setup, and local per-user WCA archive data remain open. See `plan/PRODUCTION_UI_QA_2026-09-16.md` for evidence and status.
 - D1-write-fail at the driver level (covered by validation gates locally).

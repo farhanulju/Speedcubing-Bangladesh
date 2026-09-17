@@ -55,6 +55,7 @@ await check('admin creates FAQ via editor', async () => {
 await check('admin fields use managed roles, file uploads, and anonymous donor option', async () => {
   await admin.goto(`${base}/admin/person/new`);
   assert(await admin.locator('select[name="role"] option').count() > 1, 'role options missing');
+  assert(await admin.locator('select[name="role"]').inputValue() === '', 'required role should start unselected');
   assert(await admin.locator('input[data-upload-for="photo_r2"]').count() === 1, 'photo picker missing');
   await admin.goto(`${base}/admin/donor/new`);
   const anonymous = admin.locator('input[name="is_anonymous"]');
@@ -131,6 +132,12 @@ await check('print slip hides chrome', async () => {
 // --- 6. Mobile screenshots (390px) ---
 const mobile = await browser.newContext({ viewport: { width: 360, height: 800 } });
 const m = await mobile.newPage();
+await check('mobile public menu opens inside the viewport', async () => {
+  await m.goto(`${base}/`);
+  await m.click('summary[aria-label="Open menu"]');
+  const menu = await m.locator('header details nav').boundingBox();
+  assert(menu && menu.y >= 0 && menu.y < 800 && menu.height > 100, 'mobile menu opened off-screen');
+});
 for (const [name, path] of [
   ['mobile-home', '/'],
   ['mobile-competitions', '/competitions'],
@@ -156,6 +163,13 @@ await check('dashboard fits the 360px viewport', async () => {
   await mobileDashboard.goto(`${base}/dashboard`);
   const widths = await mobileDashboard.evaluate(() => ({ viewport: document.documentElement.clientWidth, page: document.documentElement.scrollWidth }));
   assert(widths.page <= widths.viewport, `dashboard overflows horizontally: ${widths.page}px > ${widths.viewport}px`);
+  assert(await mobileDashboard.locator('main h1').count() === 1, 'dashboard needs one page heading');
+  const guardianForm = mobileDashboard.locator('details:has(form[data-consent-form])');
+  if (await guardianForm.count()) {
+    assert(!(await guardianForm.getAttribute('open')), 'guardian form should start collapsed');
+  } else {
+    assert((await mobileDashboard.getByText('Consent on file').count()) > 0, 'guardian consent state should be visible');
+  }
   await mobileUserCtx.close();
 });
 

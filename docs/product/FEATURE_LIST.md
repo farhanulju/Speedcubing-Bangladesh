@@ -4,7 +4,7 @@ Review applied 2026-09-14. Ticked `[x]` = approved for MVP build. Unticked `[ ]`
 
 Conventions: `Source` = system of record (D1 = our Cloudflare DB, managed via admin dashboard; WCA = cached, never forked). `CF` = Cloudflare free-tier piece. Effort: S < 3d, M < 2w, L > 2w. English-only v1. Mobile-first. No Google Forms anywhere.
 
-## Build status (updated 2026-09-15 — code state, not scope)
+## Build status (updated 2026-09-17 — code state, not scope)
 
 Ticks above are the scope gate and do not move. This section records what is
 already built. Legend: **Built** = code-complete, local-verified
@@ -26,7 +26,7 @@ entry (`plan/SEEDING_RUNBOOK.md`). **Gap** = scoped but not yet built.
 | A12 | Built + Content | Logo wall + deck button; PDF upload pending WP-51 |
 | A13 | Built + Content | Manual totals, masked Reveal wallets, opt-in donor wall; candidates/criteria/refund copy pending |
 | A14 | Built | Contact + email-only opt-in; alert form and Turnstile mount only after explicit signup intent; opt-in is stored-only while bulk delivery remains on hold; WhatsApp stays link-text per copy |
-| A15 | Partial | Per-page title/meta + skip link + Facebook link in footer. Missing: `og:image`, sitemap, analytics beacon, link-in-bio page (post-domain) |
+| A15 | Partial | Route-specific title/description, canonical URLs, `og:image`/Twitter metadata, generated 1200×630 social card, dynamic public-only sitemap, robots policy, skip link, and Facebook footer link. Missing: analytics beacon/token and link-in-bio page (post-domain). |
 | A16 | Built, 1 gap | NR table + daily stamp + event/holder filters + CSV export + inline snapshot history; `record_snapshot` collected by cron. Gap: dedicated Progression view |
 | A17 | Live | Dashboard (PBs + BD ranks, tracker, D1 history table, consent card); live login tested 2026-09-16 |
 | A18 | Live | Registry CRUD + guided Editor.js preview + Access-gated R2 image uploads + managed person roles/sponsor tiers + audit + quick-action/published-count ops hub + distinct shell; Access app live (8 emails), gate tested 2026-09-16 |
@@ -35,8 +35,8 @@ entry (`plan/SEEDING_RUNBOOK.md`). **Gap** = scoped but not yet built.
 | A21 | Partial | General past-competition archive includes cached 3×3 champion and WCA results/podium links; dashboard distinguishes site registrations from the official WCA profile. Per-user historical competition results are not yet cached locally. |
 | A22 | Built, on hold | Outbox + 3 templates + flush worker live (skips cleanly); Resend onboarding deferred by decision, dashboard is canonical |
 
-Open gaps feeding M5: A1 countdown, A4 past split, A5 roster, A15 plumbing,
-A16 progression, A21 archive. Phase 2 (B-items) untouched — still parked.
+Open gaps feeding M5: A15 analytics/link-in-bio, A16 progression, and A21
+per-user archive. Phase 2 (B-items) untouched — still parked.
 
 ## A. MVP — approved build list
 

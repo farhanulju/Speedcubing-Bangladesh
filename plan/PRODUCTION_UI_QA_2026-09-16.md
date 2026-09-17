@@ -192,3 +192,34 @@ Treat these as parity observations, not blanket build authorization. Some are do
 ## Not tested
 
 No public form was submitted and no registration/payment workflow was committed. File upload, email delivery, payment accept/reject, WCA acceptance tick, Access denial from an unauthenticated browser, and content publish/rollback remain unverified. The CMS draft create and read-back path was verified in the earlier pass; edit/update behavior and publishing were not exercised. The latest production retest did not repeat the 360px checks, so mobile overflow and schedule-scanning status remain unknown against the latest deployment.
+
+## Production-readiness review and local fixes — 2026-09-17
+
+This pass reviewed every public route plus `/dashboard` and `/admin` in the requested signed-in Chrome profile. It also inspected production response headers and console output. No live form was submitted and no production content was edited or deleted.
+
+New production findings:
+
+- The public mobile menu was positioned below the viewport because its absolute navigation panel had no positioned header ancestor. The admin menu was unaffected.
+- The published `person/testid` row contains an external image URL in `photo_r2`, causing `/people` to request `/api/media/https://…` and render a large broken-image area. The published test row itself remains in production and needs owner-authorized unpublish/delete.
+- `/dashboard` had no page-level `h1`; guardian consent was presented as a normal form for every user without making the under-18-only condition clear.
+- All public pages shared generic metadata; canonical links, social-image tags, sitemap and robots policy were absent. Production responses also lacked CSP, referrer, permissions, nosniff, frame, and HSTS headers.
+- Required managed admin selects could silently default to the first configured choice; the current live legacy role order made `Test` the default on a new person.
+- Live desktop routes had no console errors and no document-level horizontal overflow. Records continued to use a bounded internal table scroller.
+
+Local fixes now implemented:
+
+- Positioned the public header and added an automated 360px assertion that the expanded menu remains inside the viewport; current-page state and native summary markers were cleaned up.
+- Public content queries now accept only safe R2 object keys, so malformed external URLs no longer become broken `/api/media` requests. This intentionally suppresses the bad image but does not remove the live test person.
+- Added readable labels for retired WCA event codes; an actual dashboard `h1`; collapsed, under-18-only guardian guidance; and a safe blank placeholder for required admin selects.
+- Added route-specific descriptions, canonical/OG/Twitter metadata, a generated 1200×630 still image, dynamic public-only `sitemap.xml`, and `robots.txt` excluding private/API routes.
+- Added middleware security headers and forced `/admin`, `/dashboard`, and `/api` to `no-store` + `noindex`; HSTS is set only on HTTPS.
+- Replaced the placeholder privacy fallback with an operational summary, clarified that the Worlds campaign is not open until policy/accounts are published, removed the unverified contact-response promise, corrected invalid nested home links, and made error-page/session behavior safer.
+
+Verification on a fresh local D1/KV seed:
+
+- Playwright `e2e.mjs`: all checks green, including admin inputs, payment decision flow, intent-only newsletter Turnstile, contact Turnstile, print view, mobile menu, seven mobile route screenshots, and 360px dashboard semantics/overflow.
+- `smoke-m2.mjs`: 11/11 green, including canonical/social metadata, robots/sitemap, all public pages and form validation.
+- Chrome visual check at 360×800 confirmed the menu opens below the header and remains visible; the generated social card rendered at 1200×630.
+- Local header checks confirmed public caching is retained while private/API routes receive `no-store`, `noindex`, CSP, permissions/referrer, nosniff, and frame-deny headers.
+
+The patch is not deployed. Production still needs a post-deploy visual/header retest. Launch dependencies remain: owner-approved real FAQ/news/sponsor/About/Worlds content, owner review of privacy/retention language, cleanup of the published test person, analytics token/beacon, custom domain, and optional Resend onboarding. Per-user historical WCA results remain a separate source/design gap.

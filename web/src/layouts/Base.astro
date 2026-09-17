@@ -6,13 +6,24 @@ import { optionalUser } from '../lib/session';
 interface Props {
   title: string;
   description?: string;
+  image?: string;
+  robots?: string;
+  sessionAware?: boolean;
 }
 
-const { title, description = 'Speedcubing Bangladesh — WCA competitions, records, and community.' } = Astro.props;
+const {
+  title,
+  description = en.seo.descriptions[Astro.url.pathname as keyof typeof en.seo.descriptions] ?? en.seo.defaultDescription,
+  image = '/social-card.jpg',
+  robots = 'index, follow',
+  sessionAware = true,
+} = Astro.props;
 const path = Astro.url.pathname;
+const canonical = new URL(path, Astro.url.origin).toString();
+const socialImage = new URL(image, Astro.url.origin).toString();
 // Session-aware nav (server-side, zero client JS): logged-in users see
 // Dashboard + Log out instead of WCA Login. Null-safe on static routes.
-const session = await optionalUser(Astro.request, Astro.locals).catch(() => null);
+const session = sessionAware ? await optionalUser(Astro.request, Astro.locals).catch(() => null) : null;
 ---
 
 <!doctype html>
@@ -21,12 +32,27 @@ const session = await optionalUser(Astro.request, Astro.locals).catch(() => null
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:site_name" content="Speedcubing Bangladesh" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={`${title} — Speedcubing Bangladesh`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={socialImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="A speed cube in motion in the Speedcubing Bangladesh color palette" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={`${title} — Speedcubing Bangladesh`} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImage} />
     <title>{title} — Speedcubing Bangladesh</title>
   </head>
   <body class="bg-paper font-display text-ink antialiased">
     <a href="#main" class="sr-only focus:not-sr-only">Skip to content</a>
 
-    <header class="border-b-2 border-ink bg-white">
+    <header class="relative border-b-2 border-ink bg-white">
       <div class="container-x flex items-center justify-between gap-4 py-3">
         <a href="/" class="leading-tight">
           <span class="block text-lg font-extrabold tracking-tight">{en.brand.name}</span>
@@ -66,13 +92,13 @@ const session = await optionalUser(Astro.request, Astro.locals).catch(() => null
           )}
         </nav>
         <details class="md:hidden">
-          <summary class="btn-pill cursor-pointer border-2 border-ink bg-white px-4 py-2 text-sm" aria-label="Open menu">
+          <summary class="btn-pill cursor-pointer list-none border-2 border-ink bg-white px-4 py-2 text-sm [&::-webkit-details-marker]:hidden" aria-label="Open menu">
             Menu
           </summary>
           <nav class="absolute inset-x-0 top-full z-50 flex flex-col gap-1 border-b-2 border-ink bg-white p-4" aria-label="Mobile">
             {
               en.nav.map((item) => (
-                <a href={item.href} class="rounded-lg px-3 py-2 text-base font-semibold hover:bg-paper">
+                <a href={item.href} aria-current={path === item.href || path.startsWith(item.href + '/') ? 'page' : undefined} class="rounded-lg px-3 py-2 text-base font-semibold hover:bg-paper">
                   {item.label}
                 </a>
               ))
